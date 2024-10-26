@@ -1,8 +1,14 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind utilities;
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
 
 html, body { height: 100%; }
 body {
-    margin: 0;
     padding: 50px;
     font-family: "Courier New", sans-serif;
 }
