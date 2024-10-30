@@ -17,6 +17,7 @@ import {MatButton} from "@angular/material/button";
 })
 export class DataInputComponent {
 
+    /***************************************************************** File *****************************************************************/
     protected dragCounter = 0
 
     protected onFileInputChange(event: Event) {
@@ -24,10 +25,6 @@ export class DataInputComponent {
         const file = input.files![0]
         input.value = ''
         this.handleFile(file)
-    }
-
-    protected handleFile(file: File) {
-        file.text()
     }
 
     protected onDragEnter(e: DragEvent) {
@@ -48,6 +45,24 @@ export class DataInputComponent {
         this.handleFile(event.dataTransfer!.files[0])
     }
 
+
+    protected async handleFile(file: File) {
+        const result: string[][] = []
+        const dom = new DOMParser().parseFromString(await file.text(), 'text/xml')
+        const traceNodes = dom.getElementsByTagName("trace")
+        for (let i = 0; i < traceNodes.length; i++) {
+            const events: string[] = []
+            const traceEventNodes = traceNodes[i].getElementsByTagName("event")
+            for (let j = 0; j < traceEventNodes.length; j++) {
+                events.push(traceEventNodes[j].firstElementChild!.getAttribute("value") as string)
+            }
+            result.push(events)
+        }
+
+        console.log(result) // TODO robin
+    }
+
+    /***************************************************************** Manual Input *****************************************************************/
     protected parseEventLog(log: string) {
 
     }
