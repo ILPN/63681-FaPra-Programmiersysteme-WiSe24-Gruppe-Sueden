@@ -1,18 +1,25 @@
 <div class="flexColumnAlignStartStretch">
     <!--  Header  -->
     <div class="flexRowAlignCenterCenter">
-        <a href="https://www.fernuni-hagen.de/ilovepetrinets/"><h1>I <span class="red">❤</span> Petri Nets</h1></a>
+        <a href="https://www.fernuni-hagen.de/ilovepetrinets/">
+            <h1>I <span class="red">❤</span> Petri Nets</h1>
+        </a>
     </div>
+
     <h2>
         <i>Fachpraktikum Programmiersysteme WiSe24/25</i> by<br>
-        ..., ..., ..., ... and ...
+        Carl Sauter, Linus Rausch, ... and ...
     </h2>
 
+    <hr>
+
+    <data-input/>
+
     <!--    Main content    -->
-    <app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
+    <!--<app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
+-->
 
-
-    <div class="flexRowAlignSpaceEvenlyStart">
+    <!--<div class="flexRowAlignSpaceEvenlyStart">
         <app-example-button title="Button"></app-example-button>
 
         <app-example-file title="File" link="assets/example.json" description="An example .json Petri net"></app-example-file>
@@ -26,9 +33,10 @@
                       cdkAutosizeMaxRows="20"
                       [formControl]="textareaFc"></textarea>
         </mat-form-field>
-    </div>
+    </div>-->
+
+    <hr>
 
     <!--  Footer  -->
-    <hr>
-    <app-footer></app-footer>
+    <app-footer/>
 </div>
