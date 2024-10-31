@@ -1,4 +1,4 @@
-export class DirectlyFollows {
+export class DirectlyFollows  {
     folgeMap: 		Map<string, Set<string>>;
     vorgaengerMap: 	Map<string, Set<string>>;
 
@@ -46,7 +46,7 @@ export class DirectlyFollows {
         return this.vorgaengerMap.get("stop");
     }
 
-    private rekursiveTiefensuche (ausgangsKnoten: string,
+    private rekursiveWegTiefensuche (ausgangsKnoten: string,
                                   gesucht : Set<string>,
                                   besucht: Set<string>,
                                   wegGefunden: Set<string>,
@@ -65,7 +65,7 @@ export class DirectlyFollows {
             for (let folgeKnoten of folgeKnotenMenge) {
                 //Prüfe bereits gesucht
                 if(!besucht.has(folgeKnoten)){
-                    if (this.rekursiveTiefensuche(folgeKnoten, gesucht, besucht, wegGefunden, erlaubteKnoten)){
+                    if (this.rekursiveWegTiefensuche(folgeKnoten, gesucht, besucht, wegGefunden, erlaubteKnoten)){
                         wegGefunden.add(folgeKnoten)
                         return true;
                     }
@@ -79,13 +79,21 @@ export class DirectlyFollows {
         let wegGefunden = new Set <string>();
         for (let aKnoten of A) {
             let besucht = new Set<string>();
-            if (this.rekursiveTiefensuche(aKnoten, B, besucht, wegGefunden, erlaubteKnoten)){
+            if (this.rekursiveWegTiefensuche(aKnoten, B, besucht, wegGefunden, erlaubteKnoten)){
                 wegGefunden.add(aKnoten);
             } else {
                 return false;
             }
         }
         return true;
+    }
+    erstelleVorgaengerMap():void{
+        this.vorgaengerMap.clear();
+        for (const[ursprung, folgerset] of this.folgeMap){
+            for (const folger of folgerset) {
+                this.addVorgaenger(folger, ursprung);
+            }
+        }
     }
 
 
