@@ -14,6 +14,7 @@ export class ProcessGraphService {
         places: new Set<string>,
         transitions: new Set<string>,
         arcs: [],
+        dataUpdated: false,
     }
 
     private resultSubject = new BehaviorSubject<ProcessGraph>(this.processGraph)
@@ -37,6 +38,12 @@ export class ProcessGraphService {
     removeDfg(dfg: DirectlyFollows) {
         this.processGraph.dfgSet.delete(dfg)
         this.resultSubject.next(this.processGraph)
+    }
+    setDataUpdated(boo : boolean): void {
+        this.processGraph.dataUpdated = boo;
+    }
+    getDataUpdated(): boolean {
+        return this.processGraph.dataUpdated;
     }
 }
 

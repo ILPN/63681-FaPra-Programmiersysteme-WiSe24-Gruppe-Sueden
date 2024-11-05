@@ -10,4 +10,5 @@ export interface ProcessGraph {
     places: Set<string>;
     transitions: Set<string>;
     arcs : Arc[];
+    dataUpdated: boolean;
 }

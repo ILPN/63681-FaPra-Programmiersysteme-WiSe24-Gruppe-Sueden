@@ -26,6 +26,8 @@ export class ValidationService {
                     }
                     this.processGraphService.removeDfg(data.dfg)
                 }
+                //evtl wie flag benutzen → vor Datenübertragung von Frontend auf validation-data.service auf false setzen
+                this.processGraphService.setDataUpdated(true);
             }
         })
     }
