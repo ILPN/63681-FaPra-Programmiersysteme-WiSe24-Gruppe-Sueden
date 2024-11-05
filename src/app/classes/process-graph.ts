@@ -1,5 +1,5 @@
 import {DirectlyFollows} from './directly-follows'
-import {Arc} from "./arc.interface";
+import {Arc} from "./arc";
 
 
 //TODO: Gibt bis jetzt nur die DFGs ohne verknüpfungen usw. muss noch angepasst werden

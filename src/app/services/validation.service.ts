@@ -111,6 +111,7 @@ export class ValidationService {
         //Prüfe, ob Schnittmenge leer
         let intersection = new Set<string>([...firstNodeSet].filter(element => secondNodeSet.has(element)))
         if (intersection.size !== 0) {
+            //TODO: überhaupt nötig?
             console.log("Schnitt nicht leer")
             return false
         }

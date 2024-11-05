@@ -1,12 +1,20 @@
+import {Arc} from "./arc";
+
 export class DirectlyFollows {
     successorMap: Map<string, Set<string>>
     predecessorMap: Map<string, Set<string>>
     eventLog: string[][];
+    nodes: Set<string>
+    arcs: Arc[]
 
+
+    //TODO: Arcs und Nodes aktualisieren
     constructor() {
         this.successorMap = new Map<string, Set<string>>()
         this.predecessorMap = new Map<string, Set<string>>()
         this.eventLog = [];
+        this.nodes = new Set<string>();
+        this.arcs = [];
     }
 
     addSuccessor(origin: string, successor: string): void {

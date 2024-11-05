@@ -64,7 +64,6 @@ export class DataInputComponent {
             result.push(events)
         }
 //TODO: Error-Handling und Null-Prüfung
-        console.log(result)
         // Umwandeln des result in ein DFG Objekt
         let directlyFollowsGraph = new DirectlyFollows();
         for (const trace of result) {
