@@ -1,4 +1,3 @@
-// validation-data.service.ts
 import {Injectable} from '@angular/core'
 import {BehaviorSubject} from 'rxjs'
 import {DirectlyFollows} from '../classes/directly-follows'
