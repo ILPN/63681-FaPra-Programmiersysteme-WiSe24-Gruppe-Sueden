@@ -46,7 +46,7 @@ export class ValidationService {
 
     }
 
-
+//TODO: Eventlog abändern und einfügen
     private createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
         let resultDFG: DirectlyFollows = new DirectlyFollows()
         let tempNodeSet: Set<string> = new Set()

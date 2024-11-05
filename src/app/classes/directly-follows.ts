@@ -1,10 +1,12 @@
 export class DirectlyFollows {
     successorMap: Map<string, Set<string>>
     predecessorMap: Map<string, Set<string>>
+    eventLog: string[][];
 
     constructor() {
         this.successorMap = new Map<string, Set<string>>()
         this.predecessorMap = new Map<string, Set<string>>()
+        this.eventLog = [];
     }
 
     addSuccessor(origin: string, successor: string): void {
@@ -19,6 +21,14 @@ export class DirectlyFollows {
             this.predecessorMap.set(origin, new Set<string>())
         }
         this.predecessorMap.get(origin)!.add(predecessor)
+    }
+
+    setEventLog(log: string[][]): void {
+        this.eventLog = log;
+    }
+
+    getEventLog(): string[][] {
+        return this.eventLog;
     }
 
     getSuccessor(node: string): Set<string> | undefined {

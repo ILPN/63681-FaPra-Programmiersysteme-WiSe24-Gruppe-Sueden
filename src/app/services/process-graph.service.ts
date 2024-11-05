@@ -10,7 +10,10 @@ export class ProcessGraphService {
     private processGraph: ProcessGraph = {
         validationSuccessful: false,
         reason: null,
-        dfgSet: new Set<DirectlyFollows>()
+        dfgSet: new Set<DirectlyFollows>(),
+        places: new Set<string>,
+        transitions: new Set<string>,
+        arcs: [],
     }
 
     private resultSubject = new BehaviorSubject<ProcessGraph>(this.processGraph)
