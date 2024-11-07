@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {Edge} from "../../classes/graph/edge";
 import {Node} from "../../classes/graph/node";
 import {PhysicsHelper} from "../../helper/PhysicsHelper";
@@ -33,7 +33,7 @@ export class GraphComponent implements OnInit {
         }
 
         for (let i = 0; i < this.nodes.length - 1; i++) {
-            this.edges.push({ source: this.nodes[i], target: this.nodes[i + 1] });
+            this.edges.push({source: this.nodes[i], target: this.nodes[i + 1]});
         }
     }
 
@@ -52,7 +52,7 @@ export class GraphComponent implements OnInit {
     }
 
     onDrag(node: Node, event: MouseEvent) {
-        if(node.isDragged) {
+        if (node.isDragged) {
             node.x = event.offsetX;
             node.y = event.offsetY;
         }

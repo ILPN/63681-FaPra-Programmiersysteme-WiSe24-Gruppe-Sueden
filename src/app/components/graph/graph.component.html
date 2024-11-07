@@ -11,7 +11,7 @@
     ></rect>
 
     <!-- Draw edges -->
-    @for(edge of edges; track $index) {
+    @for (edge of edges; track $index) {
         <line
             [attr.x1]="edge.source.x"
             [attr.y1]="edge.source.y"
@@ -22,7 +22,7 @@
     }
 
     <!-- Draw nodes -->
-    @for(node of nodes; track $index) {
+    @for (node of nodes; track $index) {
         <circle
             [attr.cx]="node.x"
             [attr.cy]="node.y"
