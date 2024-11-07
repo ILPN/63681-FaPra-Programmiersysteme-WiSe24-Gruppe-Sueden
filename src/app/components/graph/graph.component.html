@@ -1,4 +1,15 @@
 <svg [attr.width]="width" [attr.height]="height">
+    <!-- Canvas Border -->
+    <rect
+        x="0"
+        y="0"
+        [attr.width]="width"
+        [attr.height]="height"
+        fill="none"
+        stroke="black"
+        stroke-width="2"
+    ></rect>
+
     <!-- Draw edges -->
     @for(edge of edges; track $index) {
         <line
@@ -20,6 +31,7 @@
             (mousedown)="onDragStart(node)"
             (mousemove)="onDrag(node, $event)"
             (mouseup)="onDragEnd(node)"
+            (mouseleave)="onDragEnd(node)"
         ></circle>
     }
 </svg>
