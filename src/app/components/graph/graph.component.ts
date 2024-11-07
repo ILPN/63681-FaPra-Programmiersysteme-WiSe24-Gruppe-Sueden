@@ -1,91 +1,142 @@
-import {Component, ElementRef, OnInit, ViewChild} from '@angular/core'
-import * as d3 from 'd3'
+import { Component, OnInit } from '@angular/core';
+import {Edge} from "../../classes/graph/edge";
+import {Node} from "../../classes/graph/node";
 
 @Component({
     selector: 'app-graph',
-    templateUrl: 'graph.component.html',
+    templateUrl: './graph.component.html',
     styleUrls: ['./graph.component.css']
 })
 export class GraphComponent implements OnInit {
-    @ViewChild('svg', {static: true}) svgElement!: ElementRef<SVGElement>
+    nodes: Node[] = [];
+    edges: Edge[] = [];
+    width = 800;
+    height = 600;
 
-    private nodes = [
-        {id: 'Node 1'},
-        {id: 'Node 2'},
-        {id: 'Node 3'},
-        {id: 'Node 4'}
-    ]
-
-    private links = [
-        {source: 'Node 1', target: 'Node 2'},
-        {source: 'Node 2', target: 'Node 3'},
-        {source: 'Node 3', target: 'Node 4'}
-    ]
-
-    ngOnInit(): void {
-        this.createNetworkGraph()
+    ngOnInit() {
+        this.initGraph();
+        this.startSimulation();
     }
 
-    private createNetworkGraph(): void {
-        const svg = d3.select(this.svgElement.nativeElement)
-        const width = +svg.attr('width')
-        const height = +svg.attr('height')
+    initGraph() {
+        // Initialize nodes and edges
+        for (let i = 0; i < 10; i++) {
+            this.nodes.push({
+                id: i,
+                x: Math.random() * this.width,
+                y: Math.random() * this.height,
+                vx: 0,
+                vy: 0,
+                isDragged: false
+            });
+        }
 
-        // Initialize simulation with forces
-        const simulation = d3.forceSimulation(this.nodes as any)
-            .force('link', d3.forceLink(this.links).id((d: any) => d.id).distance(100))
-            .force('charge', d3.forceManyBody().strength(-300))
-            .force('center', d3.forceCenter(width / 2, height / 2))
-
-        // Draw links
-        const link = svg.selectAll('.link')
-            .data(this.links)
-            .enter().append('line')
-            .attr('class', 'link')
-            .style('stroke', '#999')
-            .style('stroke-width', 2)
-
-        // Draw nodes
-        const node = svg.selectAll('.node')
-            .data(this.nodes)
-            .enter().append('circle')
-            .attr('class', 'node')
-            .attr('r', 10)
-            .style('fill', '#ffab00')
-            .call(d3.drag<SVGCircleElement, any>()
-                .on('start', (event: any, d: any) => this.dragStarted(event, d, simulation))
-                .on('drag', (event: any, d: any) => this.dragged(event, d))
-                .on('end', (event: any, d: any) => this.dragEnded(event, d, simulation))
-            )
-
-        // Update positions on tick
-        simulation.on('tick', () => {
-            link
-                .attr('x1', (d: any) => d.source.x)
-                .attr('y1', (d: any) => d.source.y)
-                .attr('x2', (d: any) => d.target.x)
-                .attr('y2', (d: any) => d.target.y)
-
-            node
-                .attr('cx', (d: any) => d.x)
-                .attr('cy', (d: any) => d.y)
-        })
+        for (let i = 0; i < this.nodes.length - 1; i++) {
+            this.edges.push({ source: this.nodes[i], target: this.nodes[i + 1] });
+        }
     }
 
-    private dragStarted(event: any, d: any, simulation: any): void {
-        if (!event.active) simulation.alphaTarget(0.3).restart()
-        d.fx = d.x
-        d.fy = d.y
+    startSimulation() {
+        setInterval(() => this.updatePhysics(), 16);  // Roughly 60 FPS
     }
 
-    private dragged(event: any, d: any): void {
-        d.fx = event.x
-        d.fy = event.y
+    updatePhysics() {
+        const k = 0.2;  // Spring constant for faster attraction
+        const damping = 0.8;  // Reduced damping for quicker stabilization
+        const repulsionStrength = 800;  // Increased repulsion strength for faster spread
+        const boundaryForce = 0.1;  // Force to keep nodes within boundaries
+        const nodeRadius = 10;  // Radius of the node, used for padding
+
+        // Calculate repulsive force between every pair of nodes
+        for (let i = 0; i < this.nodes.length; i++) {
+            for (let j = i + 1; j < this.nodes.length; j++) {
+                const nodeA = this.nodes[i];
+                const nodeB = this.nodes[j];
+
+                const dx = nodeB.x - nodeA.x;
+                const dy = nodeB.y - nodeA.y;
+                const distance = Math.sqrt(dx * dx + dy * dy) || 1;  // Prevent division by zero
+
+                // Calculate repulsive force (Coulomb-like)
+                const force = (repulsionStrength / (distance * distance));
+
+                // Apply the force in opposite directions to each node
+                const fx = (dx / distance) * force;
+                const fy = (dy / distance) * force;
+
+                if (!nodeA.isDragged) {
+                    nodeA.vx -= fx;
+                    nodeA.vy -= fy;
+                }
+                if (!nodeB.isDragged) {
+                    nodeB.vx += fx;
+                    nodeB.vy += fy;
+                }
+            }
+        }
+
+        // Calculate spring (attractive) force for edges
+        for (const edge of this.edges) {
+            const dx = edge.target.x - edge.source.x;
+            const dy = edge.target.y - edge.source.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            const force = (distance - 100) * k;
+
+            const fx = (dx / distance) * force;
+            const fy = (dy / distance) * force;
+
+            if (!edge.source.isDragged) {
+                edge.source.vx += fx;
+                edge.source.vy += fy;
+            }
+            if (!edge.target.isDragged) {
+                edge.target.vx -= fx;
+                edge.target.vy -= fy;
+            }
+        }
+
+        // Update node positions, apply damping, and enforce boundary conditions with padding
+        for (const node of this.nodes) {
+            if (!node.isDragged) {
+                node.vx *= damping;
+                node.vy *= damping;
+                node.x += node.vx;
+                node.y += node.vy;
+
+                // Boundary force with padding to keep nodes within canvas
+                if (node.x < nodeRadius) {
+                    node.vx += boundaryForce;
+                } else if (node.x > this.width - nodeRadius) {
+                    node.vx -= boundaryForce;
+                }
+                if (node.y < nodeRadius) {
+                    node.vy += boundaryForce;
+                } else if (node.y > this.height - nodeRadius) {
+                    node.vy -= boundaryForce;
+                }
+
+                // Clamp positions to stay within the canvas, considering the padding
+                node.x = Math.max(nodeRadius, Math.min(this.width - nodeRadius, node.x));
+                node.y = Math.max(nodeRadius, Math.min(this.height - nodeRadius, node.y));
+            }
+        }
     }
 
-    private dragEnded(event: any, d: any, simulation: any): void {
-        if (!event.active) simulation.alphaTarget(0)
-        d.fx = null
-        d.fy = null
+
+
+
+    onDragStart(node: Node) {
+        node.isDragged = true;
+    }
+
+    onDrag(node: Node, event: MouseEvent) {
+        if(node.isDragged) {
+            node.x = event.offsetX;
+            node.y = event.offsetY;
+        }
+    }
+
+    onDragEnd(node: Node) {
+        node.isDragged = false;
     }
 }
