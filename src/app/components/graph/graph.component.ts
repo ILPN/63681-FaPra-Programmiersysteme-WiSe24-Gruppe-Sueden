@@ -61,4 +61,6 @@ export class GraphComponent implements OnInit {
     onDragEnd(node: Node) {
         node.isDragged = false;
     }
+
+    protected readonly PhysicsHelper = PhysicsHelper;
 }
