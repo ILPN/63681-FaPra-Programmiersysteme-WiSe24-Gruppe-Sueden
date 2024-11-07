@@ -13,6 +13,7 @@ import {ExampleFileComponent} from './components/example-file/example-file.compo
 import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {ExampleButtonComponent} from "./components/example-button/example-button.component";
+import {DataInputComponent} from "./components/data-input/data-input.component";
 import {GraphComponent} from "./components/graph/graph.component";
 
 @NgModule({
@@ -30,7 +31,11 @@ import {GraphComponent} from "./components/graph/graph.component";
         MatInputModule,
         MatButtonModule,
         MatIconModule,
-        ReactiveFormsModule], providers: [
+        ReactiveFormsModule, DataInputComponent],
+    exports: [
+        ExampleButtonComponent
+    ],
+    providers: [
         {
             provide: APP_BASE_HREF,
             useFactory: (s: PlatformLocation) => s.getBaseHrefFromDOM(),
