@@ -2,6 +2,9 @@ import {Component} from "@angular/core";
 import {MatFormField, MatLabel} from "@angular/material/form-field";
 import {MatInput} from "@angular/material/input";
 import {MatButton} from "@angular/material/button";
+import {DirectlyFollows} from "../../classes/directly-follows";
+import {ProcessGraphService} from '../../services/process-graph.service';
+
 
 @Component({
     standalone: true,
@@ -16,6 +19,8 @@ import {MatButton} from "@angular/material/button";
     ]
 })
 export class DataInputComponent {
+
+    constructor(private processGraphService: ProcessGraphService) { }
 
     /***************************************************************** File *****************************************************************/
     protected dragCounter = 0
@@ -58,8 +63,25 @@ export class DataInputComponent {
             }
             result.push(events)
         }
+//TODO: Error-Handling und Null-Prüfung
+        // Umwandeln des result in ein DFG Objekt
+        let directlyFollowsGraph = new DirectlyFollows();
+        for (const trace of result) {
+            let tempElement = trace[0];
+            directlyFollowsGraph.addSuccessor("play", tempElement)
+            let traceLength = trace.length;
+            for (let i=1; i < traceLength; i++) {
+                directlyFollowsGraph.addSuccessor(tempElement, trace[i]);
+                tempElement = trace[i];
+            }
+            directlyFollowsGraph.addSuccessor(trace[traceLength-1],"stop")
+        }
+        directlyFollowsGraph.createPredecessorMap();
+        directlyFollowsGraph.setEventLog(result);
 
-        console.log(result) // TODO robin
+        this.processGraphService.addDfg(directlyFollowsGraph);
+
+
     }
 
     /***************************************************************** Manual Input *****************************************************************/

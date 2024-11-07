@@ -26,6 +26,8 @@ export class ValidationService {
                     }
                     this.processGraphService.removeDfg(data.dfg)
                 }
+                //evtl wie flag benutzen → vor Datenübertragung von Frontend auf validation-data.service auf false setzen
+                this.processGraphService.setDataUpdated(true);
             }
         })
     }
@@ -46,7 +48,7 @@ export class ValidationService {
 
     }
 
-
+//TODO: Eventlog abändern und einfügen
     private createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
         let resultDFG: DirectlyFollows = new DirectlyFollows()
         let tempNodeSet: Set<string> = new Set()
@@ -111,6 +113,7 @@ export class ValidationService {
         //Prüfe, ob Schnittmenge leer
         let intersection = new Set<string>([...firstNodeSet].filter(element => secondNodeSet.has(element)))
         if (intersection.size !== 0) {
+            //TODO: überhaupt nötig?
             console.log("Schnitt nicht leer")
             return false
         }
