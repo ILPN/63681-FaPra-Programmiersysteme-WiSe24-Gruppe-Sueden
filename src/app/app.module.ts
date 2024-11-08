@@ -14,12 +14,14 @@ import {APP_BASE_HREF, PlatformLocation} from "@angular/common";
 import {provideHttpClient, withInterceptorsFromDi} from "@angular/common/http";
 import {ExampleButtonComponent} from "./components/example-button/example-button.component";
 import {DataInputComponent} from "./components/data-input/data-input.component";
+import {GraphComponent} from "./components/graph/graph.component";
 
 @NgModule({
     declarations: [
         AppComponent,
         DisplayComponent,
         FooterComponent,
+        GraphComponent,
         ExampleFileComponent,
         ExampleButtonComponent,
     ],
