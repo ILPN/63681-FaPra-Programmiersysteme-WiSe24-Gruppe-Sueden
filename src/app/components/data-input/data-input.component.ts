@@ -1,10 +1,9 @@
 import {Component} from "@angular/core";
-import {MatFormField, MatLabel} from "@angular/material/form-field";
+import {MatError, MatFormField, MatLabel} from "@angular/material/form-field";
 import {MatInput} from "@angular/material/input";
 import {MatButton} from "@angular/material/button";
-import {DirectlyFollows} from "../../classes/directly-follows";
 import {ProcessGraphService} from '../../services/process-graph.service';
-
+import {FormControl, ReactiveFormsModule, ValidatorFn} from "@angular/forms";
 
 @Component({
     standalone: true,
@@ -15,12 +14,15 @@ import {ProcessGraphService} from '../../services/process-graph.service';
         MatFormField,
         MatLabel,
         MatInput,
-        MatButton
+        MatButton,
+        ReactiveFormsModule,
+        MatError
     ]
 })
 export class DataInputComponent {
 
-    constructor(private processGraphService: ProcessGraphService) { }
+    constructor(private processGraphService: ProcessGraphService) {
+    }
 
     /***************************************************************** File *****************************************************************/
     protected dragCounter = 0
@@ -50,9 +52,8 @@ export class DataInputComponent {
         this.handleFile(event.dataTransfer!.files[0])
     }
 
-
     protected async handleFile(file: File) {
-        const result: string[][] = []
+        const eventLog: string[][] = []
         const dom = new DOMParser().parseFromString(await file.text(), 'text/xml')
         const traceNodes = dom.getElementsByTagName("trace")
         for (let i = 0; i < traceNodes.length; i++) {
@@ -61,32 +62,28 @@ export class DataInputComponent {
             for (let j = 0; j < traceEventNodes.length; j++) {
                 events.push(traceEventNodes[j].firstElementChild!.getAttribute("value") as string)
             }
-            result.push(events)
+            eventLog.push(events)
         }
-//TODO: Error-Handling und Null-Prüfung
-        // Umwandeln des result in ein DFG Objekt
-        let directlyFollowsGraph = new DirectlyFollows();
-        for (const trace of result) {
-            let tempElement = trace[0];
-            directlyFollowsGraph.addSuccessor("play", tempElement)
-            let traceLength = trace.length;
-            for (let i=1; i < traceLength; i++) {
-                directlyFollowsGraph.addSuccessor(tempElement, trace[i]);
-                tempElement = trace[i];
-            }
-            directlyFollowsGraph.addSuccessor(trace[traceLength-1],"stop")
-        }
-        directlyFollowsGraph.createPredecessorMap();
-        directlyFollowsGraph.setEventLog(result);
 
-        this.processGraphService.addDfg(directlyFollowsGraph);
-
-
+        this.processGraphService.createGraph(eventLog)
     }
 
     /***************************************************************** Manual Input *****************************************************************/
-    protected parseEventLog(log: string) {
+    protected eventLogValidator: ValidatorFn = control => {
+        const val = control?.value as string
+        if (!!val && val.match(/^[a-zA-Z0-9 +]+$/)) {
+            return null
+        }
+        return {invalid: true}
+    }
 
+    protected manualInputControl = new FormControl("event1 event2 event3 + event3 event1 event2 + event8 event1 event2", [this.eventLogValidator])
+
+    protected parseEventLog() {
+        const result: string[][] = this.manualInputControl.value!.split("+").map(rawTrace => {
+            return rawTrace.trim().split(" ").filter(it => it !== "")
+        })
+        this.processGraphService.createGraph(result)
     }
 
 }

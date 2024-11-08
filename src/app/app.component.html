@@ -13,10 +13,13 @@
 
     <hr>
 
-    <data-input/>
+    @if (processGraphService.graphSignal()) {
+        <app-graph class="w-full p-5 flex justify-center"/>
+    } @else {
+        <data-input/>
+    }
 
-    <app-graph class="w-full p-5 flex justify-center"/>
-
+    <!---->
     <!--    Main content    -->
     <!--<app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
 -->

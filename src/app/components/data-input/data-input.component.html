@@ -31,7 +31,12 @@
     <h2 class="mb-2">Enter Event Log manually</h2>
     <mat-form-field appearance="outline">
         <mat-label>Event Log</mat-label>
-        <textarea rows="6" matInput #manualInput></textarea>
+        <textarea rows="6" matInput [formControl]="manualInputControl"></textarea>
+        @if (manualInputControl.hasError("invalid")) {
+            <mat-error>
+                Bitte Format beachten: event1 event2 event3 + event2 event5 event3 + event2 event0
+            </mat-error>
+        }
     </mat-form-field>
-    <button mat-flat-button color="primary" (click)="parseEventLog(manualInput.value)">Import</button>
+    <button mat-flat-button color="primary" [disabled]="manualInputControl.invalid" (click)="parseEventLog()">Import</button>
 </div>
