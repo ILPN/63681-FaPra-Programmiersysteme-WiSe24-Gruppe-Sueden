@@ -20,8 +20,7 @@ import {ProcessGraphService} from '../../services/process-graph.service';
 })
 export class DataInputComponent {
 
-    constructor(private processGraphService: ProcessGraphService) {
-    }
+    constructor(private processGraphService: ProcessGraphService) { }
 
     /***************************************************************** File *****************************************************************/
     protected dragCounter = 0
@@ -64,10 +63,22 @@ export class DataInputComponent {
             }
             result.push(events)
         }
+//TODO: Error-Handling und Null-Prüfung
+        // Umwandeln des result in ein DFG Objekt
+        let directlyFollowsGraph = new DirectlyFollows();
+        for (const trace of result) {
+            let tempElement = trace[0];
+            directlyFollowsGraph.addSuccessor("play", tempElement)
+            let traceLength = trace.length;
+            for (let i=1; i < traceLength; i++) {
+                directlyFollowsGraph.addSuccessor(tempElement, trace[i]);
+                tempElement = trace[i];
+            }
+            directlyFollowsGraph.addSuccessor(trace[traceLength-1],"stop")
+        }
+        directlyFollowsGraph.createPredecessorMap();
+        directlyFollowsGraph.setEventLog(result);
 
-        // Umwandeln des result in ein DFG Objekt und injecten auf service
-        const directlyFollowsGraph = new DirectlyFollows();
-        directlyFollowsGraph.setDFGfromStringArray(result);
         this.processGraphService.addDfg(directlyFollowsGraph);
 
 
