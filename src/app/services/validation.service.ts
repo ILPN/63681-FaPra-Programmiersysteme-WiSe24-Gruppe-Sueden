@@ -33,7 +33,7 @@ export class ValidationService {
     }
 
 
-    //TODO: muss noch verknüpfung der DFG Rückgeben, ob parallel, sequenziell usw usf
+    //TODO: muss noch Verkettung der DFG Rückgeben, ob parallel, sequenziell usw usf
     validateAndReturn(dfg: DirectlyFollows,
                       firstNodeSet: Set<string>,
                       secondNodeSet: Set<string>,
@@ -89,12 +89,12 @@ export class ValidationService {
         }
         switch (cutType) {
             case "xor": {
-                return this.xorValidation(dfg, firstNodeSet, secondNodeSet)
-            }
-            case "parallel": {
-                break
+                return this.xorValidation(dfg, firstNodeSet, secondNodeSet);
             }
             case "sequence": {
+                return this.sequenceValidation(dfg, firstNodeSet, secondNodeSet);
+            }
+            case "parallel": {
                 break
             }
             case "loop": {
@@ -128,6 +128,7 @@ export class ValidationService {
         return true
     }
 
+    //Prüft auf XOR-Cut
     private xorValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //Prüfe, ob keine Kanten von Knotenmenge 1 nach Knotenmenge 2
         for (let nodeFirst of firstNodeSet) {
@@ -154,5 +155,35 @@ export class ValidationService {
         return [true, null]
     }
 
+    //TODO: Prüfen onb direkter Weg start -
+    // Prüft auf Sequence-Cut
+    private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+        //Prüfe ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
+        for (let nodeFirst of firstNodeSet) {
+            for (let nodeSecond of secondNodeSet) {
+                if (!dfg.existsPath(new Set([nodeFirst]), new Set([nodeSecond]))) {
+                    return [false, `Kein Weg von ${nodeFirst} nach ${nodeSecond} gefunden`]
+                }
+            }
+        }
+        // Prüfe, dass kein Weg von Knotenmenge 2 in Knotenmenge 1 führt
+        for (let nodeSecond of secondNodeSet) {
+            if (dfg.existsPath(new Set([nodeSecond]), firstNodeSet)) {
+                return [false, `Weg von ${nodeSecond} in erste Knotenmenge gefunden`]
+            }
+        }
+        return [true, null]
+    }
 
+    private parallelValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+        for (let nodeFirst of firstNodeSet) {
+            for (let nodeSecond of secondNodeSet) {
+                //TODO: Kanten finden über ARCS?! Warte pull request ab
+            }
+
+        }
+        return [true, null]
+
+
+    }
 }
