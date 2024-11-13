@@ -12,18 +12,7 @@ export class ProcessGraphService {
     createGraph(eventLog: string[][]) {
         // Umwandeln des result in ein DFG Objekt
         let directlyFollowsGraph = new DirectlyFollows();
-        for (const trace of eventLog) {
-            let tempElement = trace[0];
-            directlyFollowsGraph.addSuccessor("play", tempElement)
-            let traceLength = trace.length;
-            for (let i = 1; i < traceLength; i++) {
-                directlyFollowsGraph.addSuccessor(tempElement, trace[i]);
-                tempElement = trace[i];
-            }
-            directlyFollowsGraph.addSuccessor(trace[traceLength - 1], "stop")
-        }
-        directlyFollowsGraph.createPredecessorMap();
-        directlyFollowsGraph.setEventLog(eventLog);
+        directlyFollowsGraph.setDFGfromStringArray(eventLog)
 
         this.graphSignal.set({
             validationSuccessful: false,
