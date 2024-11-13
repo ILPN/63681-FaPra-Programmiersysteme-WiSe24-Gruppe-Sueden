@@ -47,15 +47,19 @@ export class DirectlyFollows {
         return this.predecessorMap.get(node)
     }
 
-    //gibt alle Knoten mit Ausnahme von play/stop zurück
-    getNodes(): Set<string> {
-        let result = new Set<string>
+
+    setNodes(): void {
+        let nodeSet = new Set<string>
         for (let key of this.successorMap.keys()) {
             if (!["play", "stop"].includes(key)) {
-                result.add(key)
+                nodeSet.add(key)
             }
         }
-        return result
+        this.nodes = nodeSet;
+    }
+    //gibt alle Knoten mit Ausnahme von play/stop zurück
+    getNodes(): Set<string> {
+        return this.nodes;
     }
 
     getPlayNodes(): Set<string> | undefined {
@@ -66,6 +70,42 @@ export class DirectlyFollows {
     getStopNodes(): Set<string> | undefined {
         return this.predecessorMap.get("stop")
     }
+
+    generateArcs(): void {
+        this.arcs =[];
+        for (const [origin, successors] of this.successorMap.entries()) {
+            for (const successor of successors) {
+                const arc: Arc = {source: origin, target: successor};
+                this.arcs.push(arc);
+            }
+        }
+    }
+
+    getArcs(): Arc[] {
+        if (this.arcs.length == 0) {
+            this.generateArcs()
+        }
+        return this.arcs;
+    }
+
+    //TODO: Error-Handling und Null-Prüfung
+    public setDFGfromStringArray(inputStringArray: string[][]): void {
+        for (const trace of inputStringArray) {
+            let tempElement = trace[0];
+            this.addSuccessor("play", tempElement)
+            let traceLength = trace.length;
+            for (let i=1; i < traceLength; i++) {
+                this.addSuccessor(tempElement, trace[i]);
+                tempElement = trace[i];
+            }
+            this.addSuccessor(trace[traceLength-1],"stop")
+        }
+        this.createPredecessorMap();
+        this.setEventLog(inputStringArray);
+        this.setNodes();
+        this.generateArcs();
+    }
+
 
     private recursivePathDepthSearch(originNode: string,
                                      wanted: Set<string>,
