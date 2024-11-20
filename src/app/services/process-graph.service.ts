@@ -59,6 +59,16 @@ export class ProcessGraphService {
     getDataUpdated(): boolean {
         return false/*this.processGraph.dataUpdated;*/
     }
+
+    batchUpdateProcessGraph(updates: (graph: ProcessGraph) => void) {
+        const currentGraph = this.graphSignal();  // Schritt 1
+        if (currentGraph) {  // Schritt 2
+            const updatedGraph = { ...currentGraph };  // Schritt 3
+            updates(updatedGraph);  // Schritt 4
+            this.graphSignal.set(updatedGraph);  // Schritt 5
+        }
+    }
+
 }
 
 

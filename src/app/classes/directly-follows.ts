@@ -39,11 +39,11 @@ export class DirectlyFollows {
         return this.eventLog;
     }
 
-    getSuccessor(node: string): Set<string> | undefined {
+    getSuccessors(node: string): Set<string> | undefined {
         return this.successorMap.get(node)
     }
 
-    getPredecessor(node: string): Set<string> | undefined {
+    getPredecessors(node: string): Set<string> | undefined {
         return this.predecessorMap.get(node)
     }
 
@@ -88,6 +88,22 @@ export class DirectlyFollows {
         return this.arcs;
     }
 
+    getArcsOfSourceNode(source: string): Arc[] {
+        return this.arcs.filter(arc => arc.source === source)
+    }
+
+    existsArcWithReason(source:string, wantedTargets:Set<string>): boolean {
+        let arcsOfSource = this.getArcsOfSourceNode(source);
+        let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
+        for (const target of wantedTargets) {
+            if (!targetsOfSource.has(target)) {
+                return false;
+            }
+        }
+        return true
+    }
+
+
     //TODO: Error-Handling und Null-Prüfung
     public setDFGfromStringArray(inputStringArray: string[][]): void {
         for (const trace of inputStringArray) {
@@ -120,7 +136,7 @@ export class DirectlyFollows {
             return false
         }
         visited.add(originNode)
-        const successorNodeSet = this.getSuccessor(originNode)
+        const successorNodeSet = this.getSuccessors(originNode)
         if (successorNodeSet) {
             //gehe alle Folgeknoten durch
             for (let successorNode of successorNodeSet) {
@@ -147,6 +163,16 @@ export class DirectlyFollows {
             }
         }
         return true
+    }
+
+    // Prüft, ob ein Pfad play->node->stop über eine gegebene Knotenmenge existiert
+    existsFullPathOverNode(node: string, allowedNodes: Set<string>): boolean {
+        if (this.existsPath(new Set(["play"]), new Set([node]), allowedNodes)){
+            if (this.existsPath(new Set([node]), new Set(["stop"]), allowedNodes)){
+                return true;
+            }
+        }
+        return false;
     }
 
     createPredecessorMap(): void {

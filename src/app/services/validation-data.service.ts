@@ -1,17 +1,24 @@
-import {Injectable} from '@angular/core'
+import {Injectable, signal} from '@angular/core'
 import {BehaviorSubject} from 'rxjs'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationData} from '../classes/validation-data'
+import {CutType} from "../classes/cut-type.enum";
 
 @Injectable({
     providedIn: 'root'
 })
 export class ValidationDataService {
-    private dataSubject = new BehaviorSubject<ValidationData | null>(null)
-    data$ = this.dataSubject.asObservable()
 
-    // Aktualisiere alle Daten auf einmal
-    updateData(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: string) {
-        this.dataSubject.next({dfg, firstNodeSet, secondNodeSet, cutType})
+    // Signal für die Validierungsdaten
+    validationDataSignal = signal<ValidationData | null>(null);
+
+    // Methode zur Aktualisierung der Validierungsdaten
+    updateData(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType) {
+        this.validationDataSignal.set({ dfg, firstNodeSet, secondNodeSet, cutType });
+    }
+
+    // Methode zur Abrufung der aktuellen Validierungsdaten
+    getValidationData() {
+        return this.validationDataSignal();
     }
 }
