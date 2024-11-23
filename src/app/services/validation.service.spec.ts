@@ -18,7 +18,7 @@ describe('ValidationService', () => {
     });
 
     describe('validateAndReturn', () => {
-        it('should validate and split DFG correctly with XOR Cut and then further with XOR Cut', () => {
+        it('should validate and split DFG correctly with XOR-Cut and then further with XOR-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['A', 'B', 'C', 'D', 'B', 'C'],
@@ -98,7 +98,7 @@ describe('ValidationService', () => {
             expect(ssdResult[1]).toBe('xor');
         });
 
-        it('should validate and split DFG correctly with XOR Cut and then further with Sequence Cut', () => {
+        it('should validate and split DFG correctly with XOR-Cut and then further with Sequence-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['D', 'E', 'F'],
@@ -150,7 +150,7 @@ describe('ValidationService', () => {
             expect(ssdResult[1]).toBe('Weg von E in erste Knotenmenge gefunden');
         });
 
-        it('should validate and split DFG correctly with XOR Cut and then further with Parallel Cut', () => {
+        it('should validate and split DFG correctly with XOR-Cut and then further with Parallel-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C', 'D'],
                 ['A', 'C', 'B', 'D'],
@@ -242,7 +242,7 @@ describe('ValidationService', () => {
             expect(ssdResult[0]).toBeFalse(); // Kante von G nach F fehlt für Parallel-Cut
         });
 
-        it('should validate and split DFG correctly with XOR Cut and then further with Loop Cut', () => {
+        it('should validate and split DFG correctly with XOR-Cut and then further with Loop-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['A', 'B', 'C', 'D', 'A', 'B', 'C'],
@@ -315,7 +315,7 @@ describe('ValidationService', () => {
 
         });
 
-        it('should validate and split DFG correctly with Sequence Cut and then further with XOR Cut', () => {
+        it('should validate and split DFG correctly with Sequence-Cut and then further with XOR-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['A', 'E', 'F'],
@@ -382,7 +382,7 @@ describe('ValidationService', () => {
             expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
         });
 
-        it('should validate and split DFG correctly with Sequence Cut and then further with Sequence Cut', () => {
+        it('should validate and split DFG correctly with Sequence-Cut and then further with Sequence-Cut', () => {
             const inputStringArray: string[][] = [
                 ['A', 'C', 'F', 'H'],
                 ['A', 'C', 'G', 'H'],
@@ -497,7 +497,7 @@ describe('ValidationService', () => {
             expect(ssdResult[3]?.getPredecessors('H')).not.toContain('G');
         });
 
-        it('should validate and split DFG correctly with Sequence Cut and then further with Parallel Cut', () => {
+        it('should validate and split DFG correctly with Sequence-Cut and then further with Parallel-Cut', () => {
             // sequence{ parallel_1{ {A, B, C}, {D, E} }, parallel_2{ {W, X}, {Y, Z} } }
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C', 'D', 'E', 'W', 'X', 'Y', 'Z'],
@@ -601,7 +601,7 @@ describe('ValidationService', () => {
             expect(ssdResult[3]?.getSuccessors('Z')).toContain('stop');
         });
 
-        it('should validate and split DFG correctly with Sequence Cut and then further with Loop Cut', () => {
+        it('should validate and split DFG correctly with Sequence-Cut and then further with Loop-Cut', () => {
             // sequence{ loop_1{ {A, B, C}, {D, E} }, loop_2{ {F}, {G, H} } }
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C', 'F'],
@@ -673,6 +673,245 @@ describe('ValidationService', () => {
             expect(ssdResult[2]?.getSuccessors('G')).toContain('H');
             expect(ssdResult[2]?.getSuccessors('H')).toContain('F');
             expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+        });
+
+        it('should validate and split DFG correctly with Sequence-, XOR- and Parallel-Cut', () => {
+            // sequence{ {A}, xor{ parallel{ {B}, {C} }, {E} }, {D} }
+            const inputStringArray: string[][] = [
+                ['A', 'B', 'D'],
+                ['A', 'C', 'D'],
+                ['A', 'E', 'D'],
+                ['A', 'B', 'C', 'D'],
+                ['A', 'C', 'B', 'D']
+            ];
+
+            dfg.setDFGfromStringArray(inputStringArray);
+
+            const nsA = new Set(['A']); // nodeset {A}
+            const nsBCDE = new Set(['B', 'C', 'D', 'E']); // nodeset {B, C, D, E}
+
+            const result = service.validateAndReturn(dfg, nsA, nsBCDE, CutType.SEQUENCE);
+
+            expect(result[0]).toBeTrue();
+            expect(result[1]).toBe('sequence');
+
+
+            expect(result[2]?.getNodes()).toContain('A');
+            expect(result[3]?.getNodes()).toContain('B');
+            expect(result[3]?.getNodes()).toContain('C');
+            expect(result[3]?.getNodes()).toContain('D');
+            expect(result[3]?.getNodes()).toContain('E');
+
+            expect(result[2]?.getSuccessors('play')).toContain('A');
+            expect(result[2]?.getSuccessors('A')).toContain('stop');
+            expect(result[2]?.getSuccessors('A')).not.toContain('B');
+            expect(result[2]?.getSuccessors('A')).not.toContain('C');
+            expect(result[2]?.getSuccessors('A')).not.toContain('E');
+
+            expect(result[3]?.getSuccessors('play')).toContain('B');
+            expect(result[3]?.getSuccessors('play')).toContain('C');
+            expect(result[3]?.getSuccessors('play')).toContain('E');
+            expect(result[3]?.getSuccessors('B')).toContain('C');
+            expect(result[3]?.getSuccessors('C')).toContain('B');
+            expect(result[3]?.getSuccessors('B')).toContain('D');
+            expect(result[3]?.getSuccessors('C')).toContain('D');
+            expect(result[3]?.getSuccessors('E')).toContain('D');
+            expect(result[3]?.getSuccessors('D')).toContain('stop');
+            expect(result[3]?.getPredecessors('B')).not.toContain('A');
+            expect(result[3]?.getPredecessors('C')).not.toContain('A');
+            expect(result[3]?.getPredecessors('E')).not.toContain('A');
+
+            // result[2] ist Base-Case {A}
+            // result[3] als dfgBCDE weiter mit der Sequence-Validierung und Aufteilung
+            const dfgBCDE = result[3]
+            const nsBCE = new Set(['B', 'C', 'E']);
+            const nsD = new Set(['D']);
+
+            const resultDfgBCDE = service.validateAndReturn(dfgBCDE!, nsBCE, nsD, CutType.SEQUENCE);
+
+            expect(resultDfgBCDE[0]).toBeTrue();
+            expect(resultDfgBCDE[1]).toBe('sequence');
+            expect(resultDfgBCDE[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBCDE[2]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBCDE[2]?.getSuccessors('E')).toContain('stop');
+            expect(resultDfgBCDE[2]?.getSuccessors('B')).not.toContain('D');
+            expect(resultDfgBCDE[2]?.getSuccessors('C')).not.toContain('D');
+            expect(resultDfgBCDE[2]?.getSuccessors('E')).not.toContain('D');
+            expect(resultDfgBCDE[3]?.getSuccessors('play')).toContain('D');
+            expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('B');
+            expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('C');
+            expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('E');
+
+            // resultDfgBCDE[3] ist Base-Case {D}
+            // resultDfgBCDE[2] als dfgBCE weiter mit der XOR-Validierung und Aufteilung
+            const dfgBCE = resultDfgBCDE[2]
+            const nsBC = new Set(['B', 'C']);
+            const nsE = new Set(['E']);
+
+            const resultDfgBCE = service.validateAndReturn(dfgBCE!, nsBC, nsE, CutType.XOR);
+
+            expect(resultDfgBCE[0]).toBeTrue();
+            expect(resultDfgBCE[1]).toBe('xor');
+            expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('B');
+            expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('C');
+            expect(resultDfgBCE[2]?.getSuccessors('B')).toContain('C');
+            expect(resultDfgBCE[2]?.getSuccessors('C')).toContain('B');
+            expect(resultDfgBCE[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBCE[2]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBCE[3]?.getSuccessors('play')).toContain('E');
+            expect(resultDfgBCE[3]?.getSuccessors('E')).toContain('stop');
+
+            // resultDfgBCE[3] ist Base-Case {E}
+            // resultDfgBCE[2] als dfgBC weiter mit der Parallel-Validierung und Aufteilung
+            const dfgBC = resultDfgBCE[2]
+            const nsB = new Set(['B']);
+            const nsC = new Set(['C']);
+
+            const resultDfgBC = service.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL);
+            expect(resultDfgBC[0]).toBeTrue();
+            expect(resultDfgBC[1]).toBe('parallel');
+            expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
+            expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
+            expect(resultDfgBC[3]?.getSuccessors('play')).toContain('C');
+            expect(resultDfgBC[3]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBC[3]?.getSuccessors('C')).not.toContain('B');
+
+            // resultDfgBC[2] ist Base-Case {B}
+            // resultDfgBC[3] ist Base-Case {C}
+        });
+
+        it('should validate and split DFG correctly with Sequence-, Loop- and Parallel-Cut', () => {
+            // sequence{ {A}, loop{ parallel{ {B}, {C} }, sequence{ {E}, {F} } }, {D} }
+            const inputStringArray: string[][] = [
+                ['A', 'B', 'D'],
+                ['A', 'C', 'D'],
+                ['A', 'B', 'C', 'D'],
+                ['A', 'C', 'B', 'D'],
+                ['A', 'B', 'E', 'F', 'C', 'D'],
+                ['A', 'B', 'E', 'F', 'C', 'D'],
+                ['A', 'B', 'C', 'E', 'F', 'B', 'D'],
+                ['A', 'C', 'B', 'E', 'F', 'C', 'D'],
+                ['A', 'C', 'E', 'F', 'B', 'D'],
+            ];
+
+            dfg.setDFGfromStringArray(inputStringArray);
+
+            const nsA = new Set(['A']); // nodeset {A}
+            const nsBCDEF = new Set(['B', 'C', 'D', 'E', 'F']); // nodeset {B, C, D, E, F}
+
+            const result = service.validateAndReturn(dfg, nsA, nsBCDEF, CutType.SEQUENCE);
+
+            expect(result[0]).toBeTrue();
+            expect(result[1]).toBe('sequence');
+
+            expect(result[2]?.getSuccessors('play')).toContain('A');
+            expect(result[2]?.getSuccessors('A')).toContain('stop');
+            expect(result[2]?.getSuccessors('A')).not.toContain('B');
+            expect(result[2]?.getSuccessors('A')).not.toContain('C');
+
+            expect(result[3]?.getSuccessors('play')).toContain('B');
+            expect(result[3]?.getSuccessors('play')).toContain('C');
+            expect(result[3]?.getSuccessors('B')).toContain('C');
+            expect(result[3]?.getSuccessors('C')).toContain('B');
+            expect(result[3]?.getSuccessors('B')).toContain('D');
+            expect(result[3]?.getSuccessors('C')).toContain('D');
+            expect(result[3]?.getSuccessors('B')).toContain('E');
+            expect(result[3]?.getSuccessors('C')).toContain('E');
+            expect(result[3]?.getSuccessors('E')).toContain('F');
+            expect(result[3]?.getSuccessors('F')).toContain('B');
+            expect(result[3]?.getSuccessors('F')).toContain('C');
+            expect(result[3]?.getSuccessors('D')).toContain('stop');
+            expect(result[3]?.getPredecessors('B')).not.toContain('A');
+            expect(result[3]?.getPredecessors('C')).not.toContain('A');
+
+            // result[2] ist Base-Case {A}
+            // result[3] als dfgBCDEF weiter mit der Sequence-Validierung und Aufteilung
+            const dfgBCDEF = result[3]
+            const nsBCEF = new Set(['B', 'C', 'E', 'F']);
+            const nsD = new Set(['D']);
+
+            const resultDfgBCDEF = service.validateAndReturn(dfgBCDEF!, nsBCEF, nsD, CutType.SEQUENCE);
+
+            expect(resultDfgBCDEF[0]).toBeTrue();
+            expect(resultDfgBCDEF[1]).toBe('sequence');
+            expect(resultDfgBCDEF[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBCDEF[2]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBCDEF[2]?.getSuccessors('E')).not.toContain('stop');
+            expect(resultDfgBCDEF[2]?.getSuccessors('F')).not.toContain('stop');
+            expect(resultDfgBCDEF[2]?.getPredecessors('E')).not.toContain('play');
+            expect(resultDfgBCDEF[2]?.getPredecessors('F')).not.toContain('play');
+            expect(resultDfgBCDEF[2]?.getSuccessors('B')).not.toContain('D');
+            expect(resultDfgBCDEF[2]?.getSuccessors('C')).not.toContain('D');
+            expect(resultDfgBCDEF[2]?.getSuccessors('E')).not.toContain('D');
+            expect(resultDfgBCDEF[2]?.getSuccessors('F')).not.toContain('D');
+            expect(resultDfgBCDEF[3]?.getSuccessors('play')).toContain('D');
+            expect(resultDfgBCDEF[3]?.getPredecessors('D')).not.toContain('B');
+            expect(resultDfgBCDEF[3]?.getPredecessors('D')).not.toContain('C');
+
+            // resultDfgBCDEF[3] ist Base-Case {D}
+            // resultDfgBCDEF[2] als dfgBCEF weiter mit der Loop-Validierung und Aufteilung
+            const dfgBCEF = resultDfgBCDEF[2]
+            const nsBC = new Set(['B', 'C']);
+            const nsEF = new Set(['E', 'F']);
+
+            const resultDfgBCEF = service.validateAndReturn(dfgBCEF!, nsBC, nsEF, CutType.LOOP);
+
+            expect(resultDfgBCEF[0]).toBeTrue();
+            expect(resultDfgBCEF[1]).toBe('loop');
+            expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('B');
+            expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('C');
+            expect(resultDfgBCEF[2]?.getSuccessors('B')).toContain('C');
+            expect(resultDfgBCEF[2]?.getSuccessors('C')).toContain('B');
+            expect(resultDfgBCEF[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBCEF[2]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBCEF[2]?.getSuccessors('B')).not.toContain('E');
+            expect(resultDfgBCEF[2]?.getSuccessors('C')).not.toContain('E');
+            expect(resultDfgBCEF[2]?.getPredecessors('B')).not.toContain('F');
+            expect(resultDfgBCEF[2]?.getPredecessors('C')).not.toContain('F');
+            expect(resultDfgBCEF[3]?.getSuccessors('play')).toContain('E');
+            expect(resultDfgBCEF[3]?.getSuccessors('E')).toContain('F');
+            expect(resultDfgBCEF[3]?.getSuccessors('F')).toContain('stop');
+            expect(resultDfgBCEF[3]?.getSuccessors('F')).not.toContain('B');
+            expect(resultDfgBCEF[3]?.getSuccessors('F')).not.toContain('C');
+            expect(resultDfgBCEF[3]?.getPredecessors('E')).not.toContain('B');
+            expect(resultDfgBCEF[3]?.getPredecessors('E')).not.toContain('C');
+
+            // resultDfgBCEF[2] als dfgBC weiter mit der Parallel-Validierung und Aufteilung
+            const dfgBC = resultDfgBCEF[2]
+            const nsB = new Set(['B']);
+            const nsC = new Set(['C']);
+
+            const resultDfgBC = service.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL);
+            expect(resultDfgBC[0]).toBeTrue();
+            expect(resultDfgBC[1]).toBe('parallel');
+            expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
+            expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
+            expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
+            expect(resultDfgBC[3]?.getSuccessors('play')).toContain('C');
+            expect(resultDfgBC[3]?.getSuccessors('C')).toContain('stop');
+            expect(resultDfgBC[3]?.getSuccessors('C')).not.toContain('B');
+
+            // resultDfgBC[2] ist Base-Case {B}
+            // resultDfgBC[3] ist Base-Case {C}
+
+            // resultDfgBCEF[3] als dfgBC weiter mit der Sequence-Validierung und Aufteilung
+            const dfgEF = resultDfgBCEF[3]
+            const nsE = new Set(['E']);
+            const nsF = new Set(['F']);
+
+            const resultDfgEF = service.validateAndReturn(dfgEF!, nsE, nsF, CutType.SEQUENCE);
+            expect(resultDfgEF[0]).toBeTrue();
+            expect(resultDfgEF[1]).toBe('sequence');
+            expect(resultDfgEF[2]?.getSuccessors('play')).toContain('E');
+            expect(resultDfgEF[2]?.getSuccessors('E')).toContain('stop');
+            expect(resultDfgEF[2]?.getSuccessors('E')).not.toContain('F');
+            expect(resultDfgEF[3]?.getSuccessors('play')).toContain('F');
+            expect(resultDfgEF[3]?.getSuccessors('F')).toContain('stop');
+            expect(resultDfgEF[3]?.getPredecessors('F')).not.toContain('E');
+
+            // resultDfgEF[2] ist Base-Case {E}
+            // resultDfgEF[3] ist Base-Case {F}
         });
     });
 
