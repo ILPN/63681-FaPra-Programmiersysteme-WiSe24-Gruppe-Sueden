@@ -675,6 +675,80 @@ describe('ValidationService', () => {
             expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
         });
 
+        it('should validate and split DFG correctly with Parallel-Cut and then further with XOR-Cut', () => {
+            // parallel{ xor1{ {A, B}, {C} }, xor2{ {D}, {E, F} } }
+            const inputStringArray: string[][] = [
+                ['A', 'B', 'C', 'F'],
+                ['A', 'B', 'C', 'D', 'E', 'A', 'B', 'C', 'F'],
+                ['A', 'B', 'C', 'F', 'G', 'H', 'F']
+            ];
+
+            dfg.setDFGfromStringArray(inputStringArray);
+
+            const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E']);
+            const secondNodeSet = new Set(['F', 'G', 'H']);
+
+            const result = service.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+
+            expect(result[0]).toBeTrue();
+            expect(result[1]).toBe('sequence');
+
+
+            expect(result[2]?.getNodes()).toContain('A'); // Teil-DFG1
+            expect(result[2]?.getNodes()).toContain('B');
+            expect(result[2]?.getNodes()).toContain('C');
+            expect(result[2]?.getNodes()).toContain('D');
+            expect(result[2]?.getNodes()).toContain('E');
+            expect(result[3]?.getNodes()).toContain('F'); // Teil-DFG2
+            expect(result[3]?.getNodes()).toContain('G');
+            expect(result[3]?.getNodes()).toContain('H');
+
+            expect(result[2]?.getSuccessors('play')).toContain('A');
+            expect(result[2]?.getSuccessors('A')).toContain('B');
+            expect(result[2]?.getSuccessors('B')).toContain('C');
+            expect(result[2]?.getSuccessors('C')).toContain('D');
+            expect(result[2]?.getSuccessors('D')).toContain('E');
+            expect(result[2]?.getSuccessors('E')).toContain('A');
+            expect(result[2]?.getSuccessors('C')).toContain('stop');
+
+            expect(result[3]?.getSuccessors('play')).toContain('F');
+            expect(result[3]?.getSuccessors('F')).toContain('G');
+            expect(result[3]?.getSuccessors('G')).toContain('H');
+            expect(result[3]?.getSuccessors('H')).toContain('F');
+            expect(result[3]?.getSuccessors('F')).toContain('stop');
+
+            // Teste ob weiter mit der Loop-Validierung und Aufteilung korrekt funktioniert
+            const fsd = result[2] // first-sub-dfg
+            const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
+            const fsdSecondNodeSet = new Set(['D', 'E']);
+
+            const fsdResult = service.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP);
+
+            expect(fsdResult[0]).toBeTrue();
+            expect(fsdResult[1]).toBe('loop');
+            expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
+            expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
+            expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
+            expect(fsdResult[2]?.getSuccessors('C')).toContain('stop');
+            expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
+            expect(fsdResult[3]?.getSuccessors('D')).toContain('E');
+            expect(fsdResult[3]?.getSuccessors('E')).toContain('stop');
+
+            const ssd = result[3] // second-sub-dfg
+            const ssdFirstNodeSet = new Set(['F']);
+            const ssdSecondNodeSet = new Set(['G', 'H']);
+
+            const ssdResult = service.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP);
+
+            expect(ssdResult[0]).toBeTrue();
+            expect(ssdResult[1]).toBe('loop');
+            expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
+            expect(ssdResult[2]?.getSuccessors('F')).toContain('G');
+            expect(ssdResult[2]?.getSuccessors('G')).toContain('H');
+            expect(ssdResult[2]?.getSuccessors('H')).toContain('F');
+            expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+        });
+
         it('should validate and split DFG correctly with Sequence-, XOR- and Parallel-Cut', () => {
             // sequence{ {A}, xor{ parallel{ {B}, {C} }, {E} }, {D} }
             const inputStringArray: string[][] = [
@@ -913,6 +987,7 @@ describe('ValidationService', () => {
             // resultDfgEF[2] ist Base-Case {E}
             // resultDfgEF[3] ist Base-Case {F}
         });
+
     });
 
     describe('validator', () => {
