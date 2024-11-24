@@ -678,74 +678,98 @@ describe('ValidationService', () => {
         it('should validate and split DFG correctly with Parallel-Cut and then further with XOR-Cut', () => {
             // parallel{ xor1{ {A, B}, {C} }, xor2{ {D}, {E, F} } }
             const inputStringArray: string[][] = [
-                ['A', 'B', 'C', 'F'],
-                ['A', 'B', 'C', 'D', 'E', 'A', 'B', 'C', 'F'],
-                ['A', 'B', 'C', 'F', 'G', 'H', 'F']
+                ['A', 'B'],
+                ['A', 'D'],
+                ['A', 'B', 'D'],
+                ['A', 'D', 'B'],
+                ['A', 'B', 'F'],
+                ['A', 'F', 'B'],
+                ['A', 'E', 'F'],
+                ['A', 'E', 'F', 'B'],
+                ['A', 'B', 'E', 'F'],
+                ['C'],
+                ['C', 'D'],
+                ['C', 'F'],
+                ['C', 'E', 'F'],
+                ['D'],
+                ['D', 'C'],
+                ['D', 'B'],
+                ['D', 'A', 'B'],
+                ['E', 'B'],
+                ['E', 'C'],
+                ['E', 'F'],
+                ['E', 'A', 'B'],
+                ['E', 'A', 'B', 'F'],
+                ['F', 'C'],
+                ['F', 'A', 'B']
             ];
 
             dfg.setDFGfromStringArray(inputStringArray);
 
-            const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E']);
-            const secondNodeSet = new Set(['F', 'G', 'H']);
+            const firstNodeSet = new Set(['A', 'B', 'C']);
+            const secondNodeSet = new Set(['D', 'E', 'F']);
 
-            const result = service.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+            const result = service.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.PARALLEL);
 
             expect(result[0]).toBeTrue();
-            expect(result[1]).toBe('sequence');
-
-
-            expect(result[2]?.getNodes()).toContain('A'); // Teil-DFG1
-            expect(result[2]?.getNodes()).toContain('B');
-            expect(result[2]?.getNodes()).toContain('C');
-            expect(result[2]?.getNodes()).toContain('D');
-            expect(result[2]?.getNodes()).toContain('E');
-            expect(result[3]?.getNodes()).toContain('F'); // Teil-DFG2
-            expect(result[3]?.getNodes()).toContain('G');
-            expect(result[3]?.getNodes()).toContain('H');
+            expect(result[1]).toBe('parallel');
 
             expect(result[2]?.getSuccessors('play')).toContain('A');
+            expect(result[2]?.getSuccessors('play')).toContain('C');
             expect(result[2]?.getSuccessors('A')).toContain('B');
-            expect(result[2]?.getSuccessors('B')).toContain('C');
-            expect(result[2]?.getSuccessors('C')).toContain('D');
-            expect(result[2]?.getSuccessors('D')).toContain('E');
-            expect(result[2]?.getSuccessors('E')).toContain('A');
+            expect(result[2]?.getSuccessors('A')).not.toContain('D');
+            expect(result[2]?.getSuccessors('A')).not.toContain('E');
+            expect(result[2]?.getSuccessors('A')).not.toContain('F');
+            expect(result[2]?.getSuccessors('B')).toContain('stop');
+            expect(result[2]?.getSuccessors('B')).not.toContain('D');
+            expect(result[2]?.getSuccessors('B')).not.toContain('E');
+            expect(result[2]?.getSuccessors('B')).not.toContain('F');
             expect(result[2]?.getSuccessors('C')).toContain('stop');
+            expect(result[2]?.getSuccessors('C')).not.toContain('D');
+            expect(result[2]?.getSuccessors('C')).not.toContain('E');
+            expect(result[2]?.getSuccessors('C')).not.toContain('F');
 
-            expect(result[3]?.getSuccessors('play')).toContain('F');
-            expect(result[3]?.getSuccessors('F')).toContain('G');
-            expect(result[3]?.getSuccessors('G')).toContain('H');
-            expect(result[3]?.getSuccessors('H')).toContain('F');
+            expect(result[3]?.getSuccessors('play')).toContain('D');
+            expect(result[3]?.getSuccessors('play')).toContain('E');
+            expect(result[3]?.getSuccessors('D')).toContain('stop');
+            expect(result[3]?.getSuccessors('D')).not.toContain('A');
+            expect(result[3]?.getSuccessors('D')).not.toContain('B');
+            expect(result[3]?.getSuccessors('D')).not.toContain('C');
+            expect(result[3]?.getSuccessors('E')).toContain('F');
+            expect(result[3]?.getSuccessors('E')).not.toContain('A');
+            expect(result[3]?.getSuccessors('E')).not.toContain('B');
+            expect(result[3]?.getSuccessors('E')).not.toContain('C');
             expect(result[3]?.getSuccessors('F')).toContain('stop');
+            expect(result[3]?.getSuccessors('F')).not.toContain('A');
+            expect(result[3]?.getSuccessors('F')).not.toContain('B');
+            expect(result[3]?.getSuccessors('F')).not.toContain('C');
 
-            // Teste ob weiter mit der Loop-Validierung und Aufteilung korrekt funktioniert
             const fsd = result[2] // first-sub-dfg
-            const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
-            const fsdSecondNodeSet = new Set(['D', 'E']);
+            const fsdFirstNodeSet = new Set(['A', 'B']);
+            const fsdSecondNodeSet = new Set(['C']);
 
-            const fsdResult = service.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP);
+            const fsdResult = service.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
 
             expect(fsdResult[0]).toBeTrue();
-            expect(fsdResult[1]).toBe('loop');
+            expect(fsdResult[1]).toBe('xor');
             expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
             expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-            expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
-            expect(fsdResult[2]?.getSuccessors('C')).toContain('stop');
-            expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
-            expect(fsdResult[3]?.getSuccessors('D')).toContain('E');
-            expect(fsdResult[3]?.getSuccessors('E')).toContain('stop');
+            expect(fsdResult[2]?.getSuccessors('B')).toContain('stop');
+            expect(fsdResult[3]?.getSuccessors('play')).toContain('C');
+            expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
 
             const ssd = result[3] // second-sub-dfg
-            const ssdFirstNodeSet = new Set(['F']);
-            const ssdSecondNodeSet = new Set(['G', 'H']);
+            const ssdFirstNodeSet = new Set(['D']);
+            const ssdSecondNodeSet = new Set(['E', 'F']);
 
-            const ssdResult = service.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP);
+            const ssdResult = service.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
 
             expect(ssdResult[0]).toBeTrue();
-            expect(ssdResult[1]).toBe('loop');
-            expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
-            expect(ssdResult[2]?.getSuccessors('F')).toContain('G');
-            expect(ssdResult[2]?.getSuccessors('G')).toContain('H');
-            expect(ssdResult[2]?.getSuccessors('H')).toContain('F');
+            expect(ssdResult[1]).toBe('xor');
+            expect(ssdResult[2]?.getSuccessors('play')).toContain('D');
+            expect(ssdResult[2]?.getSuccessors('D')).toContain('stop');
+            expect(ssdResult[3]?.getSuccessors('play')).toContain('E');
+            expect(ssdResult[3]?.getSuccessors('E')).toContain('F');
             expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
         });
 

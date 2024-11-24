@@ -107,7 +107,7 @@ describe('DirectlyFollows', () => {
 
     });
 
-    it('should return true when there is a full path from play to stop via a node with existsFullPathOverNode()', () => {
+    it('should return true when there is a full path from play to stop via a node using existsFullPathOverNode()', () => {
         const inputStringArray: string[][] = [
             ['A', 'B', 'C', 'D'],
             ['E', 'F', 'G', 'H'],
@@ -124,13 +124,20 @@ describe('DirectlyFollows', () => {
         expect(directlyFollows.existsFullPathOverNode('G', new Set(['E', 'F', 'G', 'H', 'I', 'J']))).toBeTrue();
         expect(directlyFollows.existsFullPathOverNode('K', new Set(['K']))).toBeTrue();
         expect(directlyFollows.existsFullPathOverNode('L', new Set(['L', 'M']))).toBeTrue();
-        expect(directlyFollows.existsFullPathOverNode('play', new Set(['play', 'A', 'B', 'C', 'D', 'stop']))).toBeTrue();
         expect(directlyFollows.existsFullPathOverNode('F', new Set(['A', 'B', 'C', 'D', 'F']))).toBeFalse();
         expect(directlyFollows.existsFullPathOverNode('B', new Set(['A', 'B', 'C']))).toBeFalse();
         expect(directlyFollows.existsFullPathOverNode('B', new Set(['B', 'E', 'F', 'G', 'H']))).toBeFalse();
+
+        // Testen mit 'play' und 'stop' als node und als Element von allowedNodes
+        expect(directlyFollows.existsFullPathOverNode('play', new Set(['play', 'A', 'B', 'C', 'D', 'stop']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('C', new Set(['play', 'A', 'B', 'C', 'D', 'stop']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('C', new Set(['play', 'A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('C', new Set(['A', 'B', 'C', 'D', 'stop']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('stop', new Set(['play', 'A', 'B', 'C', 'D', 'stop']))).toBeTrue();
+        // das Fehlen von 'stop' in allwedNodes scheint keine Auswirkung auf das Ergebnis zu haben, das Fehlen von 'play' jedoch schon
     });
 
-    it('should return nodes correctly with getNodes()', () => {
+    it('should return nodes without play and stop using getNodes()', () => {
         const inputStringArray: string[][] = [
             ['A', 'B', 'C', 'D'],
             ['E', 'F', 'G', 'H'],
@@ -141,7 +148,6 @@ describe('DirectlyFollows', () => {
 
         directlyFollows.setDFGfromStringArray(inputStringArray);
 
-        // Sollen play und stop doch in nodes enthalten sein?
         expect(directlyFollows.getNodes()).not.toContain('play');
         expect(directlyFollows.getNodes()).toContain('A');
         expect(directlyFollows.getNodes()).toContain('B');
