@@ -85,4 +85,74 @@ describe('DirectlyFollows', () => {
 
         expect(directlyFollows.getArcs().length).toBe(10);
     });
+
+    it('should return true when there is a path from nodeset1 to nodeset2 with existsPath()', () => {
+        const inputStringArray: string[][] = [
+            ['A', 'B', 'C', 'D'],
+            ['E', 'F', 'G', 'H'],
+            ['E', 'I', 'J', 'H'],
+        ];
+
+        directlyFollows.setDFGfromStringArray(inputStringArray);
+
+        expect(directlyFollows.existsPath(new Set(['play']), new Set(['C']), new Set(['play', 'A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsPath(new Set(['A']), new Set(['B']), new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsPath(new Set(['B']), new Set(['D']), new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsPath(new Set(['B']), new Set(['C', 'D']), new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsPath(new Set(['B']), new Set(['A', 'D']), new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsPath(new Set(['A']), new Set(['C']), new Set(['C', 'D']))).toBeFalse();
+        expect(directlyFollows.existsPath(new Set(['B']), new Set(['D']), new Set(['A', 'B']))).toBeFalse();
+        expect(directlyFollows.existsPath(new Set(['F']), new Set(['J']), new Set(['E', 'F', 'G', 'H', 'I', 'J']))).toBeFalse();
+        expect(directlyFollows.existsPath(new Set(['E']), new Set(['H']), new Set(['A', 'B', 'C', 'D']))).toBeFalse();
+
+    });
+
+    it('should return true when there is a full path from play to stop via a node with existsFullPathOverNode()', () => {
+        const inputStringArray: string[][] = [
+            ['A', 'B', 'C', 'D'],
+            ['E', 'F', 'G', 'H'],
+            ['E', 'I', 'J', 'H'],
+            ['K'],
+            ['L', 'M']
+        ];
+
+        directlyFollows.setDFGfromStringArray(inputStringArray);
+
+        // Voraussetzen, dass allowedNodes immer node enthält
+        expect(directlyFollows.existsFullPathOverNode('A', new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('B', new Set(['A', 'B', 'C', 'D']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('G', new Set(['E', 'F', 'G', 'H', 'I', 'J']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('K', new Set(['K']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('L', new Set(['L', 'M']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('play', new Set(['play', 'A', 'B', 'C', 'D', 'stop']))).toBeTrue();
+        expect(directlyFollows.existsFullPathOverNode('F', new Set(['A', 'B', 'C', 'D', 'F']))).toBeFalse();
+        expect(directlyFollows.existsFullPathOverNode('B', new Set(['A', 'B', 'C']))).toBeFalse();
+        expect(directlyFollows.existsFullPathOverNode('B', new Set(['B', 'E', 'F', 'G', 'H']))).toBeFalse();
+    });
+
+    it('should return nodes correctly with getNodes()', () => {
+        const inputStringArray: string[][] = [
+            ['A', 'B', 'C', 'D'],
+            ['E', 'F', 'G', 'H'],
+            ['E', 'I', 'J', 'H'],
+            ['K'],
+            ['L', 'M']
+        ];
+
+        directlyFollows.setDFGfromStringArray(inputStringArray);
+
+        // Sollen play und stop doch in nodes enthalten sein?
+        expect(directlyFollows.getNodes()).not.toContain('play');
+        expect(directlyFollows.getNodes()).toContain('A');
+        expect(directlyFollows.getNodes()).toContain('B');
+        expect(directlyFollows.getNodes()).toContain('C');
+        expect(directlyFollows.getNodes()).toContain('D');
+        expect(directlyFollows.getNodes()).toContain('E');
+        expect(directlyFollows.getNodes()).toContain('F');
+        expect(directlyFollows.getNodes()).toContain('G');
+        expect(directlyFollows.getNodes()).toContain('H');
+        expect(directlyFollows.getNodes()).toContain('I');
+        expect(directlyFollows.getNodes()).toContain('J');
+        expect(directlyFollows.getNodes()).not.toContain('stop');
+    });
 });
