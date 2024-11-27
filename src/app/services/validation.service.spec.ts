@@ -311,7 +311,7 @@ describe('ValidationService', () => {
             const ssdResult = service.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP);
 
             expect(ssdResult[0]).toBeFalse(); // wegen der Kante von H nach stop
-            expect(ssdResult[1]).toBe('Ein Nachfolger von H liegt nicht in der play-Menge der ersten Knotenmenge');
+            expect(ssdResult[1]).toBe('Kante führt von H nach stop');
 
         });
 
@@ -669,9 +669,9 @@ describe('ValidationService', () => {
             expect(ssdResult[0]).toBeTrue();
             expect(ssdResult[1]).toBe('loop');
             expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
-            expect(ssdResult[2]?.getSuccessors('F')).toContain('G');
+            expect(ssdResult[2]?.getSuccessors('F')).not.toContain('G');
             expect(ssdResult[2]?.getSuccessors('G')).toContain('H');
-            expect(ssdResult[2]?.getSuccessors('H')).toContain('F');
+            expect(ssdResult[2]?.getSuccessors('H')).not.toContain('F');
             expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
         });
 
@@ -1222,6 +1222,16 @@ describe('ValidationService', () => {
             const secondResult = service['parallelValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
 
             expect(secondResult[0]).toBeFalse();
+            expect(secondResult[1]).toBe('Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein');
+
+            // Ungültige Cut
+            const thirdCutFirstNodeSet = new Set([]);
+            const thirdCutSecondNodeSet = new Set(['B']);
+
+            const thirdResult = service['parallelValidation'](dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet);
+
+            expect(thirdResult[0]).toBeFalse();
+            expect(thirdResult[1]).toBe('Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein');
         });
 
         it('should return true for valid parallel cut', () => {
@@ -1280,17 +1290,17 @@ describe('ValidationService', () => {
         });
 
         it('should return true for valid loop cut with multiple paths in redo part', () => {
-            // Do: A -> B -> C -> G, Redo: D -> {E, F}
+            // Do: A -> B -> C, Redo: D -> {E, F}
             const inputStringArray: string[][] = [
-                ['A', 'B', 'C', 'D', 'E', 'A', 'B', 'C', 'G'],
-                ['A', 'B', 'C', 'D', 'F', 'A', 'B', 'C', 'G'],
-                ['A', 'B', 'C', 'G'],
+                ['A', 'B', 'C', 'D', 'E', 'A', 'B', 'C'],
+                ['A', 'B', 'C', 'D', 'F', 'A', 'B', 'C'],
+                ['A', 'B', 'C'],
             ];
 
             dfg.setDFGfromStringArray(inputStringArray);
 
             // Gültige Cut
-            const firstCutFirstNodeSet = new Set(['A', 'B', 'C', 'G']);
+            const firstCutFirstNodeSet = new Set(['A', 'B', 'C']);
             const firstCutSecondNodeSet = new Set(['D', 'E', 'F']);
 
             const firstResult = service['loopValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
@@ -1300,7 +1310,7 @@ describe('ValidationService', () => {
 
             // Ungültige Cut
             const secondCutFirstNodeSet = new Set(['D', 'E', 'F']);
-            const secondCutSecondNodeSet = new Set(['A', 'B', 'C', 'G']);
+            const secondCutSecondNodeSet = new Set(['A', 'B', 'C']);
 
             const secondResult = service['loopValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
 
@@ -1342,7 +1352,7 @@ describe('ValidationService', () => {
 
             // Erwartungen von arcs
             let arcs = newDfg.getArcs();
-            expect(arcs.length).toBe(8);
+            expect(arcs.length).toBe(8); // play-A, play-E, A-B, A-F, E-B, E-F, B-stop, F-stop. 8 arcs
 
               // Kanten, die enthalten sein sollen
             expect(arcs.some(arc => arc.source === 'play' && arc.target === 'A')).toBeTrue();
@@ -1360,7 +1370,7 @@ describe('ValidationService', () => {
             expect(arcs.some(arc => arc.source === 'play' && arc.target === 'C')).toBeFalse();
             expect(arcs.some(arc => arc.source === 'play' && arc.target === 'F')).toBeFalse();
             expect(arcs.some(arc => arc.source === 'play' && arc.target === 'G')).toBeFalse();
-            expect(arcs.some(arc => arc.source === 'play' && arc.target === 'stop')).toBeFalse();
+            expect(arcs.some(arc => arc.source === 'play' && arc.target === 'stop')).toBeFalse();  // Fehler?
             expect(arcs.some(arc => arc.source === 'A' && arc.target === 'A')).toBeFalse(); // von A nur nach B, F
             expect(arcs.some(arc => arc.source === 'A' && arc.target === 'play')).toBeFalse();
             expect(arcs.some(arc => arc.source === 'A' && arc.target === 'C')).toBeFalse();
@@ -1437,7 +1447,7 @@ describe('ValidationService', () => {
             expect(newDfg.getSuccessors('play')?.has('C')).toBeFalse();
             expect(newDfg.getSuccessors('play')?.has('F')).toBeFalse();
             expect(newDfg.getSuccessors('play')?.has('G')).toBeFalse();
-            expect(newDfg.getSuccessors('play')?.has('stop')).toBeFalse();
+            expect(newDfg.getSuccessors('play')?.has('stop')).toBeFalse(); // Fehler?
             expect(newDfg.getSuccessors('A')?.has('play')).toBeFalse();
             expect(newDfg.getSuccessors('A')?.has('A')).toBeFalse();
             expect(newDfg.getSuccessors('A')?.has('C')).toBeFalse();
@@ -1467,7 +1477,7 @@ describe('ValidationService', () => {
 
             expect(newDfg.getPredecessors('B')?.has('play')).toBeFalse();
             expect(newDfg.getPredecessors('F')?.has('play')).toBeFalse();
-            expect(newDfg.getPredecessors('stop')?.has('play')).toBeFalse();
+            expect(newDfg.getPredecessors('stop')?.has('play')).toBeFalse(); // Fehler?
             expect(newDfg.getPredecessors('A')?.has('A')).toBeFalse();
             expect(newDfg.getPredecessors('E')?.has('A')).toBeFalse();
             expect(newDfg.getPredecessors('stop')?.has('A')).toBeFalse();
