@@ -1222,7 +1222,7 @@ describe('ValidationService', () => {
             const secondResult = service['parallelValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
 
             expect(secondResult[0]).toBeFalse();
-            expect(secondResult[1]).toBe('Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein');
+            expect(secondResult[1]).toBe('Zweites Node-Set ist leer');
 
             // Ungültige Cut
             const thirdCutFirstNodeSet = new Set([]);
@@ -1231,7 +1231,7 @@ describe('ValidationService', () => {
             const thirdResult = service['parallelValidation'](dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet);
 
             expect(thirdResult[0]).toBeFalse();
-            expect(thirdResult[1]).toBe('Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein');
+            expect(thirdResult[1]).toBe('Erstes Node-Set ist leer');
         });
 
         it('should return true for valid parallel cut', () => {
