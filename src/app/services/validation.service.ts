@@ -24,6 +24,7 @@ export class ValidationService {
                     graph.reason = result[1];
                     graph.validationSuccessful = result[0];
                     // Falls valider cut füge neue DFG hinzu und lösche alten
+                    //TODO: richtige Verknüpfung mit Stellen und Transitionen bis jetzt werden nur die DFG hinzugefügt..
                     if (result[0]) {
                         if (result[2]) {
                             graph.dfgSet.add(result[2]);
@@ -58,8 +59,6 @@ export class ValidationService {
     private createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
         let resultDFG: DirectlyFollows = new DirectlyFollows()
         let tempNodeSet: Set<string> = new Set()
-        nodeSet.add("play")
-        nodeSet.add("stop")
         for (const [origin, successorSet] of dfg.successorMap) {
             if (nodeSet.has(origin)) {
                 for (let successor of successorSet) {
@@ -82,7 +81,7 @@ export class ValidationService {
         }
         resultDFG.createPredecessorMap();
         //TODO: EVENTLOG
-       // resultDFG.setEventLog(inputStringArray);
+        // resultDFG.setEventLog(inputStringArray);
         resultDFG.setNodes();
         resultDFG.generateArcs();
         return resultDFG
@@ -94,6 +93,12 @@ export class ValidationService {
                       firstNodeSet: Set<string>,
                       secondNodeSet: Set<string>,
                       cutType: string): [boolean, string | null] {
+        if (firstNodeSet.size === 0) {
+            return [false, "Erstes Node-Set ist leer"];
+        }
+        if (secondNodeSet.size === 0) {
+            return [false, "Zweites Node-Set ist leer"];
+        }
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
             return [false, "Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein"]
         }
@@ -215,6 +220,7 @@ export class ValidationService {
         let firstNodeSetStop = this.erstelleStopSet(dfg, firstNodeSet)
         let secondNodeSetPlay = this.erstellePlaySet(dfg, secondNodeSet);
         let secondNodeSetStop = this.erstelleStopSet(dfg, secondNodeSet);
+
         //Validiere ob alle Kanten von play nach firstNodeSetPlay gehen
         let playNodes = dfg.getPlayNodes();
         if (playNodes) {
@@ -224,7 +230,7 @@ export class ValidationService {
                 }
             }
         }
-        //Validiere ob alle Kanten nach play von firstNodeSetStop ausgehen
+        //Validiere ob alle Kanten nach stop von firstNodeSetStop ausgehen
         let stopNodes = dfg.getStopNodes();
         if (stopNodes) {
             for (const node of stopNodes) {
@@ -233,46 +239,52 @@ export class ValidationService {
                 }
             }
         }
-        //Validiere ob alle Kanten von firstNodeSetStop nach stop oder secondNodeSetPlay führen
-        for (let node of firstNodeSetStop) {
-            let successorNodes = dfg.getSuccessors(node);
-            if (successorNodes) {
-                for (let successor of successorNodes) {
-                    if (secondNodeSetPlay.has(successor) || successor == "stop") {
-                        continue;
-                    }
-                    return [false, `Es wurde zu ${node} ein Nachfolger gefunden, der nicht zu Stop oder zu der play-Menge der zweiten KnotenMenge gehört`]
+        //Validiere ob es für alle Knoten von secondNodeSetStop vereinigt mit play eine Kante zu jedem Knoten aus firstNodeSetPlay gibt
+        let playWithSecondNodeSetStop: Set<string> = new Set(secondNodeSetStop);
+        playWithSecondNodeSetStop.add('play');
+        for (let node1 of playWithSecondNodeSetStop) {
+            let node1Successors = dfg.getSuccessors(node1);
+            // gehe alle Nachfolger von Ausgangsknoten ab und ob alle Knoten aus firstNodeSetPlay enthalten
+            for (let node2 of firstNodeSetPlay) {
+                // falls eine Kante nicht gefunden return false
+                if (!node1Successors?.has(node2)) {
+                    return [false, `Es wurde zwischen ${node1} und ${node2} keine Kante gefunden333`];
                 }
             }
         }
-        //Validiere, ob alle Kanten von secondNodeSetStop firstNodeSetPlay führen
-        for (let node of secondNodeSetStop) {
-            let successorNodes = dfg.getSuccessors(node);
-            if (successorNodes) {
-                for (let successor of successorNodes) {
-                    if (firstNodeSetPlay.has(successor)) {
-                        continue;
-                    }
-                    return [false, `Ein Nachfolger von ${node} liegt nicht in der play-Menge der ersten Knotenmenge`]
+        //Validiere ob es für alle Knoten von firstNodeSetStop eine Kante nach stop und allen secondNodeSetPlay gibt
+        let stopWithSecondNodeSetPlay: Set<string> = new Set(secondNodeSetPlay);
+        stopWithSecondNodeSetPlay.add('stop');
+        for (let node1 of firstNodeSetStop) {
+            let node1Successors = dfg.getSuccessors(node1)
+            // gehe alle Nachfolger von Ausgangsknoten ab und schau, ob stop und secondNodeSetPlay enthalten sind
+            for (let node2 of stopWithSecondNodeSetPlay) {
+                // falls eine Kante nicht gefunden return false
+                if (!node1Successors?.has(node2)) {
+                    return [false, `Es wurde zwischen ${node1} und ${node2} keine Kante gefunden`]
                 }
             }
         }
         return [true, null]
     }
 
+    //Erstellt ein Set an Knoten, zu denen mind. eine Kante führt, die nicht aus der eigenen Menge stammt
     private erstellePlaySet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
+        //gehe übergebene Knotenmenge durch und suche vorgänger
         for (const node of nodeSet) {
             const predecessors = dfg.getPredecessors(node);
             if (predecessors) {
-                let noPredecessorInSet = true;
+                let hasPredecessorFromWithoutSet = false;
                 for (let predecessor of predecessors) {
-                    if (nodeSet.has(predecessor)) {
-                        noPredecessorInSet = false;
+                    //wenn ein Vorgänger nicht im set ist gib true zurück
+                    if (!nodeSet.has(predecessor)) {
+                        hasPredecessorFromWithoutSet = true;
                         break
                     }
                 }
-                if (noPredecessorInSet) {
+                //speichere playKnoten im Result
+                if (hasPredecessorFromWithoutSet) {
                     resultSet.add(node);
                 }
             }
@@ -282,17 +294,19 @@ export class ValidationService {
 
     private erstelleStopSet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
+        //gehe übergebene Knotenmenge durch und suche Nachfolger
         for (const node of nodeSet) {
             const successors = dfg.getSuccessors(node);
             if (successors) {
-                let noSuccessorInSet = true;
+                let hasSuccessorFromWithoutSet = false;
                 for (let successor of successors) {
-                    if (nodeSet.has(successor)) {
-                        noSuccessorInSet = false;
+                    //wenn ein nachfolger nicht im set ist gib true zurück
+                    if (!nodeSet.has(successor)) {
+                        hasSuccessorFromWithoutSet = true;
                         break
                     }
                 }
-                if (noSuccessorInSet) {
+                if (hasSuccessorFromWithoutSet) {
                     resultSet.add(node);
                 }
             }

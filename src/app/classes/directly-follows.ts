@@ -57,6 +57,7 @@ export class DirectlyFollows {
         }
         this.nodes = nodeSet;
     }
+
     //gibt alle Knoten mit Ausnahme von play/stop zurück
     getNodes(): Set<string> {
         return this.nodes;
@@ -72,7 +73,7 @@ export class DirectlyFollows {
     }
 
     generateArcs(): void {
-        this.arcs =[];
+        this.arcs = [];
         for (const [origin, successors] of this.successorMap.entries()) {
             for (const successor of successors) {
                 const arc: Arc = {source: origin, target: successor};
@@ -92,7 +93,7 @@ export class DirectlyFollows {
         return this.arcs.filter(arc => arc.source === source)
     }
 
-    existsArcWithReason(source:string, wantedTargets:Set<string>): boolean {
+    existsArcWithReason(source: string, wantedTargets: Set<string>): boolean {
         let arcsOfSource = this.getArcsOfSourceNode(source);
         let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
         for (const target of wantedTargets) {
@@ -110,11 +111,11 @@ export class DirectlyFollows {
             let tempElement = trace[0];
             this.addSuccessor("play", tempElement)
             let traceLength = trace.length;
-            for (let i=1; i < traceLength; i++) {
+            for (let i = 1; i < traceLength; i++) {
                 this.addSuccessor(tempElement, trace[i]);
                 tempElement = trace[i];
             }
-            this.addSuccessor(trace[traceLength-1],"stop")
+            this.addSuccessor(trace[traceLength - 1], "stop")
         }
         this.createPredecessorMap();
         this.setEventLog(inputStringArray);
@@ -167,8 +168,10 @@ export class DirectlyFollows {
 
     // Prüft, ob ein Pfad play->node->stop über eine gegebene Knotenmenge existiert
     existsFullPathOverNode(node: string, allowedNodes: Set<string>): boolean {
-        if (this.existsPath(new Set(["play"]), new Set([node]), allowedNodes)){
-            if (this.existsPath(new Set([node]), new Set(["stop"]), allowedNodes)){
+        let tempAllowedNodes = new Set(allowedNodes);
+        tempAllowedNodes.add("play")
+        if (this.existsPath(new Set(["play"]), new Set([node]), tempAllowedNodes)) {
+            if (this.existsPath(new Set([node]), new Set(["stop"]), tempAllowedNodes)) {
                 return true;
             }
         }

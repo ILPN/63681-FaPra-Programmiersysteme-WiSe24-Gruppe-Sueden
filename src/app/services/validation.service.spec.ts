@@ -670,9 +670,9 @@ describe('ValidationService', () => {
             expect(ssdResult[1]).toBe('loop');
             expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
             expect(ssdResult[2]?.getSuccessors('F')).not.toContain('G');
-            expect(ssdResult[2]?.getSuccessors('G')).toContain('H');
+            expect(ssdResult[3]?.getSuccessors('G')).toContain('H');
             expect(ssdResult[2]?.getSuccessors('H')).not.toContain('F');
-            expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+            expect(ssdResult[2]?.getSuccessors('F')).toContain('stop');
         });
 
         it('should validate and split DFG correctly with Parallel-Cut and then further with XOR-Cut', () => {
@@ -1219,19 +1219,20 @@ describe('ValidationService', () => {
             const secondCutFirstNodeSet = new Set(['A', 'B']);
             const secondCutSecondNodeSet = new Set([]);
 
-            const secondResult = service['parallelValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
+            const secondResult = service.validateAndReturn(dfg, secondCutFirstNodeSet, secondCutSecondNodeSet, CutType.PARALLEL);
 
             expect(secondResult[0]).toBeFalse();
             expect(secondResult[1]).toBe('Zweites Node-Set ist leer');
 
             // Ungültige Cut
+
             const thirdCutFirstNodeSet = new Set([]);
             const thirdCutSecondNodeSet = new Set(['B']);
 
-            const thirdResult = service['parallelValidation'](dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet);
-
+            const thirdResult = service.validateAndReturn(dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet, CutType.PARALLEL);
             expect(thirdResult[0]).toBeFalse();
             expect(thirdResult[1]).toBe('Erstes Node-Set ist leer');
+
         });
 
         it('should return true for valid parallel cut', () => {
