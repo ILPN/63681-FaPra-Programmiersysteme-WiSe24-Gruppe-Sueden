@@ -10,9 +10,11 @@ import {CutType} from "../classes/cut-type.enum";
 export class ValidationService {
 
     constructor(
+
         private validationDataService: ValidationDataService,
         private processGraphService: ProcessGraphService
     ) {
+        //sollte auf Änderungen bei validationDataSignal reagieren
         computed(() => {
             const data = this.validationDataService.validationDataSignal();
             if (data) {
@@ -216,10 +218,10 @@ export class ValidationService {
     //TODO: sicherstellen, dass firstNodeSet den Weg play->firstNodeSet->stop hat. Ansonsten Mengen tauschen??
     private loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //erstelle die verschiedenen play/stop mengen
-        let firstNodeSetPlay = this.erstellePlaySet(dfg, firstNodeSet);
-        let firstNodeSetStop = this.erstelleStopSet(dfg, firstNodeSet)
-        let secondNodeSetPlay = this.erstellePlaySet(dfg, secondNodeSet);
-        let secondNodeSetStop = this.erstelleStopSet(dfg, secondNodeSet);
+        let firstNodeSetPlay = this.createPlaySet(dfg, firstNodeSet);
+        let firstNodeSetStop = this.createStopSet(dfg, firstNodeSet)
+        let secondNodeSetPlay = this.createPlaySet(dfg, secondNodeSet);
+        let secondNodeSetStop = this.createStopSet(dfg, secondNodeSet);
 
         //Validiere ob alle Kanten von play nach firstNodeSetPlay gehen
         let playNodes = dfg.getPlayNodes();
@@ -269,7 +271,7 @@ export class ValidationService {
     }
 
     //Erstellt ein Set an Knoten, zu denen mind. eine Kante führt, die nicht aus der eigenen Menge stammt
-    private erstellePlaySet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
+    private createPlaySet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
         //gehe übergebene Knotenmenge durch und suche vorgänger
         for (const node of nodeSet) {
@@ -292,7 +294,7 @@ export class ValidationService {
         return resultSet
     }
 
-    private erstelleStopSet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
+    private createStopSet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
         //gehe übergebene Knotenmenge durch und suche Nachfolger
         for (const node of nodeSet) {
@@ -313,6 +315,81 @@ export class ValidationService {
         }
         return resultSet
     }
+
+    //
+    private splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][],string[][]]{
+        let originalEventlog = originalDFG.getEventLog();
+        let firstEventlog : string[][] = [];
+        let secondEventlog : string[][] = [];
+        switch (cutType) {
+            case CutType.XOR:
+                for (let trace of originalEventlog){
+                    if(firstNodeSet.has(trace[0])) {
+                        firstEventlog.push(trace)
+                    }
+                    else {
+                        secondEventlog.push(trace)
+                    }
+                }
+                return [firstEventlog, secondEventlog]
+
+            //Funktioniert nur, wenn firstNodeSet mit Play verbunden ist??
+            case CutType.SEQUENCE:
+                for (let trace of originalEventlog){
+                    let tempIterator = 0;
+                    for (let activity of trace) {
+                        if (secondNodeSet.has(activity)) {
+                            firstEventlog.push(trace.slice(0, tempIterator));
+                            secondEventlog.push(trace.slice(tempIterator,trace.length));
+                            break
+                        }
+                    }
+                }
+                return [firstEventlog, secondEventlog]
+            case CutType.PARALLEL:
+                for (let trace of originalEventlog){
+                    let tempTraceFirst: string[] = [];
+                    let tempTraceSecond : string[] = [];
+                    for (let activity of trace){
+                        if (firstNodeSet.has(activity)) {
+                            tempTraceFirst.push(activity)
+                        } else {
+                            tempTraceSecond.push(activity)
+                        }
+                    }
+                    firstEventlog.push(tempTraceFirst);
+                    secondEventlog.push(tempTraceSecond);
+                }
+                return [firstEventlog, secondEventlog]
+            case CutType.LOOP:
+                for (let trace of originalEventlog) {
+                    let tempTraceFirst: string[] = [];
+                    let tempTraceSecond: string[] = [];
+                    let isDoPart: boolean = true;
+                    for (let activity of trace) {
+                        if (isDoPart) {
+                            if (firstNodeSet.has(activity)) {
+                                tempTraceFirst.push(activity);
+                            } else {
+                                firstEventlog.push(tempTraceFirst);
+                                tempTraceFirst=[]; // Logik überdenken
+                                isDoPart = false;
+                                tempTraceSecond.push(activity);
+                            }
+                        } else {
+                            //TODO: wieder aus REDO part zurückwechseln - in eventlog pushen
+
+                        }
+                    }
+                }
+                return [firstEventlog, secondEventlog];
+            default:
+                return [[],[]]
+
+        }
+
+    }
+
 
 
 }

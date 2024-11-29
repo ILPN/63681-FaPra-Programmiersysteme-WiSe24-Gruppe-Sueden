@@ -3,6 +3,8 @@ import {DirectlyFollows} from "../classes/directly-follows";
 import {ProcessGraphService} from "./process-graph.service";
 import {ValidationDataService} from "./validation-data.service";
 import {CutType} from "../classes/cut-type.enum";
+import { TestBed } from "@angular/core/testing";
+
 
 describe('ValidationService', () => {
     let service: ValidationService;
@@ -10,13 +12,53 @@ describe('ValidationService', () => {
     let processGraphService: ProcessGraphService;
     let validationDataService: ValidationDataService;
 
+
     beforeEach(() => {
         processGraphService = new ProcessGraphService();
         validationDataService = new ValidationDataService();
         service = new ValidationService(validationDataService, processGraphService);
         dfg = new DirectlyFollows();
     });
+    //TODO: Überlegungen, wie man das signal testen könnte....
+/*
+    describe('dataUpdateTests', () => {
+        let processGraphServiceMock: jasmine.SpyObj<ProcessGraphService>;
+        beforeEach(() => {
+            const spy = jasmine.createSpyObj('ProcessGraphService', ['batchUpdateProcessGraph']);
+            TestBed.configureTestingModule({
+                providers: [
+                    ValidationService,
+                    ValidationDataService,
+                    { provide: ProcessGraphService, useValue: spy }
+                ]
+            });
+            service = TestBed.inject(ValidationService);
+            validationDataService = TestBed.inject(ValidationDataService);
+            processGraphServiceMock = TestBed.inject(ProcessGraphService) as jasmine.SpyObj<ProcessGraphService>;
+        });
+        it('should trigger validation on validation data update', () => {
+            const dfg = new DirectlyFollows();
+            const firstNodeSet = new Set(['A', 'B']);
+            const secondNodeSet = new Set(['C', 'D']);
+            const cutType = CutType.XOR;
 
+            // Simuliere das Setzen der Validierungsdaten
+            validationDataService.updateData(dfg, firstNodeSet, secondNodeSet, cutType);
+
+            // Manuelle Auslösung des Computed-Blocks
+            if (service['validationDataService'].validationDataSignal()) {
+                service['validationDataService'].validationDataSignal.set({
+                    dfg: dfg,
+                    firstNodeSet: firstNodeSet,
+                    secondNodeSet: secondNodeSet,
+                    cutType: cutType
+                });
+            }
+            // Stelle sicher, dass die Methode `batchUpdateProcessGraph` aufgerufen wurde
+            expect(processGraphServiceMock.batchUpdateProcessGraph).toHaveBeenCalled();
+        });
+    })
+*/
     describe('validateAndReturn', () => {
         it('should validate and split DFG correctly with XOR-Cut and then further with XOR-Cut', () => {
             const inputStringArray: string[][] = [

@@ -1,5 +1,4 @@
 import {Injectable, signal} from '@angular/core'
-import {BehaviorSubject} from 'rxjs'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationData} from '../classes/validation-data'
 import {CutType} from "../classes/cut-type.enum";
