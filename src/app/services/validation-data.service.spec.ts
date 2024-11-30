@@ -8,7 +8,7 @@ describe('ValidationDataService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [ValidationDataService],  // Füge hier den Service explizit hinzu
+            providers: [ValidationDataService],
         });
         service = TestBed.inject(ValidationDataService);
     });
@@ -30,7 +30,7 @@ describe('ValidationDataService', () => {
         const secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
         const cutType = CutType.XOR;
 
-        // Simuliere das Setzen der Validierungsdaten
+        // Setze Validierungsdaten
         service.updateData(dfg, firstNodeSet, secondNodeSet, cutType);
 
         // Prüfe, ob das Signal aktualisiert wurde

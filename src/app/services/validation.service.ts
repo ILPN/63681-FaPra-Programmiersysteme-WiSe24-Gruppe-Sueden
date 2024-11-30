@@ -169,6 +169,7 @@ export class ValidationService {
     }
 
     //TODO: Prüfen ob direkter Weg start -> Knotenmenge 2 ==> Knotenmenge1 Optional ==> wie rückgabe?
+    //TODO: Prüfen ob direkter Wer Knotenmenge 1 -> stop ==> Knotenmenge 2 Optional ==> wie rückgabe?
     //Prüft auf Sequence-Cut
     private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
