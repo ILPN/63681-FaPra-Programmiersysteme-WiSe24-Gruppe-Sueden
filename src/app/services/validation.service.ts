@@ -25,15 +25,11 @@ export class ValidationService {
                 this.processGraphService.batchUpdateProcessGraph(graph => {
                     graph.reason = result[1];
                     graph.validationSuccessful = result[0];
-                    // Falls valider cut füge neue DFG hinzu und lösche alten
                     //TODO: richtige Verknüpfung mit Stellen und Transitionen bis jetzt werden nur die DFG hinzugefügt..
+                    //wenn validation funktioniert hat
                     if (result[0]) {
-                        if (result[2]) {
-                            graph.dfgSet.add(result[2]);
-                        }
-                        if (result[3]) {
-                            graph.dfgSet.add(result[3])
-                        }
+                        result[2] && graph.dfgSet.add(result[2]);
+                        result[3] && graph.dfgSet.add(result[3]);
                         graph.dfgSet.delete(data.dfg);
                     }
                     graph.dataUpdated = true;
