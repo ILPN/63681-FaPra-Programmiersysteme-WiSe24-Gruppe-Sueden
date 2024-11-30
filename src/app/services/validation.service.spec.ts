@@ -1264,7 +1264,7 @@ describe('ValidationService', () => {
             const secondResult = service.validateAndReturn(dfg, secondCutFirstNodeSet, secondCutSecondNodeSet, CutType.PARALLEL);
 
             expect(secondResult[0]).toBeFalse();
-            expect(secondResult[1]).toBe('Zweites Node-Set ist leer');
+            expect(secondResult[1]).toBe('Ein übergebenes NodeSet ist leer');
 
             // Ungültige Cut
 
@@ -1273,7 +1273,7 @@ describe('ValidationService', () => {
 
             const thirdResult = service.validateAndReturn(dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet, CutType.PARALLEL);
             expect(thirdResult[0]).toBeFalse();
-            expect(thirdResult[1]).toBe('Erstes Node-Set ist leer');
+            expect(thirdResult[1]).toBe('Ein übergebenes NodeSet ist leer');
 
         });
 

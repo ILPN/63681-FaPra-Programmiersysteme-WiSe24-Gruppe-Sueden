@@ -45,19 +45,25 @@ export class ValidationService {
 
     //TODO: muss noch Verkettung der DFG Rückgeben, ob parallel, sequenziell usw usf
     validateAndReturn(dfg: DirectlyFollows,
-                      firstNodeSet: Set<string>,
-                      secondNodeSet: Set<string>,
+                      firstNodeSetIn: Set<string>,
+                      secondNodeSetIn: Set<string>,
                       cutType: CutType): [boolean, string | null, DirectlyFollows?, DirectlyFollows?] {
+        //TODO: SORT first and second Nodeset bei loop und sequence cut
+        let sortedNodes = this.sortNodeSets(dfg, firstNodeSetIn, secondNodeSetIn)
+        const firstNodeSet = sortedNodes[0];
+        const secondNodeSet = sortedNodes[1];
         const validationResult: [boolean, string | null] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
         let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
         let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
+        let splitEventlogs =this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
+        dfg1.setEventLog(splitEventlogs[0]);
+        dfg2.setEventLog(splitEventlogs[1]);
         return [true, cutType, dfg1, dfg2]
     }
 
-    //TODO: Eventlog abändern und einfügen
     private createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
         let resultDFG: DirectlyFollows = new DirectlyFollows()
         let tempNodeSet: Set<string> = new Set()
@@ -82,8 +88,6 @@ export class ValidationService {
             resultDFG.addSuccessor("play", node)
         }
         resultDFG.createPredecessorMap();
-        //TODO: EVENTLOG
-        // resultDFG.setEventLog(inputStringArray);
         resultDFG.setNodes();
         resultDFG.generateArcs();
         return resultDFG
@@ -95,11 +99,8 @@ export class ValidationService {
                       firstNodeSet: Set<string>,
                       secondNodeSet: Set<string>,
                       cutType: string): [boolean, string | null] {
-        if (firstNodeSet.size === 0) {
-            return [false, "Erstes Node-Set ist leer"];
-        }
-        if (secondNodeSet.size === 0) {
-            return [false, "Zweites Node-Set ist leer"];
+        if (firstNodeSet.size === 0 || secondNodeSet.size === 0) {
+            return [false, "Ein übergebenes NodeSet ist leer"];
         }
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
             return [false, "Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein"]
@@ -168,7 +169,7 @@ export class ValidationService {
     }
 
     //TODO: Prüfen ob direkter Weg start -> Knotenmenge 2 ==> Knotenmenge1 Optional ==> wie rückgabe?
-    // Prüft auf Sequence-Cut
+    //Prüft auf Sequence-Cut
     private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
         for (let nodeFirst of firstNodeSet) {
@@ -319,10 +320,13 @@ export class ValidationService {
     //
     private splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][],string[][]]{
         let originalEventlog = originalDFG.getEventLog();
+        //erstelle Rückgabewerte  der 2 resultierenden Eventlogs nach dem cut
         let firstEventlog : string[][] = [];
         let secondEventlog : string[][] = [];
         switch (cutType) {
             case CutType.XOR:
+                // sobald eine Aktivitaet aus einem trace zum Nodeset passt, wird der gesamte trace
+                // ins jeweilige Eventlog aufgenommen
                 for (let trace of originalEventlog){
                     if(firstNodeSet.has(trace[0])) {
                         firstEventlog.push(trace)
@@ -334,51 +338,67 @@ export class ValidationService {
                 return [firstEventlog, secondEventlog]
 
             //Funktioniert nur, wenn firstNodeSet mit Play verbunden ist??
+                //TODO: Optionales A?
             case CutType.SEQUENCE:
+                // trace wird ab der Aktivität gespalten, die zum zweiten Nodeset gehört
                 for (let trace of originalEventlog){
-                    let tempIterator = 0;
+                    let tempIterator = -1;
                     for (let activity of trace) {
+                        tempIterator++;
                         if (secondNodeSet.has(activity)) {
                             firstEventlog.push(trace.slice(0, tempIterator));
                             secondEventlog.push(trace.slice(tempIterator,trace.length));
                             break
                         }
+                        if (tempIterator == trace.length-1) {
+                            firstEventlog.push(trace)
+                        }
                     }
                 }
                 return [firstEventlog, secondEventlog]
             case CutType.PARALLEL:
+                //es werden alle traces durchlaufen und 2 temp-traces erstellt
                 for (let trace of originalEventlog){
-                    let tempTraceFirst: string[] = [];
-                    let tempTraceSecond : string[] = [];
-                    for (let activity of trace){
-                        if (firstNodeSet.has(activity)) {
-                            tempTraceFirst.push(activity)
-                        } else {
-                            tempTraceSecond.push(activity)
-                        }
-                    }
+                    let tempTraceFirst: string[] = trace.filter(activity => firstNodeSet.has(activity));
+                    let tempTraceSecond: string[] = trace.filter(activity => secondNodeSet.has(activity));
                     firstEventlog.push(tempTraceFirst);
                     secondEventlog.push(tempTraceSecond);
                 }
                 return [firstEventlog, secondEventlog]
+
+            // In der Ausgabe ist im firstEventlog der Do-Part und in secondEventlog der Redo-Part
             case CutType.LOOP:
                 for (let trace of originalEventlog) {
-                    let tempTraceFirst: string[] = [];
-                    let tempTraceSecond: string[] = [];
+                    let tempTrace: string[] = [];
+                    //Anfangs immer im Do-Part
                     let isDoPart: boolean = true;
-                    for (let activity of trace) {
+                    let lastElementIndex = trace.length - 1;
+                    for (let i = 0; i < trace.length; i++) {
+                        let activity = trace[i];
+                        //wir befinden uns im Do-Part
                         if (isDoPart) {
                             if (firstNodeSet.has(activity)) {
-                                tempTraceFirst.push(activity);
+                                tempTrace.push(activity);
+                                if (i === lastElementIndex){
+                                    firstEventlog.push(tempTrace);
+                                }
                             } else {
-                                firstEventlog.push(tempTraceFirst);
-                                tempTraceFirst=[]; // Logik überdenken
+                                firstEventlog.push(tempTrace);
+                                tempTrace=[];
                                 isDoPart = false;
-                                tempTraceSecond.push(activity);
+                                tempTrace.push(activity);
                             }
-                        } else {
-                            //TODO: wieder aus REDO part zurückwechseln - in eventlog pushen
-
+                        }
+                        //wir befinden uns im Redo-Part
+                        if (!isDoPart) {
+                            if (secondNodeSet.has(activity)) {
+                                tempTrace.push(activity);
+                            } else {
+                                secondEventlog.push(tempTrace);
+                                tempTrace=[];
+                                isDoPart = true;
+                                tempTrace.push(activity);
+                            }
                         }
                     }
                 }
@@ -386,6 +406,19 @@ export class ValidationService {
             default:
                 return [[],[]]
 
+        }
+
+    }
+
+    private sortNodeSets(dfg: DirectlyFollows,
+                         firstNodeSet: Set<string>,
+                         secondNodeSet: Set<string>): [Set<string>, Set<string>] {
+        const playNodes = dfg.getPlayNodes();
+        const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
+        if(hasCommonNode){
+            return [firstNodeSet, secondNodeSet];
+        } else {
+            return [secondNodeSet, firstNodeSet];
         }
 
     }
