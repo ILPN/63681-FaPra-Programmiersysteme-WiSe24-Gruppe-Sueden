@@ -1,6 +1,10 @@
 import {Injectable, signal} from '@angular/core'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ProcessGraph} from "../classes/process-graph"
+import {Place} from "../classes/graph/place";
+import {Transition} from "../classes/graph/transition";
+import {Arc} from "../classes/arc";
+
 
 @Injectable({
     providedIn: 'root'
@@ -11,16 +15,34 @@ export class ProcessGraphService {
 
     createGraph(eventLog: string[][]) {
         // Umwandeln des result in ein DFG Objekt
-        let directlyFollowsGraph = new DirectlyFollows();
+        const directlyFollowsGraph = new DirectlyFollows();
         directlyFollowsGraph.setDFGfromStringArray(eventLog)
+
+        // Erstelle Transitionen und Places für das Petrinetz
+        const firstPlace: Place = { id: this.generateUniqueId('place')};
+        const playTransition : Transition ={ id: "play"};
+        const tempPlace1: Place = { id: this.generateUniqueId('place')};
+        const tempPlace2: Place = { id: this.generateUniqueId('place')};
+        const lastPlace: Place = { id: this.generateUniqueId('place')};
+        const stopTransition : Transition ={ id: "stop"};
+
+        const arcs: Arc[] = [
+            { source: firstPlace, target: playTransition },
+            { source: playTransition, target: tempPlace1 },
+            { source: tempPlace1, target: directlyFollowsGraph },
+            { source: directlyFollowsGraph, target: tempPlace2 },
+            { source: tempPlace2, target: stopTransition },
+            { source: stopTransition, target: lastPlace },
+        ];
+
 
         this.graphSignal.set({
             validationSuccessful: false,
             reason: null,
             dfgSet: new Set<DirectlyFollows>([directlyFollowsGraph]),
-            places: new Set<string>,
-            transitions: new Set<string>,
-            arcs: [],
+            places: new Set<Place>,
+            transitions: new Set<Transition>,
+            arcs: arcs,
             dataUpdated: false,
         })
     }
@@ -68,6 +90,11 @@ export class ProcessGraphService {
             this.graphSignal.set(updatedGraph);  // Schritt 5
         }
     }
+
+    generateUniqueId(prefix: string): string {
+        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
 
 }
 
