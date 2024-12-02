@@ -14,7 +14,6 @@ describe('DirectlyFollows', () => {
             ['A', 'B', 'C'],
             ['A', 'D', 'C'],
             ['E', 'F', 'G'],
-
         ];
 
         // Methode aufrufen

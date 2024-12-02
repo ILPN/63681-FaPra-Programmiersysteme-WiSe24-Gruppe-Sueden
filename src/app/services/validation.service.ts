@@ -23,6 +23,14 @@ export class ValidationService {
 
                 // Die Ergebnisse an das ProcessGraphService weitergeben
                 this.processGraphService.batchUpdateProcessGraph(graph => {
+                    this.processGraphService.updateValidationSuccessful(result[0]);  //update validation successful
+                    this.processGraphService.updateReason(result[1]);               // update reason
+                    if (result[0]){                                                 // wenn validation successful
+
+                    }
+
+
+                    /* Alte Variante
                     graph.reason = result[1];
                     graph.validationSuccessful = result[0];
                     //TODO: richtige Verknüpfung mit Stellen und Transitionen bis jetzt werden nur die DFG hinzugefügt..
@@ -33,6 +41,7 @@ export class ValidationService {
                         graph.dfgSet.delete(data.dfg);
                     }
                     graph.dataUpdated = true;
+                    */
                 })
             }
         });
@@ -166,6 +175,7 @@ export class ValidationService {
 
     //TODO: Prüfen ob direkter Weg start -> Knotenmenge 2 ==> Knotenmenge1 Optional ==> wie rückgabe?
     //TODO: Prüfen ob direkter Wer Knotenmenge 1 -> stop ==> Knotenmenge 2 Optional ==> wie rückgabe?
+    //TODO: Prüfen Knotenmenge 1 sowie Knotenmenge 2 Optional ==> wie rückgabe?
     //Prüft auf Sequence-Cut
     private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
