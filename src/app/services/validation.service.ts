@@ -3,7 +3,6 @@ import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationDataService} from './validation-data.service'
 import {ProcessGraphService} from './process-graph.service'
 import {CutType} from "../classes/cut-type.enum";
-import {first} from "rxjs";
 
 @Injectable({
     providedIn: 'root'
@@ -18,8 +17,7 @@ export class ValidationService {
         computed(() => {
             const data = this.validationDataService.validationDataSignal();
             if (data) {
-                //TODO: Ordne übergebene Knotenmengen hier könnte noch ein fehler liegen, falls sequence cut die Knoten falsch herum bekommt
-                let sortedNodes = this.sortNodeSets(data.dfg, data.firstNodeSet, data.secondNodeSet)
+                let sortedNodes = this.sortNodeSets(data.dfg, data.firstNodeSet, data.secondNodeSet, data.cutType)
                 //TODO: hier evtl noch play/stop rausnehmen ==> Linus
                 const firstNodeSet = sortedNodes[0];
                 const secondNodeSet = sortedNodes[1];
@@ -34,8 +32,8 @@ export class ValidationService {
                         let isOptional2: boolean = false;
                         // Wenn Sequence cut erfolgreich war, prüfe ob erste oder zweite Knotenmenge optional und setze flag
                         if (data.cutType === CutType.SEQUENCE){
-                            isOptional1 = data.dfg.existsPath(new Set<string>("play"),secondNodeSet,secondNodeSet)
-                            isOptional2 = data.dfg.existsPath(firstNodeSet,new Set<string>("stop"),firstNodeSet)
+                            isOptional1 = data.dfg.existsPath(new Set<string>(["play"]),secondNodeSet,secondNodeSet)
+                            isOptional2 = data.dfg.existsPath(firstNodeSet,new Set<string>(["stop"]),firstNodeSet)
                         }
                         if (result[2] && result[3]) {
                             this.processGraphService.incorporateNewDFGs(data.dfg, result[2], isOptional1, result[3], isOptional2, data.cutType)
@@ -99,7 +97,7 @@ export class ValidationService {
                       firstNodeSet: Set<string>,
                       secondNodeSet: Set<string>,
                       cutType: string): [boolean, string | null] {
-        if (firstNodeSet.size === 0 || secondNodeSet.size === 0) {
+        if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
             return [false, "Ein übergebenes NodeSet ist leer"];
         }
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
@@ -168,9 +166,6 @@ export class ValidationService {
         return [true, null]
     }
 
-    //TODO: Prüfen ob direkter Weg start -> Knotenmenge 2 ==> Knotenmenge1 Optional ==> wie rückgabe?
-    //TODO: Prüfen ob direkter Wer Knotenmenge 1 -> stop ==> Knotenmenge 2 Optional ==> wie rückgabe?
-    //TODO: Prüfen Knotenmenge 1 sowie Knotenmenge 2 Optional ==> wie rückgabe?
     //Prüft auf Sequence-Cut
     private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
@@ -413,14 +408,31 @@ export class ValidationService {
 
     private sortNodeSets(dfg: DirectlyFollows,
                          firstNodeSet: Set<string>,
-                         secondNodeSet: Set<string>): [Set<string>, Set<string>] {
-        const playNodes = dfg.getPlayNodes();
-        const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
-        if (hasCommonNode) {
-            return [firstNodeSet, secondNodeSet];
-        } else {
-            return [secondNodeSet, firstNodeSet];
+                         secondNodeSet: Set<string>,
+                         cutTypeIn: CutType): [Set<string>, Set<string>] {
+        if(firstNodeSet?.size > 0 && secondNodeSet?.size > 0){
+            switch (cutTypeIn){
+                case CutType.LOOP:
+                    //Wenn eine Kante play -> firstNodeset existiert, muss das der Do part sein
+                    const playNodes = dfg.getPlayNodes();
+                    const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
+                    if (hasCommonNode) {
+                        return [firstNodeSet, secondNodeSet];
+                    } else {
+                        return [secondNodeSet, firstNodeSet];
+                    }
+                case CutType.SEQUENCE:
+                    // Wenn ein weg von firstNodeSet nach secondNodeSet führt, muss die Reihenfolge so stimmen
+                    if (dfg.existsPath(new Set<string>([firstNodeSet.values().next().value]),secondNodeSet)) {
+                        return [firstNodeSet, secondNodeSet];
+                    } else {
+                        return [secondNodeSet, firstNodeSet];
+                    }
+                default:
+                    return [firstNodeSet, secondNodeSet]
+            }
         }
+        return [firstNodeSet,secondNodeSet]
 
     }
 
