@@ -11,8 +11,6 @@ import {CutType} from "../classes/cut-type.enum";
     providedIn: 'root'
 })
 export class ProcessGraphService {
-    private successorMap = new Map<DirectlyFollows, Arc[]>();
-    private predecessorMap = new Map<DirectlyFollows, Arc[]>();
 
     graphSignal = signal<ProcessGraph | null>(null)
 
@@ -21,7 +19,7 @@ export class ProcessGraphService {
         const directlyFollowsGraph = new DirectlyFollows();
         directlyFollowsGraph.setDFGfromStringArray(eventLog)
 
-        // Erstelle Transitionen und Places für das Petrinetz
+        // Erstelle Anfangs Transitionen und Places für das Petrinetz
         const firstPlace: Place = {id: this.generateUniqueId('place')};
         const playTransition: Transition = {id: "play"};
         const tempPlace1: Place = {id: this.generateUniqueId('place')};
@@ -29,6 +27,7 @@ export class ProcessGraphService {
         const lastPlace: Place = {id: this.generateUniqueId('place')};
         const stopTransition: Transition = {id: "stop"};
 
+        // Erstelle Arcs
         const firstArcs: Arc[] = [
             {source: firstPlace, target: playTransition},
             {source: playTransition, target: tempPlace1},
@@ -37,8 +36,6 @@ export class ProcessGraphService {
             {source: tempPlace2, target: stopTransition},
             {source: stopTransition, target: lastPlace},
         ];
-        this.updateArcMaps();
-
 
         this.graphSignal.set({
             validationSuccessful: false,
@@ -48,38 +45,6 @@ export class ProcessGraphService {
             transitions: new Set<Transition>,
             arcs: firstArcs,
         })
-    }
-
-    // löscht die aktuelle successorMap und predecessorMap und updated sie auf den aktuellen Zustand
-    updateArcMaps() {
-        const currentGraph = this.graphSignal();
-        if (!currentGraph) {
-            throw new Error("Kein ProcessGraph im Graph Signal vorhanden!");
-        }
-        this.successorMap.clear();
-        this.predecessorMap.clear();
-        for (const arc of currentGraph.arcs) {
-            if (arc.source instanceof DirectlyFollows) {
-                if (!this.successorMap.has(arc.source)) {
-                    this.successorMap.set(arc.source, []);
-                }
-                this.successorMap.get(arc.source)!.push(arc);
-            }
-            if (arc.target instanceof DirectlyFollows) {
-                if (!this.predecessorMap.has(arc.target)) {
-                    this.predecessorMap.set(arc.target, []);
-                }
-                this.predecessorMap.get(arc.target)!.push(arc);
-            }
-        }
-    }
-
-    getSuccessorArcs(dfg: DirectlyFollows): Arc[] {
-        return this.successorMap.get(dfg) || [];
-    }
-
-    getPredecessorArcs(dfg: DirectlyFollows): Arc[] {
-        return this.predecessorMap.get(dfg) || [];
     }
 
     updateValidationSuccessful(validationSuccessful: boolean) {
@@ -96,25 +61,8 @@ export class ProcessGraphService {
         }))
     }
 
-    addDfg(dfg: DirectlyFollows) {
-        /*this.graphSignal.update(graph => ({
-            ...graph!,
-            dfgSet: graph?.dfgSet
-            validationSuccessful: successful
-        })) TODO warten auf Set entscheidung*/
-    }
-
-    removeDfg(dfg: DirectlyFollows) {
-        /*this.processGraph.dfgSet.delete(dfg)
-        this.resultSubject.next(this.processGraph)*/
-    }
-
-    setDataUpdated(boo: boolean): void {
-        /*this.processGraph.dataUpdated = boo;*/
-    }
-
-    getDataUpdated(): boolean {
-        return false/*this.processGraph.dataUpdated;*/
+    getDfgList(){
+        return this.graphSignal()?.dfgSet
     }
 
     batchUpdateProcessGraph(updates: (graph: ProcessGraph) => void) {

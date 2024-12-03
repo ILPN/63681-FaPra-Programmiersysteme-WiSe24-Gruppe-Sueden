@@ -1,8 +1,9 @@
-import {Injectable, computed} from '@angular/core'
+import {computed, Injectable} from '@angular/core'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationDataService} from './validation-data.service'
 import {ProcessGraphService} from './process-graph.service'
 import {CutType} from "../classes/cut-type.enum";
+import {first} from "rxjs";
 
 @Injectable({
     providedIn: 'root'
@@ -10,7 +11,6 @@ import {CutType} from "../classes/cut-type.enum";
 export class ValidationService {
 
     constructor(
-
         private validationDataService: ValidationDataService,
         private processGraphService: ProcessGraphService
     ) {
@@ -18,52 +18,47 @@ export class ValidationService {
         computed(() => {
             const data = this.validationDataService.validationDataSignal();
             if (data) {
-                // Validierung durchführen
-                const result = this.validateAndReturn(data.dfg, data.firstNodeSet, data.secondNodeSet, data.cutType);
+                //TODO: Ordne übergebene Knotenmengen hier könnte noch ein fehler liegen, falls sequence cut die Knoten falsch herum bekommt
+                let sortedNodes = this.sortNodeSets(data.dfg, data.firstNodeSet, data.secondNodeSet)
+                //TODO: hier evtl noch play/stop rausnehmen ==> Linus
+                const firstNodeSet = sortedNodes[0];
+                const secondNodeSet = sortedNodes[1];
+                const result = this.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
 
                 // Die Ergebnisse an das ProcessGraphService weitergeben
                 this.processGraphService.batchUpdateProcessGraph(graph => {
                     this.processGraphService.updateValidationSuccessful(result[0]);  //update validation successful
                     this.processGraphService.updateReason(result[1]);               // update reason
-                    if (result[0]){                                                 // wenn validation successful
-
-                    }
-
-
-                    /* Alte Variante
-                    graph.reason = result[1];
-                    graph.validationSuccessful = result[0];
-                    //TODO: richtige Verknüpfung mit Stellen und Transitionen bis jetzt werden nur die DFG hinzugefügt..
-                    //wenn validation funktioniert hat
                     if (result[0]) {
-                        result[2] && graph.dfgSet.add(result[2]);
-                        result[3] && graph.dfgSet.add(result[3]);
-                        graph.dfgSet.delete(data.dfg);
+                        let isOptional1: boolean = false;
+                        let isOptional2: boolean = false;
+                        // Wenn Sequence cut erfolgreich war, prüfe ob erste oder zweite Knotenmenge optional und setze flag
+                        if (data.cutType === CutType.SEQUENCE){
+                            isOptional1 = data.dfg.existsPath(new Set<string>("play"),secondNodeSet,secondNodeSet)
+                            isOptional2 = data.dfg.existsPath(firstNodeSet,new Set<string>("stop"),firstNodeSet)
+                        }
+                        if (result[2] && result[3]) {
+                            this.processGraphService.incorporateNewDFGs(data.dfg, result[2], isOptional1, result[3], isOptional2, data.cutType)
+                        }
                     }
-                    graph.dataUpdated = true;
-                    */
                 })
             }
         });
     }
 
 
-    //TODO: muss noch Verkettung der DFG Rückgeben, ob parallel, sequenziell usw usf
+
     validateAndReturn(dfg: DirectlyFollows,
-                      firstNodeSetIn: Set<string>,
-                      secondNodeSetIn: Set<string>,
+                      firstNodeSet: Set<string>,
+                      secondNodeSet: Set<string>,
                       cutType: CutType): [boolean, string | null, DirectlyFollows?, DirectlyFollows?] {
-        //TODO: SORT first and second Nodeset bei loop und sequence cut
-        let sortedNodes = this.sortNodeSets(dfg, firstNodeSetIn, secondNodeSetIn)
-        const firstNodeSet = sortedNodes[0];
-        const secondNodeSet = sortedNodes[1];
         const validationResult: [boolean, string | null] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
         let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
         let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
-        let splitEventlogs =this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
+        let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
         return [true, cutType, dfg1, dfg2]
@@ -223,7 +218,7 @@ export class ValidationService {
         return [true, null]
     }
 
-    //TODO: sicherstellen, dass firstNodeSet den Weg play->firstNodeSet->stop hat. Ansonsten Mengen tauschen??
+
     private loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
         //erstelle die verschiedenen play/stop mengen
         let firstNodeSetPlay = this.createPlaySet(dfg, firstNodeSet);
@@ -325,39 +320,38 @@ export class ValidationService {
     }
 
     //
-    private splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][],string[][]]{
+    private splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][], string[][]] {
         let originalEventlog = originalDFG.getEventLog();
         //erstelle Rückgabewerte  der 2 resultierenden Eventlogs nach dem cut
-        let firstEventlog : string[][] = [];
-        let secondEventlog : string[][] = [];
+        let firstEventlog: string[][] = [];
+        let secondEventlog: string[][] = [];
         switch (cutType) {
             case CutType.XOR:
                 // sobald eine Aktivitaet aus einem trace zum Nodeset passt, wird der gesamte trace
                 // ins jeweilige Eventlog aufgenommen
-                for (let trace of originalEventlog){
-                    if(firstNodeSet.has(trace[0])) {
+                for (let trace of originalEventlog) {
+                    if (firstNodeSet.has(trace[0])) {
                         firstEventlog.push(trace)
-                    }
-                    else {
+                    } else {
                         secondEventlog.push(trace)
                     }
                 }
                 return [firstEventlog, secondEventlog]
 
             //Funktioniert nur, wenn firstNodeSet mit Play verbunden ist??
-                //TODO: Optionales A?
+            //TODO: Optionales A?
             case CutType.SEQUENCE:
                 // trace wird ab der Aktivität gespalten, die zum zweiten Nodeset gehört
-                for (let trace of originalEventlog){
+                for (let trace of originalEventlog) {
                     let tempIterator = -1;
                     for (let activity of trace) {
                         tempIterator++;
                         if (secondNodeSet.has(activity)) {
                             firstEventlog.push(trace.slice(0, tempIterator));
-                            secondEventlog.push(trace.slice(tempIterator,trace.length));
+                            secondEventlog.push(trace.slice(tempIterator, trace.length));
                             break
                         }
-                        if (tempIterator == trace.length-1) {
+                        if (tempIterator == trace.length - 1) {
                             firstEventlog.push(trace)
                         }
                     }
@@ -365,7 +359,7 @@ export class ValidationService {
                 return [firstEventlog, secondEventlog]
             case CutType.PARALLEL:
                 //es werden alle traces durchlaufen und 2 temp-traces erstellt
-                for (let trace of originalEventlog){
+                for (let trace of originalEventlog) {
                     let tempTraceFirst: string[] = trace.filter(activity => firstNodeSet.has(activity));
                     let tempTraceSecond: string[] = trace.filter(activity => secondNodeSet.has(activity));
                     firstEventlog.push(tempTraceFirst);
@@ -386,12 +380,12 @@ export class ValidationService {
                         if (isDoPart) {
                             if (firstNodeSet.has(activity)) {
                                 tempTrace.push(activity);
-                                if (i === lastElementIndex){
+                                if (i === lastElementIndex) {
                                     firstEventlog.push(tempTrace);
                                 }
                             } else {
                                 firstEventlog.push(tempTrace);
-                                tempTrace=[];
+                                tempTrace = [];
                                 isDoPart = false;
                                 tempTrace.push(activity);
                             }
@@ -402,7 +396,7 @@ export class ValidationService {
                                 tempTrace.push(activity);
                             } else {
                                 secondEventlog.push(tempTrace);
-                                tempTrace=[];
+                                tempTrace = [];
                                 isDoPart = true;
                                 tempTrace.push(activity);
                             }
@@ -411,7 +405,7 @@ export class ValidationService {
                 }
                 return [firstEventlog, secondEventlog];
             default:
-                return [[],[]]
+                return [[], []]
 
         }
 
@@ -422,14 +416,13 @@ export class ValidationService {
                          secondNodeSet: Set<string>): [Set<string>, Set<string>] {
         const playNodes = dfg.getPlayNodes();
         const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
-        if(hasCommonNode){
+        if (hasCommonNode) {
             return [firstNodeSet, secondNodeSet];
         } else {
             return [secondNodeSet, firstNodeSet];
         }
 
     }
-
 
 
 }
