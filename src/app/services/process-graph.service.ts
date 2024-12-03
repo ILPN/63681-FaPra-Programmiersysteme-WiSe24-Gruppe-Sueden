@@ -154,12 +154,11 @@ export class ProcessGraphService {
                 break
             default:
                 throw new Error("Kein Cut-Type übergeben")
-
         }
-
     }
+
     /*==============================================================================================================================*/
-                                                            //XOR
+    //XOR
     /*==============================================================================================================================*/
     private incorporateXor(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                            dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
@@ -184,8 +183,9 @@ export class ProcessGraphService {
         // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
     }
+
     /*==============================================================================================================================*/
-                                                                //Sequence
+    //Sequence
     /*==============================================================================================================================*/
     private incorporateSequence(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                                 dfg1: DirectlyFollows, isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
@@ -219,8 +219,9 @@ export class ProcessGraphService {
         }
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
     }
+
     /*==============================================================================================================================*/
-                                                                //Parallel
+    //Parallel
     /*==============================================================================================================================*/
     private incorporateParallel(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                                 dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
@@ -263,8 +264,9 @@ export class ProcessGraphService {
         });
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
     }
+
     /*==============================================================================================================================*/
-                                                        //LOOP
+    //LOOP
     /*==============================================================================================================================*/
     private incorporateLoop(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                             dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
@@ -274,12 +276,12 @@ export class ProcessGraphService {
             // stelle nach dfgOriginal gefunden
             if (arc.source === dfgOriginal) {
                 // Füge Kanten dfg1->stelle-> dfg2 ein, lösche kante zu dfgOriginal
-                return [{source: dfg1, target: arc.target},{source:arc.target, target:dfg2}];
+                return [{source: dfg1, target: arc.target}, {source: arc.target, target: dfg2}];
             }
             //Stelle vor dfgOriginal
             if (arc.target === dfgOriginal) {
                 // Füge Kanten dfg2 -> stelle-> dfg1 ein, lösche kante zu dfgOriginal
-                return [{source: arc.source, target: dfg1},{source:dfg2, target:arc.source}];
+                return [{source: arc.source, target: dfg1}, {source: dfg2, target: arc.source}];
             }
             // Behalte den Arc, falls er nicht ersetzt wird
             return [arc];
