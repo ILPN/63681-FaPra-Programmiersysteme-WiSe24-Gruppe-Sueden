@@ -130,7 +130,7 @@ export class ProcessGraphService {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
     }
 
-    // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechen den Processgrap am Signal
+    // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
     incorporateNewDFGs(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                        dfg1: DirectlyFollows, isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
                        dfg2: DirectlyFollows, isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
@@ -141,86 +141,150 @@ export class ProcessGraphService {
         }
         switch (cutMethod) {
             case CutType.XOR:
-                //flatMap durchläuft alle arcs und ersetzt sie nach bestimmten Kriterien
-                currentGraph.arcs = currentGraph.arcs.flatMap(arc => {
-                    //Kriterium = source = originalDFG
-                    if (arc.source === dfgOriginal) {
-                        const newArc1 = {source: dfg1, target: arc.target};
-                        const newArc2 = {source: dfg2, target: arc.target};
-                        return [newArc1, newArc2];
-                    }
-                    if (arc.target === dfgOriginal) {
-                        const newArc1 = {source: arc.source, target: dfg1};
-                        const newArc2 = {source: arc.source, target: dfg2};
-                        return [newArc1, newArc2];
-                    }
-                    // Behalte den Arc, falls er nicht ersetzt wird
-                    return [arc];
-                });
-                this.exchangeDFGs(dfgOriginal, dfg1, dfg2, currentGraph)
+                this.incorporateXor(dfgOriginal, dfg1, dfg2, currentGraph);
                 break
             case CutType.SEQUENCE:
-                const middlePlace: Place = {id: this.generateUniqueId('place')};
-                //middlePlace ist die stelle zwischen dfg1 und dfg2
-                currentGraph.places.add(middlePlace);
-                currentGraph.arcs = currentGraph.arcs.flatMap(arc => {
-                    // wenn target original DFG war, ersetze mit DFG 1, erstelle neuen arc dfg1 -> middlePlace
-                    if (arc.target === dfgOriginal) {
-                        const newArc1 = {source: arc.source, target: dfg1};
-                        const newArc2 = {source: dfg1, target: middlePlace}
-                        return [newArc1, newArc2];
-                    }
-                    // wenn target original DFG war, ersetze mit DFG 1, erstelle neuen arc dfg1 -> middlePlace
-                    if (arc.source === dfgOriginal) {
-                        const newArc1 = {source: dfg2, target: arc.target};
-                        const newArc2 = {source: middlePlace, target: dfg2}
-                        return [newArc1, newArc2];
-                    }
-                    return [arc];
-                });
-                //TODO: evtl nicht nötig, falls wir TAU-Übergänge noch in den DFG nehmen
-                //macht dfgs optional (siehe skript)
-                if (isOptional1) {
-                    this.makeOptional(dfg1, currentGraph)
-                }
-                if (isOptional2) {
-                    this.makeOptional(dfg2, currentGraph)
-                }
-                this.exchangeDFGs(dfgOriginal, dfg1, dfg2, currentGraph)
+                this.incorporateSequence(dfgOriginal, dfg1, isOptional1, dfg2, isOptional2, currentGraph);
                 break
             case CutType.PARALLEL:
-                /*
-                Pseudocode:
-                eingabe : dfgOriginal (der zu ersetzende), dfg1, dfg2 (dfg1 ist do, dfg2 ist redo)
-                stelleStart =  stelle vor dfgOriginal
-                stelleEnd =  stelle nach dfgOriginal
-                ersetze dfgOriginal mit dfg1
-                verlinke stelleEnd mit dfg2
-                verlinke dfg2 mit stelleStart
-                ersetze dfgOriginal mit dfg1
-                lösche verweise auf dfgOriginal in dfgSet
-                erstelle verweise auf dfg1 und dfg2 in dfgSet
-                 */
+                this.incorporateParallel(dfgOriginal, dfg1, dfg2, currentGraph);
                 break
             case CutType.LOOP:
-                /*
-                Pseudocode:
-                eingabe : dfgOriginal (der zu ersetzende), dfg1, dfg2 (dfg1 ist do, dfg2 ist redo)
-                stelleStart =  stelle vor dfgOriginal
-                stelleEnd =  stelle nach dfgOriginal
-                ersetze dfgOriginal mit dfg1
-                verlinke stelleEnd mit dfg2
-                verlinke dfg2 mit stelleStart
-                ersetze dfgOriginal mit dfg1
-                lösche verweise auf dfgOriginal in dfgSet
-                erstelle verweise auf dfg1 und dfg2 in dfgSet
-                 */
+                this.incorporateLoop(dfgOriginal, dfg1, dfg2, currentGraph);
                 break
             default:
                 throw new Error("Kein Cut-Type übergeben")
 
         }
 
+    }
+    /*==============================================================================================================================*/
+                                                            //XOR
+    /*==============================================================================================================================*/
+    private incorporateXor(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
+                           dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                           dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                           workingGraph: ProcessGraph) {
+        //flatMap durchläuft alle arcs und ersetzt sie nach bestimmten Kriterien
+        workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
+            //Kriterium = source = originalDFG
+            if (arc.source === dfgOriginal) {
+                const newArc1 = {source: dfg1, target: arc.target};
+                const newArc2 = {source: dfg2, target: arc.target};
+                return [newArc1, newArc2];
+            }
+            if (arc.target === dfgOriginal) {
+                const newArc1 = {source: arc.source, target: dfg1};
+                const newArc2 = {source: arc.source, target: dfg2};
+                return [newArc1, newArc2];
+            }
+            // Behalte den Arc, falls er nicht ersetzt wird
+            return [arc];
+        });
+        // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
+        this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+    }
+    /*==============================================================================================================================*/
+                                                                //Sequence
+    /*==============================================================================================================================*/
+    private incorporateSequence(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
+                                dfg1: DirectlyFollows, isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+                                dfg2: DirectlyFollows, isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+                                workingGraph: ProcessGraph) {
+        const middlePlace: Place = {id: this.generateUniqueId('place')};
+        //middlePlace ist die stelle zwischen dfg1 und dfg2
+        workingGraph.places.add(middlePlace);
+        workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
+            // wenn target original DFG war, ersetze mit DFG 1, erstelle neuen arc dfg1 -> middlePlace
+            if (arc.target === dfgOriginal) {
+                const newArc1 = {source: arc.source, target: dfg1};
+                const newArc2 = {source: dfg1, target: middlePlace}
+                return [newArc1, newArc2];
+            }
+            // wenn target original DFG war, ersetze mit DFG 1, erstelle neuen arc dfg1 -> middlePlace
+            if (arc.source === dfgOriginal) {
+                const newArc1 = {source: dfg2, target: arc.target};
+                const newArc2 = {source: middlePlace, target: dfg2}
+                return [newArc1, newArc2];
+            }
+            return [arc];
+        });
+        //TODO: evtl nicht nötig, falls wir TAU-Übergänge noch in den DFG nehmen
+        //macht dfgs optional (siehe skript)
+        if (isOptional1) {
+            this.makeOptional(dfg1, workingGraph)
+        }
+        if (isOptional2) {
+            this.makeOptional(dfg2, workingGraph)
+        }
+        this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+    }
+    /*==============================================================================================================================*/
+                                                                //Parallel
+    /*==============================================================================================================================*/
+    private incorporateParallel(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
+                                dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                                dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                                workingGraph: ProcessGraph) {
+        const firstPlaceNew: Place = {id: this.generateUniqueId('place')};
+        const lastPlaceNew: Place = {id: this.generateUniqueId('place')};
+        workingGraph.places.add(firstPlaceNew);
+        workingGraph.places.add(lastPlaceNew);
+        workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
+            //geh alle arcs durch und suche die stelle vor dem dfgOriginal
+            if (arc.target === dfgOriginal) {
+                //suche die Transition(en) bzw. dfg vor der Stelle und verlinke mit firstPlaceNew
+                workingGraph.arcs.forEach(arc2 => {
+                    if (arc2.target === arc.source) {
+                        workingGraph.arcs.push({source: arc2.source, target: firstPlaceNew});
+                    }
+                });
+                // tausche dfgOriginal mit dfg1 in arcs
+                return [{source: arc.source, target: dfg1}]
+            }
+            //füge verlinkung firstPlaceNew zu dfg2 in arcs ein
+            workingGraph.arcs.push({source: firstPlaceNew, target: dfg2});
+            //suche stelle nach dem dfgOriginal
+            if (arc.source === dfgOriginal) {
+                //suche die Transition(en) bzw. dfg nach der Stelle und verlinke mit lastPlaceNew
+                workingGraph.arcs.forEach(arc2 => {
+                    if (arc2.source === arc.target) {
+                        //arc2.target ist die transition nach der stelle...
+                        workingGraph.arcs.push({source: lastPlaceNew, target: arc2.target});
+                    }
+                });
+                // tausche dfgOriginal mit dfg1 in arcs
+                return [{source: dfg1, target: arc.target}];
+            }
+            //füge verlinkung firstPlaceNew zu dfg2 in arcs ein
+            workingGraph.arcs.push({source: dfg2, target: firstPlaceNew});
+            // falls dfgOriginal nicht im arc, ändere nichts
+            return arc
+        });
+        this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+    }
+    /*==============================================================================================================================*/
+                                                        //LOOP
+    /*==============================================================================================================================*/
+    private incorporateLoop(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
+                            dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                            dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
+                            workingGraph: ProcessGraph) {
+        workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
+            // stelle nach dfgOriginal gefunden
+            if (arc.source === dfgOriginal) {
+                // Füge Kanten dfg1->stelle-> dfg2 ein, lösche kante zu dfgOriginal
+                return [{source: dfg1, target: arc.target},{source:arc.target, target:dfg2}];
+            }
+            //Stelle vor dfgOriginal
+            if (arc.target === dfgOriginal) {
+                // Füge Kanten dfg2 -> stelle-> dfg1 ein, lösche kante zu dfgOriginal
+                return [{source: arc.source, target: dfg1},{source:dfg2, target:arc.source}];
+            }
+            // Behalte den Arc, falls er nicht ersetzt wird
+            return [arc];
+        });
+        this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
     }
 
     // tauscht einen dfg im dfgset gegen zwei neue übergebene aus
@@ -235,12 +299,14 @@ export class ProcessGraphService {
         const tauTransition: Transition = {id: this.generateUniqueId('TAU')};
         workingGraph.transitions.add(tauTransition);
         workingGraph.arcs.forEach(arc => {
-            if (arc.source === dfg) workingGraph.arcs.push({source: tauTransition, target: arc.target});
-            if (arc.target === dfg) workingGraph.arcs.push({source: arc.source, target: tauTransition});
+            if (arc.source === dfg) {
+                workingGraph.arcs.push({source: tauTransition, target: arc.target});
+            }
+            if (arc.target === dfg) {
+                workingGraph.arcs.push({source: arc.source, target: tauTransition});
+            }
         });
     }
 }
 
 
-//TODO: Gesamten Aufbau des results überdenken
-/* brauche: boolean (ob letzter cut geklappt), string (Begründung), die neue Menge an DFGs sowie Pertinetz-Teilen*/
