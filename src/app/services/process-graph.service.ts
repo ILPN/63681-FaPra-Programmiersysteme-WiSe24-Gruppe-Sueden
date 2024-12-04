@@ -65,11 +65,11 @@ export class ProcessGraphService {
         return this.graphSignal()?.dfgSet
     }
 
-    batchUpdateProcessGraph(updates: (graph: ProcessGraph) => void) {
+    batchUpdateProcessGraph(updates: () => void) {
         const currentGraph = this.graphSignal();  // Rufe das aktuelle Process-Graph-Objekt ab
         if (currentGraph) {  //wenn es existiert
             const updatedGraph = {...currentGraph};  //erstelle Kopie
-            updates(updatedGraph);  // führe updates an Kopie durch
+            updates();  // führe updates an Kopie durch
             this.graphSignal.set(updatedGraph);  //aktualisiere Signal auf das upgedatete Process-Graph-Objekt
         }
     }

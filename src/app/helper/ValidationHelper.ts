@@ -1,56 +1,57 @@
-import {computed, Injectable} from '@angular/core'
 import {DirectlyFollows} from '../classes/directly-follows'
-import {ValidationDataService} from './validation-data.service'
-import {ProcessGraphService} from './process-graph.service'
+import {ProcessGraphService} from '../services/process-graph.service'
+import {ValidationData} from '../classes/validation-data'
 import {CutType} from "../classes/cut-type.enum";
+import {ValidationResult} from '../classes/validation-result'
+import {LoopState} from '../classes/loop-state.enum'
 
-@Injectable({
-    providedIn: 'root'
-})
-export class ValidationService {
 
-    constructor(
-        private validationDataService: ValidationDataService,
-        private processGraphService: ProcessGraphService
-    ) {
-        //sollte auf Änderungen bei validationDataSignal reagieren
-        computed(() => {
-            const data = this.validationDataService.validationDataSignal();
-            if (data) {
-                let sortedNodes = this.sortNodeSets(data.dfg, data.firstNodeSet, data.secondNodeSet, data.cutType)
-                //TODO: hier evtl noch play/stop rausnehmen ==> Linus
-                const firstNodeSet = sortedNodes[0];
-                const secondNodeSet = sortedNodes[1];
-                const result = this.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
+export class ValidationHelper {
+    //Nimmt ein ValidationData objekt entgegen und gibt ein Validation result zurück
+    // updated mittels Processgraphservice den ... process graph...
+    public static cutValidation(data: ValidationData, processGraphService: ProcessGraphService): ValidationResult {
+        // sortiere die Reihenfolge der NodeSets für die spätere Parameterübergabe
+        let sortedNodes = this.createSortedNodeSets(data)
+        const firstNodeSet = sortedNodes[0];
+        const secondNodeSet = sortedNodes[1];
+        //Rufe Validierung auf
+        const result = this.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
 
-                // Die Ergebnisse an das ProcessGraphService weitergeben
-                this.processGraphService.batchUpdateProcessGraph(() => {
-                    this.processGraphService.updateValidationSuccessful(result[0]);  //update validation successful
-                    this.processGraphService.updateReason(result[1]);               // update reason
-                    if (result[0]) {
-                        let isOptional1: boolean = false;
-                        let isOptional2: boolean = false;
-                        // Wenn Sequence cut erfolgreich war, prüfe ob erste oder zweite Knotenmenge optional und setze flag
-                        if (data.cutType === CutType.SEQUENCE){
-                            isOptional1 = data.dfg.existsPath(new Set<string>(["play"]),secondNodeSet,secondNodeSet)
-                            isOptional2 = data.dfg.existsPath(firstNodeSet,new Set<string>(["stop"]),firstNodeSet)
-                        }
-                        if (result[2] && result[3]) {
-                            this.processGraphService.incorporateNewDFGs(data.dfg, result[2], isOptional1, result[3], isOptional2, data.cutType)
-                        }
+        // Die Ergebnisse an das ProcessGraphService weitergeben
+        processGraphService.batchUpdateProcessGraph(() => {
+            if (result[0]) {
+                let firstOptional = false;
+                let secondOptional = false;
+                if (data.cutType === CutType.SEQUENCE) {
+                    firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
+                    secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
+                    if (firstOptional && secondOptional) {
+                        result[1] = 'Sequence-Cut erfolgreich, beide Teilgraphen optional';
                     }
-                })
+                    if (firstOptional) {
+                        result[1] = 'Sequence-Cut erfolgreich, erster Teilgraph optional';
+                    }
+                    if (secondOptional) {
+                        result[1] = 'Sequence-Cut erfolgreich, zweiter Teilgraph optional';
+                    }
+                }
+                if (result[2] && result[3]) {
+                    processGraphService.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
+                }
             }
+            //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
+            processGraphService.updateValidationSuccessful(result[0]);  // update validation successful
+            processGraphService.updateReason(result[1]);               // update reason
         });
+        return {validationSuccessful: result[0], comment: result[1]};
     }
 
 
-
-    validateAndReturn(dfg: DirectlyFollows,
-                      firstNodeSet: Set<string>,
-                      secondNodeSet: Set<string>,
-                      cutType: CutType): [boolean, string | null, DirectlyFollows?, DirectlyFollows?] {
-        const validationResult: [boolean, string | null] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
+    private static validateAndReturn(dfg: DirectlyFollows,
+                                     firstNodeSet: Set<string>,
+                                     secondNodeSet: Set<string>,
+                                     cutType: CutType): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
+        const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
@@ -62,7 +63,7 @@ export class ValidationService {
         return [true, cutType, dfg1, dfg2]
     }
 
-    private createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
+    private static createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
         let resultDFG: DirectlyFollows = new DirectlyFollows()
         let tempNodeSet: Set<string> = new Set()
         for (const [origin, successorSet] of dfg.successorMap) {
@@ -93,10 +94,10 @@ export class ValidationService {
 
 
     //Nimmt als eingabe einen DFG, 2 Knotenmengen sowie die Cutmethode als string, prüft den cut und gibt true, bzw false mit einem String als Begründung aus
-    private validator(dfg: DirectlyFollows,
-                      firstNodeSet: Set<string>,
-                      secondNodeSet: Set<string>,
-                      cutType: string): [boolean, string | null] {
+    private static validator(dfg: DirectlyFollows,
+                             firstNodeSet: Set<string>,
+                             secondNodeSet: Set<string>,
+                             cutType: string): [boolean, string] {
         if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
             return [false, "Ein übergebenes NodeSet ist leer"];
         }
@@ -123,7 +124,7 @@ export class ValidationService {
         return [false, "anderer Fehler"]
     }
 
-    private allNodesUsedValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): boolean {
+    private static allNodesUsedValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): boolean {
         //Prüfe, ob Schnittmenge leer
         let intersection = new Set<string>([...firstNodeSet].filter(element => secondNodeSet.has(element)))
         if (intersection.size !== 0) {
@@ -140,7 +141,7 @@ export class ValidationService {
     }
 
     //Prüft auf XOR-Cut
-    private xorValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+    private static xorValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         //Prüfe, ob keine Kanten von Knotenmenge 1 nach Knotenmenge 2
         for (let nodeFirst of firstNodeSet) {
             let nodeFirstSuccessors = dfg.getSuccessors(nodeFirst)
@@ -163,11 +164,11 @@ export class ValidationService {
                 }
             }
         }
-        return [true, null]
+        return [true, 'XOR-Cut erfolgreich']
     }
 
     //Prüft auf Sequence-Cut
-    private sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+    private static sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg in die zweite Knotenmenge führt
         for (let nodeFirst of firstNodeSet) {
             for (let nodeSecond of secondNodeSet) {
@@ -182,10 +183,10 @@ export class ValidationService {
                 return [false, `Weg von ${nodeSecond} in erste Knotenmenge gefunden`]
             }
         }
-        return [true, null]
+        return [true, 'Sequence-Cut erfolgreich']
     }
 
-    private parallelValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+    private static parallelValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         for (let nodeFirst of firstNodeSet) {
             let arcsOfSource = dfg.getArcsOfSourceNode(nodeFirst);
             let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
@@ -210,11 +211,11 @@ export class ValidationService {
                 return [false, `Kein Weg play -> ${nodeSecond} -> stop gefunden, der nur über die eigene Knotenmenge geht`];
             }
         }
-        return [true, null]
+        return [true, 'Parallel-Cut erfolgreich']
     }
 
 
-    private loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string | null] {
+    private static loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         //erstelle die verschiedenen play/stop mengen
         let firstNodeSetPlay = this.createPlaySet(dfg, firstNodeSet);
         let firstNodeSetStop = this.createStopSet(dfg, firstNodeSet)
@@ -265,11 +266,11 @@ export class ValidationService {
                 }
             }
         }
-        return [true, null]
+        return [true, 'Loop-Cut erfolgreich']
     }
 
     //Erstellt ein Set an Knoten, zu denen mind. eine Kante führt, die nicht aus der eigenen Menge stammt
-    private createPlaySet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
+    private static createPlaySet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
         //gehe übergebene Knotenmenge durch und suche vorgänger
         for (const node of nodeSet) {
@@ -292,7 +293,7 @@ export class ValidationService {
         return resultSet
     }
 
-    private createStopSet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
+    private static createStopSet(dfg: DirectlyFollows, nodeSet: Set<string>): Set<string> {
         let resultSet = new Set<string>();
         //gehe übergebene Knotenmenge durch und suche Nachfolger
         for (const node of nodeSet) {
@@ -314,8 +315,8 @@ export class ValidationService {
         return resultSet
     }
 
-    //
-    private splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][], string[][]] {
+    //splitte das eventlog für die zwei graphen
+    private static splitEventlogs(originalDFG: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>, cutType: CutType): [string[][], string[][]] {
         let originalEventlog = originalDFG.getEventLog();
         //erstelle Rückgabewerte  der 2 resultierenden Eventlogs nach dem cut
         let firstEventlog: string[][] = [];
@@ -333,8 +334,6 @@ export class ValidationService {
                 }
                 return [firstEventlog, secondEventlog]
 
-            //Funktioniert nur, wenn firstNodeSet mit Play verbunden ist??
-            //TODO: Optionales A?
             case CutType.SEQUENCE:
                 // trace wird ab der Aktivität gespalten, die zum zweiten Nodeset gehört
                 for (let trace of originalEventlog) {
@@ -352,6 +351,7 @@ export class ValidationService {
                     }
                 }
                 return [firstEventlog, secondEventlog]
+
             case CutType.PARALLEL:
                 //es werden alle traces durchlaufen und 2 temp-traces erstellt
                 for (let trace of originalEventlog) {
@@ -365,56 +365,61 @@ export class ValidationService {
             // In der Ausgabe ist im firstEventlog der Do-Part und in secondEventlog der Redo-Part
             case CutType.LOOP:
                 for (let trace of originalEventlog) {
-                    let tempTrace: string[] = [];
                     //Anfangs immer im Do-Part
-                    let isDoPart: boolean = true;
-                    let lastElementIndex = trace.length - 1;
-                    for (let i = 0; i < trace.length; i++) {
-                        let activity = trace[i];
-                        //wir befinden uns im Do-Part
-                        if (isDoPart) {
-                            if (firstNodeSet.has(activity)) {
-                                tempTrace.push(activity);
-                                if (i === lastElementIndex) {
+                    let state: LoopState = LoopState.DO_PART;
+                    let tempTrace: string[] = [];
+
+                    for (let activity of trace) {
+                        switch (state){
+                            case LoopState.DO_PART:
+                                //solange die Aktivität im firstNodeSet vorkommt, gehört sie zum 1. trace
+                                if (firstNodeSet.has(activity)) {
+                                    tempTrace.push(activity);
+                                } else {
+                                    // sobald die Aktivität zum 2. Nodeset gehört, ist ein Do-trace erledigt und kommt ins eventlog
                                     firstEventlog.push(tempTrace);
+                                    tempTrace = [activity];
+                                    state = LoopState.REDO_PART;
                                 }
-                            } else {
-                                firstEventlog.push(tempTrace);
-                                tempTrace = [];
-                                isDoPart = false;
-                                tempTrace.push(activity);
-                            }
+                                break;
+
+                            case LoopState.REDO_PART:
+                                //funktioniert spiegelverkehrt von oben
+                                if (secondNodeSet.has(activity)) {
+                                    tempTrace.push(activity);
+                                } else {
+                                    secondEventlog.push(tempTrace);
+                                    tempTrace = [activity];
+                                    state = LoopState.DO_PART;
+                                }
+                                break;
                         }
-                        //wir befinden uns im Redo-Part
-                        if (!isDoPart) {
-                            if (secondNodeSet.has(activity)) {
-                                tempTrace.push(activity);
-                            } else {
-                                secondEventlog.push(tempTrace);
-                                tempTrace = [];
-                                isDoPart = true;
-                                tempTrace.push(activity);
-                            }
-                        }
+                    }
+                    // der letzte trace, an dem wir am arbeiten waren wird noch ins eventlog gefügt
+                    if (state === LoopState.DO_PART) {
+                        firstEventlog.push(tempTrace);
+                    } else {
+                        secondEventlog.push(tempTrace);
                     }
                 }
                 return [firstEventlog, secondEventlog];
+
             default:
                 return [[], []]
-
         }
-
     }
 
-    private sortNodeSets(dfg: DirectlyFollows,
-                         firstNodeSet: Set<string>,
-                         secondNodeSet: Set<string>,
-                         cutTypeIn: CutType): [Set<string>, Set<string>] {
-        if(firstNodeSet?.size > 0 && secondNodeSet?.size > 0){
-            switch (cutTypeIn){
+    private static createSortedNodeSets(data: ValidationData): [Set<string>, Set<string>] {
+        // zweites NodeSet durch Differenz mit allen Nodes
+        const allNodes = data.dfg.getNodes();
+        const secondNodeSet = new Set<string>([...allNodes].filter(element => !data.firstNodeSet.has(element)));
+        // filter play / stop aus dem übergeben NodeSet, falls vorhanden...
+        const firstNodeSet = new Set<string>([...data.firstNodeSet].filter(element => !new Set(['play', 'stop']).has(element)))
+        if (firstNodeSet?.size > 0 && secondNodeSet?.size > 0) {
+            switch (data.cutType) {
                 case CutType.LOOP:
                     //Wenn eine Kante play -> firstNodeset existiert, muss das der Do part sein
-                    const playNodes = dfg.getPlayNodes();
+                    const playNodes = data.dfg.getPlayNodes();
                     const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
                     if (hasCommonNode) {
                         return [firstNodeSet, secondNodeSet];
@@ -423,7 +428,7 @@ export class ValidationService {
                     }
                 case CutType.SEQUENCE:
                     // Wenn ein weg von firstNodeSet nach secondNodeSet führt, muss die Reihenfolge so stimmen
-                    if (dfg.existsPath(new Set<string>([firstNodeSet.values().next().value]),secondNodeSet)) {
+                    if (data.dfg.existsPath(new Set<string>([firstNodeSet.values().next().value]), secondNodeSet)) {
                         return [firstNodeSet, secondNodeSet];
                     } else {
                         return [secondNodeSet, firstNodeSet];
@@ -432,9 +437,6 @@ export class ValidationService {
                     return [firstNodeSet, secondNodeSet]
             }
         }
-        return [firstNodeSet,secondNodeSet]
-
+        return [firstNodeSet, secondNodeSet]
     }
-
-
 }
