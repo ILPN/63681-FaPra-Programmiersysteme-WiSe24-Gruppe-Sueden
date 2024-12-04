@@ -61,17 +61,8 @@ export class ProcessGraphService {
         }))
     }
 
-    getDfgList(){
+    getDfgList() {
         return this.graphSignal()?.dfgSet
-    }
-
-    batchUpdateProcessGraph(updates: () => void) {
-        const currentGraph = this.graphSignal();  // Rufe das aktuelle Process-Graph-Objekt ab
-        if (currentGraph) {  //wenn es existiert
-            const updatedGraph = {...currentGraph};  //erstelle Kopie
-            updates();  // führe updates an Kopie durch
-            this.graphSignal.set(updatedGraph);  //aktualisiere Signal auf das upgedatete Process-Graph-Objekt
-        }
     }
 
     generateUniqueId(prefix: string): string {

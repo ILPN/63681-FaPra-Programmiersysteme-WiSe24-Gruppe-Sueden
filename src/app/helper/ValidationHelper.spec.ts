@@ -18,7 +18,7 @@ describe('ValidationHelper', () => {
     });
 
     describe('validateAndReturn', () => {
-        it('should correctly validate and split DFG with XOR-Cut, and then further with XOR-Cut', () => {
+        it('should correctly validate and split DFG with XOR-Cut, and load it on ProcessGraph', () => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['A', 'B', 'C', 'D', 'B', 'C'],
@@ -30,12 +30,12 @@ describe('ValidationHelper', () => {
             ];
             processGraphService.createGraph(inputStringArray);
 
-            const graph = processGraphService.graphSignal()
+            let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
             dfg = dfgArray[0];
 
-            const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
-            //          const secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
+            let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
+            let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
             const valiDat : ValidationData = {
                 dfg: dfg,
                 firstNodeSet: firstNodeSet,
@@ -45,8 +45,22 @@ describe('ValidationHelper', () => {
 
             // Teste die erste XOR-Aufteilung
             const result = ValidationHelper.cutValidation(valiDat, processGraphService);
+            let graph2 = processGraphService.graphSignal()
             expect(result.validationSuccessful).toBeTrue();
             expect(result.comment).toBe('XOR-Cut erfolgreich');
+            for (let dfg of graph?.dfgSet || []) {
+                if (dfg.getNodes().has('A')){
+                    for (let node of dfg.getNodes()) {
+                        expect(firstNodeSet.has(node)).toBe(true);
+                        firstNodeSet.delete(node);
+                    }
+                } else {
+                    for (let node of dfg.getNodes()) {
+                        expect(secondNodeSet.has(node)).toBe(true);
+                        secondNodeSet.delete(node);
+                    }
+                }
+            }
         });
     });
 });

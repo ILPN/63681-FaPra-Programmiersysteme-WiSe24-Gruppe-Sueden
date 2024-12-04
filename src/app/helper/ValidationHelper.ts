@@ -16,33 +16,33 @@ export class ValidationHelper {
         const secondNodeSet = sortedNodes[1];
         //Rufe Validierung auf
         const result = this.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
-
         // Die Ergebnisse an das ProcessGraphService weitergeben
-        processGraphService.batchUpdateProcessGraph(() => {
-            if (result[0]) {
-                let firstOptional = false;
-                let secondOptional = false;
-                if (data.cutType === CutType.SEQUENCE) {
-                    firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
-                    secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
-                    if (firstOptional && secondOptional) {
-                        result[1] = 'Sequence-Cut erfolgreich, beide Teilgraphen optional';
-                    }
-                    if (firstOptional) {
-                        result[1] = 'Sequence-Cut erfolgreich, erster Teilgraph optional';
-                    }
-                    if (secondOptional) {
-                        result[1] = 'Sequence-Cut erfolgreich, zweiter Teilgraph optional';
-                    }
+
+        if (result[0]) {
+            let firstOptional = false;
+            let secondOptional = false;
+            if (data.cutType === CutType.SEQUENCE) {
+                firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
+                secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
+                if (firstOptional && secondOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, beide Teilgraphen optional';
                 }
-                if (result[2] && result[3]) {
-                    processGraphService.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
+                if (firstOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, erster Teilgraph optional';
+                }
+                if (secondOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, zweiter Teilgraph optional';
                 }
             }
-            //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
-            processGraphService.updateValidationSuccessful(result[0]);  // update validation successful
-            processGraphService.updateReason(result[1]);               // update reason
-        });
+            if (result[2] && result[3]) {
+                processGraphService.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
+            }
+        }
+        //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
+        processGraphService.updateValidationSuccessful(result[0]);  // update validation successful
+        processGraphService.updateReason(result[1]);               // update reason
+
+
         return {validationSuccessful: result[0], comment: result[1]};
     }
 
@@ -60,7 +60,7 @@ export class ValidationHelper {
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
-        return [true, cutType, dfg1, dfg2]
+        return [validationResult[0], validationResult[1], dfg1, dfg2]
     }
 
     private static createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
@@ -370,7 +370,7 @@ export class ValidationHelper {
                     let tempTrace: string[] = [];
 
                     for (let activity of trace) {
-                        switch (state){
+                        switch (state) {
                             case LoopState.DO_PART:
                                 //solange die Aktivität im firstNodeSet vorkommt, gehört sie zum 1. trace
                                 if (firstNodeSet.has(activity)) {
