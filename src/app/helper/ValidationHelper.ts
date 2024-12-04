@@ -46,7 +46,9 @@ export class ValidationHelper {
         return {validationSuccessful: result[0], comment: result[1]};
     }
 
-
+    public static testValidateAndReturn(dfg: any, firstNodeSet: any, secondNodeSet: any, cutType: CutType) {
+        return this.validateAndReturn(dfg, firstNodeSet, secondNodeSet, cutType);
+    }
     private static validateAndReturn(dfg: DirectlyFollows,
                                      firstNodeSet: Set<string>,
                                      secondNodeSet: Set<string>,

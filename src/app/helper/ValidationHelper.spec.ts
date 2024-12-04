@@ -45,7 +45,6 @@ describe('ValidationHelper', () => {
 
             // Teste die erste XOR-Aufteilung
             const result = ValidationHelper.cutValidation(valiDat, processGraphService);
-            let graph2 = processGraphService.graphSignal()
             expect(result.validationSuccessful).toBeTrue();
             expect(result.comment).toBe('XOR-Cut erfolgreich');
             for (let dfg of graph?.dfgSet || []) {
@@ -63,129 +62,174 @@ describe('ValidationHelper', () => {
             }
         });
     });
+/*
+    describe('validateAndReturn', () => {
+        it('should correctly validate and split DFG with XOR-Cut,  and then further with XOR-Cut', () => {
+            const inputStringArray: string[][] = [
+                ['A', 'B', 'C'],
+                ['A', 'B', 'C', 'D', 'B', 'C'],
+                ['E', 'F'],
+                ['G', 'H', 'I', 'K'],
+                ['G', 'H', 'J', 'K'],
+                ['L', 'M', 'N'],
+                ['L', 'M', 'O']
+            ];
+            processGraphService.createGraph(inputStringArray);
+
+            let graph = processGraphService.graphSignal()
+            let dfgArray = Array.from(graph?.dfgSet || []);
+            dfg = dfgArray[0];
+
+            let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
+            let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
+            const valiDat : ValidationData = {
+                dfg: dfg,
+                firstNodeSet: firstNodeSet,
+                secondNodeSet: new Set<string>(),
+                cutType: CutType.XOR,
+            }
+
+            const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
+
+
+            expect(result[0]).toBeTrue(); // Sollte erfolgreich validieren
+            expect(result[1]).toBe('xor'); // Sollte XOR-Cut bestätigen
+
+            // Überprüfe die Knoten im ersten Teil-Digraph (DFG1)
+            expect(result[2]?.getNodes()).toContain('A');
+            expect(result[2]?.getNodes()).toContain('B');
+            expect(result[2]?.getNodes()).toContain('C');
+            expect(result[2]?.getNodes()).toContain('D');
+            expect(result[2]?.getNodes()).toContain('E');
+            expect(result[2]?.getNodes()).toContain('F');
+
+            // Überprüfe die Knoten im zweiten Teil-Digraph (DFG2)
+            expect(result[3]?.getNodes()).toContain('G');
+            expect(result[3]?.getNodes()).toContain('H');
+            expect(result[3]?.getNodes()).toContain('I');
+            expect(result[3]?.getNodes()).toContain('J');
+            expect(result[3]?.getNodes()).toContain('K');
+            expect(result[3]?.getNodes()).toContain('L');
+            expect(result[3]?.getNodes()).toContain('M');
+            expect(result[3]?.getNodes()).toContain('N');
+            expect(result[3]?.getNodes()).toContain('O');
+
+            // Überprüfe die Nachfolger im ersten Teil-Digraph
+            expect(result[2]?.getSuccessors('A')).toContain('B');
+            expect(result[2]?.getSuccessors('B')).toContain('C');
+            expect(result[2]?.getSuccessors('C')).toContain('D');
+            expect(result[2]?.getSuccessors('D')).toContain('B');
+            expect(result[2]?.getSuccessors('C')).toContain('stop');
+            expect(result[2]?.getSuccessors('E')).toContain('F');
+            expect(result[2]?.getSuccessors('F')).toContain('stop');
+
+            // Überprüfe die Nachfolger im zweiten Teil-Digraph
+            expect(result[3]?.getSuccessors('G')).toContain('H');
+            expect(result[3]?.getSuccessors('H')).toContain('I');
+            expect(result[3]?.getSuccessors('I')).toContain('K');
+            expect(result[3]?.getSuccessors('H')).toContain('J');
+            expect(result[3]?.getSuccessors('J')).toContain('K');
+            expect(result[3]?.getSuccessors('K')).toContain('stop');
+            expect(result[3]?.getSuccessors('L')).toContain('M');
+            expect(result[3]?.getSuccessors('M')).toContain('N');
+            expect(result[3]?.getSuccessors('N')).toContain('stop');
+            expect(result[3]?.getSuccessors('M')).toContain('O');
+            expect(result[3]?.getSuccessors('O')).toContain('stop');
+
+            // Teste eine weitere XOR-Aufteilung für den ersten Teil
+            const fsd = result[2]; // First Sub-DFG
+            const fsdFirstNodeSet = new Set(['A', 'B', 'C', 'D']);
+            const fsdSecondNodeSet = new Set(['E', 'F']);
+
+            const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
+
+            expect(fsdResult[0]).toBeTrue();
+            expect(fsdResult[1]).toBe('xor');
+
+            // Teste eine XOR-Aufteilung für den zweiten Teil
+            const ssd = result[3]; // Second Sub-DFG
+            const ssdFirstNodeSet = new Set(['G', 'H', 'I', 'J', 'K']);
+            const ssdSecondNodeSet = new Set(['L', 'M', 'N', 'O']);
+
+            const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
+
+            expect(ssdResult[0]).toBeTrue();
+            expect(ssdResult[1]).toBe('xor');
+        });
+    });
+
+    it('should validate and split DFG correctly with XOR-Cut and then further with Sequence-Cut', () => {
+        const inputStringArray: string[][] = [
+            ['A', 'B', 'C'],
+            ['D', 'E', 'F'],
+            ['D', 'E', 'F', 'D', 'E', 'F']
+        ];
+        processGraphService.createGraph(inputStringArray);
+
+        let graph = processGraphService.graphSignal()
+        let dfgArray = Array.from(graph?.dfgSet || []);
+        dfg = dfgArray[0];
+
+        const firstNodeSet = new Set(['A', 'B', 'C']);
+        const secondNodeSet = new Set(['D', 'E', 'F']);
+        const valiDat : ValidationData = {
+            dfg: dfg,
+            firstNodeSet: firstNodeSet,
+            secondNodeSet: new Set<string>(),
+            cutType: CutType.XOR,
+        }
+
+
+
+        // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
+        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
+
+        expect(result[0]).toBeTrue();
+        expect(result[1]).toBe('xor');
+
+        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[2]?.getNodes()).toContain('B');
+        expect(result[2]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D'); // Teil DFG2
+        expect(result[3]?.getNodes()).toContain('E');
+        expect(result[3]?.getNodes()).toContain('F');
+
+        expect(result[2]?.getSuccessors('A')).toContain('B');
+        expect(result[2]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('D')).toContain('E');
+        expect(result[3]?.getSuccessors('E')).toContain('F');
+
+        // Teste ob weiter mit der Sequence-Validierung und Aufteilung korrekt funktioniert
+        const fsd = result[2] // first-sub-dfg
+        const fsdFirstNodeSet = new Set(['A']);
+        const fsdSecondNodeSet = new Set(['B', 'C']);
+
+        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE);
+
+        expect(fsdResult[0]).toBeTrue();
+        expect(fsdResult[1]).toBe('sequence');
+        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('B');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
+
+        const ssd = result[3] // second-sub-dfg
+        const ssdFirstNodeSet = new Set(['D']);
+        const ssdSecondNodeSet = new Set(['E', 'F']);
+
+        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE);
+
+        expect(ssdResult[0]).toBeFalse(); // Schleife enthalten
+        expect(ssdResult[1]).toBe('Weg von E in erste Knotenmenge gefunden');
+    });
+*/
+
 });
 
 
             /*
-                        expect(result[0]).toBeTrue(); // Sollte erfolgreich validieren
-                        expect(result[1]).toBe('xor'); // Sollte XOR-Cut bestätigen
-
-                        // Überprüfe die Knoten im ersten Teil-Digraph (DFG1)
-                        expect(result[2]?.getNodes()).toContain('A');
-                        expect(result[2]?.getNodes()).toContain('B');
-                        expect(result[2]?.getNodes()).toContain('C');
-                        expect(result[2]?.getNodes()).toContain('D');
-                        expect(result[2]?.getNodes()).toContain('E');
-                        expect(result[2]?.getNodes()).toContain('F');
-
-                        // Überprüfe die Knoten im zweiten Teil-Digraph (DFG2)
-                        expect(result[3]?.getNodes()).toContain('G');
-                        expect(result[3]?.getNodes()).toContain('H');
-                        expect(result[3]?.getNodes()).toContain('I');
-                        expect(result[3]?.getNodes()).toContain('J');
-                        expect(result[3]?.getNodes()).toContain('K');
-                        expect(result[3]?.getNodes()).toContain('L');
-                        expect(result[3]?.getNodes()).toContain('M');
-                        expect(result[3]?.getNodes()).toContain('N');
-                        expect(result[3]?.getNodes()).toContain('O');
-
-                        // Überprüfe die Nachfolger im ersten Teil-Digraph
-                        expect(result[2]?.getSuccessors('A')).toContain('B');
-                        expect(result[2]?.getSuccessors('B')).toContain('C');
-                        expect(result[2]?.getSuccessors('C')).toContain('D');
-                        expect(result[2]?.getSuccessors('D')).toContain('B');
-                        expect(result[2]?.getSuccessors('C')).toContain('stop');
-                        expect(result[2]?.getSuccessors('E')).toContain('F');
-                        expect(result[2]?.getSuccessors('F')).toContain('stop');
-
-                        // Überprüfe die Nachfolger im zweiten Teil-Digraph
-                        expect(result[3]?.getSuccessors('G')).toContain('H');
-                        expect(result[3]?.getSuccessors('H')).toContain('I');
-                        expect(result[3]?.getSuccessors('I')).toContain('K');
-                        expect(result[3]?.getSuccessors('H')).toContain('J');
-                        expect(result[3]?.getSuccessors('J')).toContain('K');
-                        expect(result[3]?.getSuccessors('K')).toContain('stop');
-                        expect(result[3]?.getSuccessors('L')).toContain('M');
-                        expect(result[3]?.getSuccessors('M')).toContain('N');
-                        expect(result[3]?.getSuccessors('N')).toContain('stop');
-                        expect(result[3]?.getSuccessors('M')).toContain('O');
-                        expect(result[3]?.getSuccessors('O')).toContain('stop');
-
-                        // Teste eine weitere XOR-Aufteilung für den ersten Teil
-                        const fsd = result[2]; // First Sub-DFG
-                        const fsdFirstNodeSet = new Set(['A', 'B', 'C', 'D']);
-                        const fsdSecondNodeSet = new Set(['E', 'F']);
-
-                        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
-
-                        expect(fsdResult[0]).toBeTrue();
-                        expect(fsdResult[1]).toBe('xor');
-
-                        // Teste eine XOR-Aufteilung für den zweiten Teil
-                        const ssd = result[3]; // Second Sub-DFG
-                        const ssdFirstNodeSet = new Set(['G', 'H', 'I', 'J', 'K']);
-                        const ssdSecondNodeSet = new Set(['L', 'M', 'N', 'O']);
-
-                        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
-
-                        expect(ssdResult[0]).toBeTrue();
-                        expect(ssdResult[1]).toBe('xor');
-                    });
-                });
-            });
 
 
-            it('should validate and split DFG correctly with XOR-Cut and then further with Sequence-Cut', () => {
-                        const inputStringArray: string[][] = [
-                            ['A', 'B', 'C'],
-                            ['D', 'E', 'F'],
-                            ['D', 'E', 'F', 'D', 'E', 'F']
-                        ];
 
-                        dfg.setDFGfromStringArray(inputStringArray);
 
-                        const firstNodeSet = new Set(['A', 'B', 'C']);
-                        const secondNodeSet = new Set(['D', 'E', 'F']);
-
-                        // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
-                        const result = service.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
-
-                        expect(result[0]).toBeTrue();
-                        expect(result[1]).toBe('xor');
-
-                        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-                        expect(result[2]?.getNodes()).toContain('B');
-                        expect(result[2]?.getNodes()).toContain('C');
-                        expect(result[3]?.getNodes()).toContain('D'); // Teil DFG2
-                        expect(result[3]?.getNodes()).toContain('E');
-                        expect(result[3]?.getNodes()).toContain('F');
-
-                        expect(result[2]?.getSuccessors('A')).toContain('B');
-                        expect(result[2]?.getSuccessors('B')).toContain('C');
-                        expect(result[3]?.getSuccessors('D')).toContain('E');
-                        expect(result[3]?.getSuccessors('E')).toContain('F');
-
-                        // Teste ob weiter mit der Sequence-Validierung und Aufteilung korrekt funktioniert
-                        const fsd = result[2] // first-sub-dfg
-                        const fsdFirstNodeSet = new Set(['A']);
-                        const fsdSecondNodeSet = new Set(['B', 'C']);
-
-                        const fsdResult = service.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE);
-
-                        expect(fsdResult[0]).toBeTrue();
-                        expect(fsdResult[1]).toBe('sequence');
-                        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('B');
-                        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
-
-                        const ssd = result[3] // second-sub-dfg
-                        const ssdFirstNodeSet = new Set(['D']);
-                        const ssdSecondNodeSet = new Set(['E', 'F']);
-
-                        const ssdResult = service.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE);
-
-                        expect(ssdResult[0]).toBeFalse(); // Schleife enthalten
-                        expect(ssdResult[1]).toBe('Weg von E in erste Knotenmenge gefunden');
-                    });
 
                     it('should validate and split DFG correctly with XOR-Cut and then further with Parallel-Cut', () => {
                         const inputStringArray: string[][] = [
