@@ -166,26 +166,34 @@ export class ProcessGraphService {
                                 dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                                 dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                                 workingGraph: ProcessGraph) {
-        const firstPlaceNew: Place = {id: this.generateUniqueId('place')};
-        const lastPlaceNew: Place = {id: this.generateUniqueId('place')};
-        workingGraph.places.add(firstPlaceNew);
-        workingGraph.places.add(lastPlaceNew);
+
+
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //geh alle arcs durch und suche die stelle vor dem dfgOriginal
             if (arc.target === dfgOriginal) {
+                // erstelle neue stelle, für logik transition --> neue stelle --> dfg2
+                const firstPlaceNew: Place = {id: this.generateUniqueId('place')};
+                workingGraph.places.add(firstPlaceNew);
                 //suche die Transition(en) bzw. dfg vor der Stelle und verlinke mit firstPlaceNew
                 workingGraph.arcs.forEach(arc2 => {
                     if (arc2.target === arc.source) {
                         workingGraph.arcs.push({source: arc2.source, target: firstPlaceNew});
                     }
                 });
-                // tausche dfgOriginal mit dfg1 in arcs
-                return [{source: arc.source, target: dfg1}]
+                // finde Umwege die von der Stelle davor ausgehen und transferiere diese auf die neue Stelle
+                workingGraph.arcs.forEach(arc2 => {
+                    if (arc2.source === arc.source && arc2.target !== dfgOriginal) {
+                        workingGraph.arcs.push({source: firstPlaceNew, target: arc2.target});
+                    }
+                });
+                // tausche dfgOriginal mit dfg1 in arcs und füge verlinkung firstPlaceNew zu dfg2 in arcs ein
+                return [{source: arc.source, target: dfg1}, {source: firstPlaceNew, target: dfg2}];
             }
-            //füge verlinkung firstPlaceNew zu dfg2 in arcs ein
-            workingGraph.arcs.push({source: firstPlaceNew, target: dfg2});
             //suche stelle nach dem dfgOriginal
             if (arc.source === dfgOriginal) {
+                // erstelle neue stelle, für logik dfg2 --> neue stelle --> transition
+                const lastPlaceNew: Place = {id: this.generateUniqueId('place')};
+                workingGraph.places.add(lastPlaceNew);
                 //suche die Transition(en) bzw. dfg nach der Stelle und verlinke mit lastPlaceNew
                 workingGraph.arcs.forEach(arc2 => {
                     if (arc2.source === arc.target) {
@@ -193,11 +201,15 @@ export class ProcessGraphService {
                         workingGraph.arcs.push({source: lastPlaceNew, target: arc2.target});
                     }
                 });
-                // tausche dfgOriginal mit dfg1 in arcs
-                return [{source: dfg1, target: arc.target}];
+                // finde Umwege die zur Stelle führen und transferiere diese auf die neue Stelle
+                workingGraph.arcs.forEach(arc2 => {
+                    if (arc2.target === arc.target && arc2.source !== dfgOriginal) {
+                        workingGraph.arcs.push({source: arc2.source, target: lastPlaceNew});
+                    }
+                });
+                // tausche dfgOriginal mit dfg1 in arcs und füge arc dfg2 -> lastPlaceNew ein
+                return [{source: dfg1, target: arc.target}, {source: dfg2, target: lastPlaceNew}];
             }
-            //füge verlinkung firstPlaceNew zu dfg2 in arcs ein
-            workingGraph.arcs.push({source: dfg2, target: firstPlaceNew});
             // falls dfgOriginal nicht im arc, ändere nichts
             return arc
         });

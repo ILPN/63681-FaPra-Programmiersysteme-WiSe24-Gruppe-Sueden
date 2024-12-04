@@ -5,6 +5,11 @@ import {ProcessGraph} from '../classes/process-graph';
 import { CutType } from '../classes/cut-type.enum';
 import { DirectlyFollows } from '../classes/directly-follows';
 
+describe('Sanity Check', () => {
+    it('should pass', () => {
+        expect(true).toBe(true);
+    });
+});
 
 
 describe('ValidationHelper', () => {
@@ -62,7 +67,7 @@ describe('ValidationHelper', () => {
             }
         });
     });
-/*
+
     describe('validateAndReturn', () => {
         it('should correctly validate and split DFG with XOR-Cut,  and then further with XOR-Cut', () => {
             const inputStringArray: string[][] = [
@@ -93,7 +98,7 @@ describe('ValidationHelper', () => {
 
 
             expect(result[0]).toBeTrue(); // Sollte erfolgreich validieren
-            expect(result[1]).toBe('xor'); // Sollte XOR-Cut bestätigen
+            expect(result[1]).toBe('XOR-Cut erfolgreich'); // Sollte XOR-Cut bestätigen
 
             // Überprüfe die Knoten im ersten Teil-Digraph (DFG1)
             expect(result[2]?.getNodes()).toContain('A');
@@ -144,7 +149,7 @@ describe('ValidationHelper', () => {
             const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
 
             expect(fsdResult[0]).toBeTrue();
-            expect(fsdResult[1]).toBe('xor');
+            expect(fsdResult[1]).toBe('XOR-Cut erfolgreich');
 
             // Teste eine XOR-Aufteilung für den zweiten Teil
             const ssd = result[3]; // Second Sub-DFG
@@ -154,7 +159,7 @@ describe('ValidationHelper', () => {
             const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
 
             expect(ssdResult[0]).toBeTrue();
-            expect(ssdResult[1]).toBe('xor');
+            expect(ssdResult[1]).toBe('XOR-Cut erfolgreich');
         });
     });
 
@@ -185,7 +190,7 @@ describe('ValidationHelper', () => {
         const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('xor');
+        expect(result[1]).toBe('XOR-Cut erfolgreich');
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
         expect(result[2]?.getNodes()).toContain('B');
@@ -207,7 +212,7 @@ describe('ValidationHelper', () => {
         const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('sequence');
+        expect(fsdResult[1]).toBe('Sequence-Cut erfolgreich');
         expect(fsdResult[2]?.getSuccessors('A')).not.toContain('B');
         expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
 
@@ -220,7 +225,7 @@ describe('ValidationHelper', () => {
         expect(ssdResult[0]).toBeFalse(); // Schleife enthalten
         expect(ssdResult[1]).toBe('Weg von E in erste Knotenmenge gefunden');
     });
-*/
+
 
 });
 

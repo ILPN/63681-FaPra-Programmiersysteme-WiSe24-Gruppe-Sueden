@@ -24,7 +24,7 @@ export class ValidationService {
                 const result = this.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
 
                 // Die Ergebnisse an das ProcessGraphService weitergeben
-                this.processGraphService.batchUpdateProcessGraph(() => {
+                /*this.processGraphService.batchUpdateProcessGraph(() => {
                     this.processGraphService.updateValidationSuccessful(result[0]);  //update validation successful
                     this.processGraphService.updateReason(result[1]);               // update reason
                     if (result[0]) {
@@ -39,7 +39,7 @@ export class ValidationService {
                             this.processGraphService.incorporateNewDFGs(data.dfg, result[2], isOptional1, result[3], isOptional2, data.cutType)
                         }
                     }
-                })
+                })*/
             }
         });
     }
