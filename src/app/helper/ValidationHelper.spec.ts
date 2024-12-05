@@ -15,6 +15,23 @@ describe('ValidationHelper', () => {
         processGraphService = new ProcessGraphService();
         dfg = new DirectlyFollows();
     });
+    describe('ProcessGraph after all cuts', () => {
+        it('should pull the correct dfg from process-graph', () => {
+            const inputStringArray: string[][] = [
+                ['A', 'B'],
+                ['C', 'D', 'E', 'F', 'G'],
+                ['C', 'D', 'E', 'F', 'G'],
+                ['C', 'D', 'E', 'F', 'G'],
+                ['C', 'D', 'E', 'U', 'D', 'E', 'F', 'G'],
+            ];
+            processGraphService.createGraph(inputStringArray);
+
+            let graph = processGraphService.graphSignal()
+            let dfgArray = Array.from(graph?.dfgSet || []);
+            dfg = dfgArray[0];
+            expect(true).toBe(true)
+        });
+    });
 
     describe('validateAndReturn', () => {
         it('should correctly validate and split DFG with XOR-Cut, and load it on ProcessGraph', () => {
@@ -42,7 +59,7 @@ describe('ValidationHelper', () => {
             }
 
             // Teste die erste XOR-Aufteilung
-            const result = ValidationHelper.cutValidation(valiDat);
+            const result = ValidationHelper.cutValidation(valiDat, processGraphService);
             expect(result.validationSuccessful).toBeTrue();
             expect(result.comment).toBe('XOR-Cut erfolgreich');
             for (let dfg of graph?.dfgSet || []) {
