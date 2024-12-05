@@ -196,15 +196,15 @@ export class ProcessGraphService {
             return arc
         });
         //Erstelle verbindungen zu neuen Stellen
-        workingGraph.arcs.push({source:firstTauTransition, target:firstPlaceNew1});
-        workingGraph.arcs.push({source:firstTauTransition, target:firstPlaceNew2});
-        workingGraph.arcs.push({source:lastPlaceNew1, target:lastTauTransition});
-        workingGraph.arcs.push({source:lastPlaceNew2, target:lastTauTransition});
+        workingGraph.arcs.push({source: firstTauTransition, target: firstPlaceNew1});
+        workingGraph.arcs.push({source: firstTauTransition, target: firstPlaceNew2});
+        workingGraph.arcs.push({source: lastPlaceNew1, target: lastTauTransition});
+        workingGraph.arcs.push({source: lastPlaceNew2, target: lastTauTransition});
         //Erstelle Verbindungen zu dfgs
-        workingGraph.arcs.push({source:firstPlaceNew1, target:dfg1});
-        workingGraph.arcs.push({source:firstPlaceNew2, target:dfg2});
-        workingGraph.arcs.push({source:dfg1, target:lastPlaceNew1});
-        workingGraph.arcs.push({source:dfg2, target:lastPlaceNew2});
+        workingGraph.arcs.push({source: firstPlaceNew1, target: dfg1});
+        workingGraph.arcs.push({source: firstPlaceNew2, target: dfg2});
+        workingGraph.arcs.push({source: dfg1, target: lastPlaceNew1});
+        workingGraph.arcs.push({source: dfg2, target: lastPlaceNew2});
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
     }
 

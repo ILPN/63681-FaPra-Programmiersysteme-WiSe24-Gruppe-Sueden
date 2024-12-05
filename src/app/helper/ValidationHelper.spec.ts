@@ -1,9 +1,9 @@
-import { ValidationHelper } from './ValidationHelper';
-import { ValidationData } from '../classes/validation-data';
-import { ProcessGraphService } from '../services/process-graph.service';
+import {ValidationHelper} from './ValidationHelper';
+import {ValidationData} from '../classes/validation-data';
+import {ProcessGraphService} from '../services/process-graph.service';
 import {ProcessGraph} from '../classes/process-graph';
-import { CutType } from '../classes/cut-type.enum';
-import { DirectlyFollows } from '../classes/directly-follows';
+import {CutType} from '../classes/cut-type.enum';
+import {DirectlyFollows} from '../classes/directly-follows';
 
 
 describe('ValidationHelper', () => {
@@ -35,7 +35,7 @@ describe('ValidationHelper', () => {
 
             let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
-            const valiDat : ValidationData = {
+            const valiDat: ValidationData = {
                 dfg: dfg,
                 firstNodeSet: firstNodeSet,
                 cutType: CutType.XOR,
@@ -46,7 +46,7 @@ describe('ValidationHelper', () => {
             expect(result.validationSuccessful).toBeTrue();
             expect(result.comment).toBe('XOR-Cut erfolgreich');
             for (let dfg of graph?.dfgSet || []) {
-                if (dfg.getNodes().has('A')){
+                if (dfg.getNodes().has('A')) {
                     for (let node of dfg.getNodes()) {
                         expect(firstNodeSet.has(node)).toBe(true);
                         firstNodeSet.delete(node);
@@ -80,7 +80,7 @@ describe('ValidationHelper', () => {
 
             let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
-            const valiDat : ValidationData = {
+            const valiDat: ValidationData = {
                 dfg: dfg,
                 firstNodeSet: firstNodeSet,
                 cutType: CutType.XOR,
@@ -169,12 +169,11 @@ describe('ValidationHelper', () => {
 
         const firstNodeSet = new Set(['A', 'B', 'C']);
         const secondNodeSet = new Set(['D', 'E', 'F']);
-        const valiDat : ValidationData = {
+        const valiDat: ValidationData = {
             dfg: dfg,
             firstNodeSet: firstNodeSet,
             cutType: CutType.XOR,
         }
-
 
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
@@ -1579,10 +1578,7 @@ describe('createNewDFG', () => {
 });
 
 
-
-
-
-            /*
+/*
 
 
 
@@ -1591,5 +1587,5 @@ describe('createNewDFG', () => {
 
 
 
-            */
+*/
 
