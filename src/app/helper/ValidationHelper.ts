@@ -7,9 +7,10 @@ import {LoopState} from '../classes/loop-state.enum'
 
 
 export class ValidationHelper {
+    private static processGraphService = new ProcessGraphService();
     //Nimmt ein ValidationData objekt entgegen und gibt ein Validation result zurück
     // updated mittels Processgraphservice den ... process graph...
-    public static cutValidation(data: ValidationData, processGraphService: ProcessGraphService): ValidationResult {
+    public static cutValidation(data: ValidationData): ValidationResult {
         // sortiere die Reihenfolge der NodeSets für die spätere Parameterübergabe
         let sortedNodes = this.createSortedNodeSets(data)
         const firstNodeSet = sortedNodes[0];
@@ -35,12 +36,12 @@ export class ValidationHelper {
                 }
             }
             if (result[2] && result[3]) {
-                processGraphService.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
+                this.processGraphService.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
             }
         }
         //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
-        processGraphService.updateValidationSuccessful(result[0]);  // update validation successful
-        processGraphService.updateReason(result[1]);               // update reason
+        this.processGraphService.updateValidationSuccessful(result[0]);  // update validation successful
+        this.processGraphService.updateReason(result[1]);               // update reason
 
 
         return {validationSuccessful: result[0], comment: result[1]};

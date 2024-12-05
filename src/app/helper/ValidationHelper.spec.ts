@@ -43,7 +43,7 @@ describe('ValidationHelper', () => {
             }
 
             // Teste die erste XOR-Aufteilung
-            const result = ValidationHelper.cutValidation(valiDat, processGraphService);
+            const result = ValidationHelper.cutValidation(valiDat);
             expect(result.validationSuccessful).toBeTrue();
             expect(result.comment).toBe('XOR-Cut erfolgreich');
             for (let dfg of graph?.dfgSet || []) {
