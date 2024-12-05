@@ -42,13 +42,16 @@ describe('ValidationHelper', () => {
                 firstNodeSet: new Set<string>(['A','B']),
                 cutType: CutType.XOR,
             }
+            expect(graph?.dfgSet.size === 1).toBe(true);
+            expect(graph?.arcs.length===6).toBe(true);
             let result = ValidationHelper.cutValidation(valiDat, processGraphService)
             expect(graph?.dfgSet.size === 2).toBe(true);
             expect(result.validationSuccessful).toBe(true);
             expect(graph?.arcs.length===8).toBe(true);
             expect(graph?.places.size).toBe(4);
-
         });
+        //TODO: nächstes seqence cut, dann loop cut.. immer kantenmengen und anzahl der elemente abtesten..
+        // die darauffolgenden dfgs muss man mit Logik (schau ob knoten in dfg, dann nimm ihn) aus dem dfgSet ziehen..
     });
 
     describe('validateAndReturn', () => {
