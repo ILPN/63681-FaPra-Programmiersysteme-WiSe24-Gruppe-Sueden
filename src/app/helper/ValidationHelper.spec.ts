@@ -16,7 +16,7 @@ describe('ValidationHelper', () => {
         dfg = new DirectlyFollows();
     });
     describe('ProcessGraph after all cuts', () => {
-        it('should pull the correct dfg from process-graph', () => {
+        beforeEach(() => {
             const inputStringArray: string[][] = [
                 ['A', 'B'],
                 ['C', 'D', 'E', 'F', 'G'],
@@ -25,11 +25,29 @@ describe('ValidationHelper', () => {
                 ['C', 'D', 'E', 'U', 'D', 'E', 'F', 'G'],
             ];
             processGraphService.createGraph(inputStringArray);
-
+        });
+        it('should pull the correct dfg from process-graph', () => {
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
             dfg = dfgArray[0];
-            expect(true).toBe(true)
+            expect(graph?.dfgSet.has(dfg)).toBe(true)
+            expect(graph?.dfgSet.size === 1).toBe(true)
+        });
+        it('make a correct xor cut and have 2 dfg on petrinet', () => {
+            let graph = processGraphService.graphSignal()
+            let dfgArray = Array.from(graph?.dfgSet || []);
+            dfg = dfgArray[0];
+            let valiDat: ValidationData = {
+                dfg: dfg,
+                firstNodeSet: new Set<string>(['A','B']),
+                cutType: CutType.XOR,
+            }
+            let result = ValidationHelper.cutValidation(valiDat, processGraphService)
+            expect(graph?.dfgSet.size === 2).toBe(true);
+            expect(result.validationSuccessful).toBe(true);
+            expect(graph?.arcs.length===8).toBe(true);
+            expect(graph?.places.size).toBe(4);
+
         });
     });
 

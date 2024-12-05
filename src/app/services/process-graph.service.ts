@@ -26,6 +26,15 @@ export class ProcessGraphService {
         const tempPlace2: Place = {id: this.generateUniqueId('place')};
         const lastPlace: Place = {id: this.generateUniqueId('place')};
         const stopTransition: Transition = {id: "stop"};
+        const placeSet= new Set<Place>;
+        const transSet= new Set<Transition>;
+        placeSet.add(firstPlace);
+        placeSet.add(tempPlace1);
+        placeSet.add(tempPlace2);
+        placeSet.add(lastPlace);
+        transSet.add(playTransition);
+        transSet.add(stopTransition);
+
 
         // Erstelle Arcs
         const firstArcs: Arc[] = [
@@ -41,8 +50,8 @@ export class ProcessGraphService {
             validationSuccessful: false,
             reason: null,
             dfgSet: new Set<DirectlyFollows>([directlyFollowsGraph]),
-            places: new Set<Place>,
-            transitions: new Set<Transition>,
+            places: placeSet,
+            transitions: transSet,
             arcs: firstArcs,
         })
     }
