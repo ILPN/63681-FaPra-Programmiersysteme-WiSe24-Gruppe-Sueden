@@ -38,7 +38,6 @@ describe('ValidationHelper', () => {
             const valiDat : ValidationData = {
                 dfg: dfg,
                 firstNodeSet: firstNodeSet,
-                secondNodeSet: new Set<string>(),
                 cutType: CutType.XOR,
             }
 
@@ -84,7 +83,6 @@ describe('ValidationHelper', () => {
             const valiDat : ValidationData = {
                 dfg: dfg,
                 firstNodeSet: firstNodeSet,
-                secondNodeSet: new Set<string>(),
                 cutType: CutType.XOR,
             }
 
@@ -174,7 +172,6 @@ describe('ValidationHelper', () => {
         const valiDat : ValidationData = {
             dfg: dfg,
             firstNodeSet: firstNodeSet,
-            secondNodeSet: new Set<string>(),
             cutType: CutType.XOR,
         }
 
