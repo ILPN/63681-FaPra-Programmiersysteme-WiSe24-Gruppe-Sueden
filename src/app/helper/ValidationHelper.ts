@@ -7,7 +7,7 @@ import {LoopState} from '../classes/loop-state.enum'
 
 
 export class ValidationHelper {
-   // private static processGraphService = new ProcessGraphService(); ===> funktioniert doch nicht?!
+    // private static processGraphService = new ProcessGraphService(); ===> funktioniert doch nicht?!
     //Nimmt ein ValidationData objekt entgegen und gibt ein Validation result zurück
     // updated mittels Processgraphservice den ... process graph...
     public static cutValidation(data: ValidationData, processGraphService: ProcessGraphService): ValidationResult {
@@ -51,7 +51,7 @@ export class ValidationHelper {
         return this.validateAndReturn(dfg, firstNodeSet, secondNodeSet, cutType);
     }
 
-    private static validateAndReturn(dfg: DirectlyFollows,
+    public static validateAndReturn(dfg: DirectlyFollows,
                                      firstNodeSet: Set<string>,
                                      secondNodeSet: Set<string>,
                                      cutType: CutType): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
@@ -413,7 +413,7 @@ export class ValidationHelper {
         }
     }
 
-    private static createSortedNodeSets(data: ValidationData): [Set<string>, Set<string>] {
+    public static createSortedNodeSets(data: ValidationData): [Set<string>, Set<string>] {
         // zweites NodeSet durch Differenz mit allen Nodes
         const allNodes = data.dfg.getNodes();
         const secondNodeSet = new Set<string>([...allNodes].filter(element => !data.firstNodeSet.has(element)));

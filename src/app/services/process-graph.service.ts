@@ -5,6 +5,9 @@ import {Place} from "../classes/graph/place";
 import {Transition} from "../classes/graph/transition";
 import {Arc} from "../classes/arc";
 import {CutType} from "../classes/cut-type.enum";
+import {ValidationResult} from '../classes/validation-result';
+import {ValidationData} from "../classes/validation-data";
+import {ValidationHelper} from "../helper/ValidationHelper";
 
 
 @Injectable({
@@ -76,6 +79,43 @@ export class ProcessGraphService {
 
     generateUniqueId(prefix: string): string {
         return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+    public validateCut(data: ValidationData): ValidationResult {
+        // sortiere die Reihenfolge der NodeSets für die spätere Parameterübergabe
+        let sortedNodes = ValidationHelper.createSortedNodeSets(data)
+        const firstNodeSet = sortedNodes[0];
+        const secondNodeSet = sortedNodes[1];
+        //Rufe Validierung auf
+        const result = ValidationHelper.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
+        // Die Ergebnisse an das ProcessGraphService weitergeben
+
+        if (result[0]) {
+            let firstOptional = false;
+            let secondOptional = false;
+            if (data.cutType === CutType.SEQUENCE) {
+                firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
+                secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
+                if (firstOptional && secondOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, beide Teilgraphen optional';
+                }
+                if (firstOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, erster Teilgraph optional';
+                }
+                if (secondOptional) {
+                    result[1] = 'Sequence-Cut erfolgreich, zweiter Teilgraph optional';
+                }
+            }
+            if (result[2] && result[3]) {
+                this.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
+            }
+        }
+        //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
+        this.updateValidationSuccessful(result[0]);  // update validation successful
+        this.updateReason(result[1]);               // update reason
+
+
+        return {validationSuccessful: result[0], comment: result[1]};
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
