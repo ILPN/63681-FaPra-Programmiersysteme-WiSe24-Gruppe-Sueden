@@ -29,8 +29,8 @@ export class ProcessGraphService {
         const tempPlace2: Place = {id: this.generateUniqueId('place')};
         const lastPlace: Place = {id: this.generateUniqueId('place')};
         const stopTransition: Transition = {id: "stop"};
-        const placeSet= new Set<Place>;
-        const transSet= new Set<Transition>;
+        const placeSet = new Set<Place>;
+        const transSet = new Set<Transition>;
         placeSet.add(firstPlace);
         placeSet.add(tempPlace1);
         placeSet.add(tempPlace2);

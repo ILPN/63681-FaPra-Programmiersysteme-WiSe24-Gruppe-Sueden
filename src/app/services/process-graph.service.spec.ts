@@ -29,7 +29,7 @@ describe('ProcessGraphService Signal Reaktivität', () => {
                 observedValue = service.graphSignal()?.validationSuccessful ?? null;
             });
         });
-        expect( service.graphSignal()?.validationSuccessful).toBeFalse();
+        expect(service.graphSignal()?.validationSuccessful).toBeFalse();
         expect(observedValue).toBeFalse();
         // Ändere den Wert des Signals
         service.updateValidationSuccessful(true);
