@@ -47,7 +47,7 @@ describe('ProcessGraphService Signal Reaktivität', () => {
     }));
 });
 
-describe('CutValidation on progess graph', () => {
+describe('CutValidation on progress graph', () => {
     let dfg: DirectlyFollows;
     let processGraphService: ProcessGraphService;
 
@@ -139,56 +139,54 @@ describe('CutValidation on progess graph', () => {
             }
         });
     });
+});
+describe('ProcessGraphService', () => {
+    let dfg: DirectlyFollows;
+    let processGraphService: ProcessGraphService;
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+        const inputStringArray: string[][] = [
+            ['A', 'B'],
+            ['C', 'D', 'E', 'F', 'G'],
+            ['C', 'D', 'E', 'F', 'G'],
+            ['C', 'D', 'E', 'F', 'G'],
+            ['C', 'D', 'E', 'U', 'D', 'E', 'F', 'G'],
+        ];
+        processGraphService.createGraph(inputStringArray);
+    });
 
-    describe('ProcessGraphService', () => {
-        let service: ProcessGraphService;
-        let dfg: DirectlyFollows;
+    it('should be created', () => {
+        expect(processGraphService).toBeTruthy();
+    });
 
-        beforeEach(() => {
-            service = new ProcessGraphService();
-            dfg = new DirectlyFollows();
-            const inputStringArray: string[][] = [
-                ['A', 'B'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'U', 'D', 'E', 'F', 'G'],
-            ];
-            service.createGraph(inputStringArray);
-        });
+    describe('createGraph', () => {
+        it('should create a graph and update the signal', () => {
+            const eventLog = [['A', 'B'], ['B', 'C']];
+            processGraphService.createGraph(eventLog);
 
-        it('should be created', () => {
-            expect(service).toBeTruthy();
-        });
-
-        describe('createGraph', () => {
-            it('should create a graph and update the signal', () => {
-                const eventLog = [['A', 'B'], ['B', 'C']];
-                service.createGraph(eventLog);
-
-                let graph = service.graphSignal();
-                expect(graph).toBeTruthy();
-                expect(graph?.places.size).toBeGreaterThan(0);
-                expect(graph?.transitions.size).toBeGreaterThan(0);
-            });
-        });
-
-        describe('updateValidationSuccessful', () => {
-            it('should update the validationSuccessful flag', () => {
-                service.createGraph([['A', 'B']]);
-                expect(service.graphSignal()?.validationSuccessful).toBeFalse();
-                service.updateValidationSuccessful(true);
-                expect(service.graphSignal()?.validationSuccessful).toBeTrue();
-            });
-        });
-
-        describe('generateUniqueId', () => {
-            it('should generate unique IDs', () => {
-                const id1 = service.generateUniqueId('test');
-                const id2 = service.generateUniqueId('test');
-                expect(id1).not.toEqual(id2);
-                expect(id1).toContain('test_');
-            });
+            let graph = processGraphService.graphSignal();
+            expect(graph).toBeTruthy();
+            expect(graph?.places.size).toBeGreaterThan(0);
+            expect(graph?.transitions.size).toBeGreaterThan(0);
         });
     });
+
+    describe('updateValidationSuccessful', () => {
+        it('should update the validationSuccessful flag', () => {
+            processGraphService.createGraph([['A', 'B']]);
+            expect(processGraphService.graphSignal()?.validationSuccessful).toBeFalse();
+            processGraphService.updateValidationSuccessful(true);
+            expect(processGraphService.graphSignal()?.validationSuccessful).toBeTrue();
+        });
+    });
+
+    describe('generateUniqueId', () => {
+        it('should generate unique IDs', () => {
+            const id1 = processGraphService.generateUniqueId('test');
+            const id2 = processGraphService.generateUniqueId('test');
+            expect(id1).not.toEqual(id2);
+            expect(id1).toContain('test_');
+        });
+    });
+
 });
