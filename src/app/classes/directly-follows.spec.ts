@@ -14,7 +14,6 @@ describe('DirectlyFollows', () => {
             ['A', 'B', 'C'],
             ['A', 'D', 'C'],
             ['E', 'F', 'G'],
-
         ];
 
         // Methode aufrufen
@@ -47,16 +46,16 @@ describe('DirectlyFollows', () => {
         // Erwartungen für arcs
 
         const expectedArcs: Arc[] = [
-            { source: 'play', target: 'A' },
-            { source: 'play', target: 'E' },
-            { source: 'A', target: 'B' },
-            { source: 'A', target: 'D' },
-            { source: 'B', target: 'C' },
-            { source: 'D', target: 'C' },
-            { source: 'C', target: 'stop' },
-            { source: 'E', target: 'F' },
-            { source: 'F', target: 'G' },
-            { source: 'G', target: 'stop' },
+            {source: 'play', target: 'A'},
+            {source: 'play', target: 'E'},
+            {source: 'A', target: 'B'},
+            {source: 'A', target: 'D'},
+            {source: 'B', target: 'C'},
+            {source: 'D', target: 'C'},
+            {source: 'C', target: 'stop'},
+            {source: 'E', target: 'F'},
+            {source: 'F', target: 'G'},
+            {source: 'G', target: 'stop'},
         ];
         const arcs = directlyFollows.getArcs();
 
