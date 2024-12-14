@@ -1,4 +1,4 @@
-import {Injectable, signal} from '@angular/core'
+import {effect, Injectable, signal, Signal} from '@angular/core'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ProcessGraph} from "../classes/process-graph"
 import {Place} from "../classes/graph/place";
@@ -48,7 +48,6 @@ export class ProcessGraphService {
             {source: tempPlace2, target: stopTransition},
             {source: stopTransition, target: lastPlace},
         ];
-
         this.graphSignal.set({
             validationSuccessful: false,
             reason: null,
@@ -56,29 +55,11 @@ export class ProcessGraphService {
             places: placeSet,
             transitions: transSet,
             arcs: firstArcs,
+            validationLog: []
         })
-    }
-
-    updateValidationSuccessful(validationSuccessful: boolean) {
-        this.graphSignal.update(graph => ({
-            ...graph!,
-            validationSuccessful
-        }))
-    }
-
-    updateReason(reason: string | null) {
-        this.graphSignal.update(graph => ({
-            ...graph!,
-            reason
-        }))
-    }
-
-    getDfgList() {
-        return this.graphSignal()?.dfgSet
-    }
-
-    generateUniqueId(prefix: string): string {
-        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        this.updateLog(' ')
+        this.updateLog('Initial Graph generated')
+        this.updateLog(' ')
     }
 
     public validateCut(data: ValidationData): ValidationResult {
@@ -87,34 +68,39 @@ export class ProcessGraphService {
         const firstNodeSet = sortedNodes[0];
         const secondNodeSet = sortedNodes[1];
         //Rufe Validierung auf
-        const result = ValidationHelper.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType);
+        const result = ValidationHelper.validateAndReturn(data.dfg, firstNodeSet, secondNodeSet, data.cutType, this.updateLog.bind(this));
         // Die Ergebnisse an das ProcessGraphService weitergeben
 
         if (result[0]) {
             let firstOptional = false;
             let secondOptional = false;
             if (data.cutType === CutType.SEQUENCE) {
+                this.updateLog("checking if subgraphs optional")
                 firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
                 secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
                 if (firstOptional && secondOptional) {
-                    result[1] = 'Sequence-Cut erfolgreich, beide Teilgraphen optional';
+                    this.updateLog('Sequence-Cut successful, both subgraphs optional');
+                    result[1] = 'Sequence-Cut successful, both subgraphs optional';
                 }
                 if (firstOptional) {
-                    result[1] = 'Sequence-Cut erfolgreich, erster Teilgraph optional';
+                    this.updateLog('Sequence-Cut successful, first subgraph optional');
+                    result[1] = 'Sequence-Cut successful, first subgraph optional';
                 }
                 if (secondOptional) {
-                    result[1] = 'Sequence-Cut erfolgreich, zweiter Teilgraph optional';
+                    this.updateLog('Sequence-Cut successful, second subgraph optional');
+                    result[1] = 'Sequence-Cut successful, second subgraph optional';
                 }
+                this.updateLog("no subgraph optional")
             }
             if (result[2] && result[3]) {
+                this.updateLog("incorporating new DFGs into Petrinet")
                 this.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
             }
         }
         //TODO: Eigentlich unnötig --> ich lasse es momentan noch, falls wir doch darauf wechseln wollen.
         this.updateValidationSuccessful(result[0]);  // update validation successful
         this.updateReason(result[1]);               // update reason
-
-
+        this.updateLog(" ")
         return {validationSuccessful: result[0], comment: result[1]};
     }
 
@@ -125,23 +111,30 @@ export class ProcessGraphService {
                        cutMethod: CutType) {                        // cutmethode
         const currentGraph = this.graphSignal();
         if (!currentGraph) {
-            throw new Error("Kein ProcessGraph im Graph Signal vorhanden!");
+            throw new Error("No ProcessGraph found in the Graph Signal!");
         }
+        //Setze ID der dfg
+        dfg1.setID(dfgOriginal.id);
+        dfg2.setID(currentGraph.dfgSet.size);
         switch (cutMethod) {
             case CutType.XOR:
                 this.incorporateXor(dfgOriginal, dfg1, dfg2, currentGraph);
+                this.updateLog("Xor-Cut successfully executed")
                 break
             case CutType.SEQUENCE:
                 this.incorporateSequence(dfgOriginal, dfg1, isOptional1, dfg2, isOptional2, currentGraph);
+                this.updateLog("Sequence-Cut successfully executed")
                 break
             case CutType.PARALLEL:
                 this.incorporateParallel(dfgOriginal, dfg1, dfg2, currentGraph);
+                this.updateLog("Parallel-Cut  successfully executed")
                 break
             case CutType.LOOP:
                 this.incorporateLoop(dfgOriginal, dfg1, dfg2, currentGraph);
+                this.updateLog("Loop-Cut  successfully executed")
                 break
             default:
-                throw new Error("Kein Cut-Type übergeben")
+                throw new Error("No Cut-Type provided")
         }
     }
 
@@ -170,6 +163,7 @@ export class ProcessGraphService {
         });
         // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        this.graphSignal.set(workingGraph);
     }
 
     /*==============================================================================================================================*/
@@ -199,6 +193,7 @@ export class ProcessGraphService {
         });
         //TODO: evtl nicht nötig, falls wir TAU-Übergänge noch in den DFG nehmen
         //macht dfgs optional (siehe skript)
+        this.updateLog('creating silent transitions')
         if (isOptional1) {
             this.makeOptional(dfg1, workingGraph)
         }
@@ -206,11 +201,14 @@ export class ProcessGraphService {
             this.makeOptional(dfg2, workingGraph)
         }
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        this.graphSignal.set(workingGraph);
     }
 
     /*==============================================================================================================================*/
     //Parallel
     /*==============================================================================================================================*/
+
+    //TODO: evtl in dem fall, dass die stellen und transitionen vorher nachher nur auf den dfg zeigen, TAU rausnehmen?!
     private incorporateParallel(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                                 dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                                 dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
@@ -255,6 +253,7 @@ export class ProcessGraphService {
         workingGraph.arcs.push({source: dfg1, target: lastPlaceNew1});
         workingGraph.arcs.push({source: dfg2, target: lastPlaceNew2});
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        this.graphSignal.set(workingGraph);
     }
 
     /*==============================================================================================================================*/
@@ -279,6 +278,7 @@ export class ProcessGraphService {
             return [arc];
         });
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        this.graphSignal.set(workingGraph);
     }
 
     // tauscht einen dfg im dfgset gegen zwei neue übergebene aus
@@ -301,6 +301,97 @@ export class ProcessGraphService {
             }
         });
     }
+
+
+    /*======================================Unique IDs===========================================*/
+    generateUniqueId(prefix: string): string {
+        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    }
+
+
+    /*======================================UPDATE-METHODEN===========================================*/
+    updateLog(log: string): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            currentGraph.validationLog.push(log);  // Log wird zur bestehenden Liste hinzugefügt
+            this.graphSignal.set({...currentGraph}); // Signal aktualisieren
+        }
+    }
+
+    updateReason(reason: string | null) {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                reason
+            });
+        }
+    }
+
+    updateValidationSuccessful(validationSuccessful: boolean) {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                validationSuccessful
+            });
+        }
+    }
+
+    updateDfgSet(newDfgSet: Set<DirectlyFollows>): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            // Setze das dfgSet auf das neue Set
+            this.graphSignal.set({
+                ...currentGraph,
+                dfgSet: newDfgSet // Ersetze das vorhandene dfgSet
+            });
+        }
+    }
+
+    updatePlaces(newPlaces: Set<Place>): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                places: newPlaces // Ersetze das vorhandene Set von Places
+            });
+        }
+    }
+
+    updateTransitions(newTransitions: Set<Transition>): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                transitions: newTransitions // Ersetze das vorhandene Set von Transitionen
+            });
+        }
+    }
+
+    updateArcs(newArcs: Arc[]): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                arcs: newArcs // Ersetze das vorhandene Array von Arcs
+            });
+        }
+    }
+
+    emptyLog(): void {
+        const currentGraph = this.graphSignal();
+        if (currentGraph) {
+            this.graphSignal.set({
+                ...currentGraph,
+                validationLog: [] // Leere das Log
+            });
+        }
+    }
+
+    getDfgList() {
+        return this.graphSignal()?.dfgSet
+    }
+
+
 }
-
-

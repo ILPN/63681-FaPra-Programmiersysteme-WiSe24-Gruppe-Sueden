@@ -11,4 +11,5 @@ export interface ProcessGraph {
     places: Set<Place>;
     transitions: Set<Transition>;
     arcs: Arc[];
+    validationLog: string[];
 }

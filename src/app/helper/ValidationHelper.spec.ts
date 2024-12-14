@@ -9,53 +9,23 @@ import {DirectlyFollows} from '../classes/directly-follows';
 describe('ValidationHelper', () => {
     let dfg: DirectlyFollows;
     let processGraphService: ProcessGraphService;
+    let log: string[];
+    let logFunc: (logMessage: string) => void;
 
 
     beforeEach(() => {
         processGraphService = new ProcessGraphService();
         dfg = new DirectlyFollows();
-    });
-    describe('ProcessGraph after all cuts', () => {
-        beforeEach(() => {
-            const inputStringArray: string[][] = [
-                ['A', 'B'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'F', 'G'],
-                ['C', 'D', 'E', 'U', 'D', 'E', 'F', 'G'],
-            ];
-            processGraphService.createGraph(inputStringArray);
-        });
-        it('should pull the correct dfg from process-graph', () => {
-            let graph = processGraphService.graphSignal()
-            let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
-            expect(graph?.dfgSet.has(dfg)).toBe(true)
-            expect(graph?.dfgSet.size === 1).toBe(true)
-        });
-        it('make a correct xor cut and have 2 dfg on petrinet', () => {
-            let graph = processGraphService.graphSignal()
-            let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
-            let valiDat: ValidationData = {
-                dfg: dfg,
-                firstNodeSet: new Set<string>(['A', 'B']),
-                cutType: CutType.XOR,
-            }
-            expect(graph?.dfgSet.size === 1).toBe(true);
-            expect(graph?.arcs.length === 6).toBe(true);
-            let result = ValidationHelper.cutValidation(valiDat, processGraphService)
-            expect(graph?.dfgSet.size === 2).toBe(true);
-            expect(result.validationSuccessful).toBe(true);
-            expect(graph?.arcs.length === 8).toBe(true);
-            expect(graph?.places.size).toBe(4);
-        });
-        //TODO: nächstes seqence cut, dann loop cut.. immer kantenmengen und anzahl der elemente abtesten..
-        // die darauffolgenden dfgs muss man mit Logik (schau ob knoten in dfg, dann nimm ihn) aus dem dfgSet ziehen..
+        //erstelle log und logfunc fürs logging (da aufruf nicht aus processgraph.service..)
+        log = [];
+        logFunc = (logMessage: string) => {
+            log.push(logMessage);
+        };
     });
 
     describe('validateAndReturn', () => {
-        it('should correctly validate and split DFG with XOR-Cut, and load it on ProcessGraph', () => {
+        let result: [boolean, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
+        beforeEach((): void => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
                 ['A', 'B', 'C', 'D', 'B', 'C'],
@@ -73,62 +43,12 @@ describe('ValidationHelper', () => {
 
             let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
-            const valiDat: ValidationData = {
-                dfg: dfg,
-                firstNodeSet: firstNodeSet,
-                cutType: CutType.XOR,
-            }
 
-            // Teste die erste XOR-Aufteilung
-            const result = ValidationHelper.cutValidation(valiDat, processGraphService);
-            expect(result.validationSuccessful).toBeTrue();
-            expect(result.comment).toBe('XOR-Cut erfolgreich');
-            for (let dfg of graph?.dfgSet || []) {
-                if (dfg.getNodes().has('A')) {
-                    for (let node of dfg.getNodes()) {
-                        expect(firstNodeSet.has(node)).toBe(true);
-                        firstNodeSet.delete(node);
-                    }
-                } else {
-                    for (let node of dfg.getNodes()) {
-                        expect(secondNodeSet.has(node)).toBe(true);
-                        secondNodeSet.delete(node);
-                    }
-                }
-            }
+            result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
         });
-    });
-
-    describe('validateAndReturn', () => {
-        it('should correctly validate and split DFG with XOR-Cut,  and then further with XOR-Cut', () => {
-            const inputStringArray: string[][] = [
-                ['A', 'B', 'C'],
-                ['A', 'B', 'C', 'D', 'B', 'C'],
-                ['E', 'F'],
-                ['G', 'H', 'I', 'K'],
-                ['G', 'H', 'J', 'K'],
-                ['L', 'M', 'N'],
-                ['L', 'M', 'O']
-            ];
-            processGraphService.createGraph(inputStringArray);
-
-            let graph = processGraphService.graphSignal()
-            let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
-
-            let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
-            let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
-            const valiDat: ValidationData = {
-                dfg: dfg,
-                firstNodeSet: firstNodeSet,
-                cutType: CutType.XOR,
-            }
-
-            const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
-
-
+        it('should correctly validate and split DFG with XOR-Cut', () => {
             expect(result[0]).toBeTrue(); // Sollte erfolgreich validieren
-            expect(result[1]).toBe('XOR-Cut erfolgreich'); // Sollte XOR-Cut bestätigen
+            expect(result[1]).toBe('XOR-Cut successful'); // Sollte XOR-Cut bestätigen
 
             // Überprüfe die Knoten im ersten Teil-Digraph (DFG1)
             expect(result[2]?.getNodes()).toContain('A');
@@ -170,26 +90,32 @@ describe('ValidationHelper', () => {
             expect(result[3]?.getSuccessors('N')).toContain('stop');
             expect(result[3]?.getSuccessors('M')).toContain('O');
             expect(result[3]?.getSuccessors('O')).toContain('stop');
+        });
+        //TODO: weitere log prüfungen...
+        it('should correctly add to log', () => {
+            expect(log[1]).toBe(`Start validation for cutType: xor`)
+        })
 
+        it('should correctly split further with XOR-Cut', () => {
             // Teste eine weitere XOR-Aufteilung für den ersten Teil
             const fsd = result[2]; // First Sub-DFG
             const fsdFirstNodeSet = new Set(['A', 'B', 'C', 'D']);
             const fsdSecondNodeSet = new Set(['E', 'F']);
 
-            const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
+            const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR, logFunc);
 
             expect(fsdResult[0]).toBeTrue();
-            expect(fsdResult[1]).toBe('XOR-Cut erfolgreich');
+            expect(fsdResult[1]).toBe('XOR-Cut successful');
 
             // Teste eine XOR-Aufteilung für den zweiten Teil
             const ssd = result[3]; // Second Sub-DFG
             const ssdFirstNodeSet = new Set(['G', 'H', 'I', 'J', 'K']);
             const ssdSecondNodeSet = new Set(['L', 'M', 'N', 'O']);
 
-            const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
+            const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR, logFunc);
 
             expect(ssdResult[0]).toBeTrue();
-            expect(ssdResult[1]).toBe('XOR-Cut erfolgreich');
+            expect(ssdResult[1]).toBe('XOR-Cut successful');
         });
     });
 
@@ -215,10 +141,10 @@ describe('ValidationHelper', () => {
 
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('XOR-Cut erfolgreich');
+        expect(result[1]).toBe('XOR-Cut successful');
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
         expect(result[2]?.getNodes()).toContain('B');
@@ -237,10 +163,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A']);
         const fsdSecondNodeSet = new Set(['B', 'C']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Sequence-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Sequence-Cut successful');
         expect(fsdResult[2]?.getSuccessors('A')).not.toContain('B');
         expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
 
@@ -248,10 +174,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['D']);
         const ssdSecondNodeSet = new Set(['E', 'F']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(ssdResult[0]).toBeFalse(); // Schleife enthalten
-        expect(ssdResult[1]).toBe('Weg von E in erste Knotenmenge gefunden');
+        expect(ssdResult[1]).toBe('Path from E to first NodeSet found');
     });
 
     it('should validate and split DFG correctly with XOR-Cut and then further with Parallel-Cut', () => {
@@ -273,10 +199,10 @@ describe('ValidationHelper', () => {
         const secondNodeSet = new Set(['E', 'F', 'G']);
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('XOR-Cut erfolgreich');
+        expect(result[1]).toBe('XOR-Cut successful');
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
         expect(result[2]?.getNodes()).toContain('B');
@@ -315,10 +241,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B']);
         const fsdSecondNodeSet = new Set(['C', 'D']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.PARALLEL);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Parallel-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Parallel-Cut successful');
 
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
@@ -341,7 +267,7 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['E', 'F']);
         const ssdSecondNodeSet = new Set(['G']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.PARALLEL);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(ssdResult[0]).toBeFalse(); // Kante von G nach F fehlt für Parallel-Cut
     });
@@ -361,10 +287,10 @@ describe('ValidationHelper', () => {
         const secondNodeSet = new Set(['E', 'F', 'G', 'H']);
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('XOR-Cut erfolgreich');
+        expect(result[1]).toBe('XOR-Cut successful');
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
         expect(result[2]?.getNodes()).toContain('B');
@@ -395,10 +321,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Loop-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Loop-Cut successful');
 
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
@@ -412,10 +338,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['E', 'F', 'G']);
         const ssdSecondNodeSet = new Set(['H']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP, logFunc);
 
         expect(ssdResult[0]).toBeFalse(); // wegen der Kante von H nach stop
-        expect(ssdResult[1]).toBe('Kante führt von H nach stop');
+        expect(ssdResult[1]).toBe('There exists an arc from H to stop');
 
     });
 
@@ -432,10 +358,10 @@ describe('ValidationHelper', () => {
         const firstNodeSet = new Set(['A', 'D']);
         const secondNodeSet = new Set(['B', 'C', 'E', 'F']);
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
@@ -461,10 +387,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A']);
         const fsdSecondNodeSet = new Set(['D']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('XOR-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('XOR-Cut successful');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('stop');
         expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
@@ -474,10 +400,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['B', 'C']);
         const ssdSecondNodeSet = new Set(['E', 'F']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR, logFunc);
 
         expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('XOR-Cut erfolgreich');
+        expect(ssdResult[1]).toBe('XOR-Cut successful');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('B');
         expect(ssdResult[2]?.getSuccessors('B')).toContain('C');
         expect(ssdResult[2]?.getSuccessors('C')).toContain('stop');
@@ -505,10 +431,10 @@ describe('ValidationHelper', () => {
         const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E']);
         const secondNodeSet = new Set(['F', 'G', 'H']);
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
@@ -554,10 +480,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B']);
         const fsdSecondNodeSet = new Set(['C', 'D', 'E']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Sequence-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Sequence-Cut successful');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('B');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('stop');
@@ -585,10 +511,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['F', 'G']);
         const ssdSecondNodeSet = new Set(['H']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('Sequence-Cut erfolgreich');
+        expect(ssdResult[1]).toBe('Sequence-Cut successful');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('G');
         expect(ssdResult[2]?.getSuccessors('F')).toContain('stop');
@@ -621,10 +547,10 @@ describe('ValidationHelper', () => {
         const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E']);
         const secondNodeSet = new Set(['W', 'X', 'Y', 'Z']);
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
 
         expect(result[2]?.getNodes()).toContain('A');
@@ -677,10 +603,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D', 'E']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.PARALLEL);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Parallel-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Parallel-Cut successful');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
         expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
@@ -693,10 +619,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['W', 'X']);
         const ssdSecondNodeSet = new Set(['Y', 'Z']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.PARALLEL);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('Parallel-Cut erfolgreich');
+        expect(ssdResult[1]).toBe('Parallel-Cut successful');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('W');
         expect(ssdResult[2]?.getSuccessors('W')).toContain('X');
         expect(ssdResult[2]?.getSuccessors('X')).toContain('stop');
@@ -718,10 +644,10 @@ describe('ValidationHelper', () => {
         const firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E']);
         const secondNodeSet = new Set(['F', 'G', 'H']);
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
 
         expect(result[2]?.getNodes()).toContain('A'); // Teil-DFG1
@@ -752,10 +678,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D', 'E']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.LOOP, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('Loop-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('Loop-Cut successful');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
         expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
@@ -768,10 +694,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['F']);
         const ssdSecondNodeSet = new Set(['G', 'H']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP, logFunc);
 
         expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('Loop-Cut erfolgreich');
+        expect(ssdResult[1]).toBe('Loop-Cut successful');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
         expect(ssdResult[2]?.getSuccessors('F')).not.toContain('G');
         expect(ssdResult[3]?.getSuccessors('G')).toContain('H');
@@ -813,10 +739,10 @@ describe('ValidationHelper', () => {
         const firstNodeSet = new Set(['A', 'B', 'C']);
         const secondNodeSet = new Set(['D', 'E', 'F']);
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.PARALLEL);
+        const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Parallel-Cut erfolgreich');
+        expect(result[1]).toBe('Parallel-Cut successful');
 
         expect(result[2]?.getSuccessors('play')).toContain('A');
         expect(result[2]?.getSuccessors('play')).toContain('C');
@@ -852,10 +778,10 @@ describe('ValidationHelper', () => {
         const fsdFirstNodeSet = new Set(['A', 'B']);
         const fsdSecondNodeSet = new Set(['C']);
 
-        const fsdResult = ValidationHelper.testValidateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR);
+        const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR, logFunc);
 
         expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('XOR-Cut erfolgreich');
+        expect(fsdResult[1]).toBe('XOR-Cut successful');
         expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
         expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
         expect(fsdResult[2]?.getSuccessors('B')).toContain('stop');
@@ -866,10 +792,10 @@ describe('ValidationHelper', () => {
         const ssdFirstNodeSet = new Set(['D']);
         const ssdSecondNodeSet = new Set(['E', 'F']);
 
-        const ssdResult = ValidationHelper.testValidateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR);
+        const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR, logFunc);
 
         expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('XOR-Cut erfolgreich');
+        expect(ssdResult[1]).toBe('XOR-Cut successful');
         expect(ssdResult[2]?.getSuccessors('play')).toContain('D');
         expect(ssdResult[2]?.getSuccessors('D')).toContain('stop');
         expect(ssdResult[3]?.getSuccessors('play')).toContain('E');
@@ -892,10 +818,10 @@ describe('ValidationHelper', () => {
         const nsA = new Set(['A']); // nodeset {A}
         const nsBCDE = new Set(['B', 'C', 'D', 'E']); // nodeset {B, C, D, E}
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, nsA, nsBCDE, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, nsA, nsBCDE, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
 
         expect(result[2]?.getNodes()).toContain('A');
@@ -929,10 +855,10 @@ describe('ValidationHelper', () => {
         const nsBCE = new Set(['B', 'C', 'E']);
         const nsD = new Set(['D']);
 
-        const resultDfgBCDE = ValidationHelper.testValidateAndReturn(dfgBCDE!, nsBCE, nsD, CutType.SEQUENCE);
+        const resultDfgBCDE = ValidationHelper.validateAndReturn(dfgBCDE!, nsBCE, nsD, CutType.SEQUENCE, logFunc);
 
         expect(resultDfgBCDE[0]).toBeTrue();
-        expect(resultDfgBCDE[1]).toBe('Sequence-Cut erfolgreich');
+        expect(resultDfgBCDE[1]).toBe('Sequence-Cut successful');
         expect(resultDfgBCDE[2]?.getSuccessors('B')).toContain('stop');
         expect(resultDfgBCDE[2]?.getSuccessors('C')).toContain('stop');
         expect(resultDfgBCDE[2]?.getSuccessors('E')).toContain('stop');
@@ -950,10 +876,10 @@ describe('ValidationHelper', () => {
         const nsBC = new Set(['B', 'C']);
         const nsE = new Set(['E']);
 
-        const resultDfgBCE = ValidationHelper.testValidateAndReturn(dfgBCE!, nsBC, nsE, CutType.XOR);
+        const resultDfgBCE = ValidationHelper.validateAndReturn(dfgBCE!, nsBC, nsE, CutType.XOR, logFunc);
 
         expect(resultDfgBCE[0]).toBeTrue();
-        expect(resultDfgBCE[1]).toBe('XOR-Cut erfolgreich');
+        expect(resultDfgBCE[1]).toBe('XOR-Cut successful');
         expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('B');
         expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('C');
         expect(resultDfgBCE[2]?.getSuccessors('B')).toContain('C');
@@ -969,9 +895,9 @@ describe('ValidationHelper', () => {
         const nsB = new Set(['B']);
         const nsC = new Set(['C']);
 
-        const resultDfgBC = ValidationHelper.testValidateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL);
+        const resultDfgBC = ValidationHelper.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL, logFunc);
         expect(resultDfgBC[0]).toBeTrue();
-        expect(resultDfgBC[1]).toBe('Parallel-Cut erfolgreich');
+        expect(resultDfgBC[1]).toBe('Parallel-Cut successful');
         expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
         expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
         expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
@@ -1002,10 +928,10 @@ describe('ValidationHelper', () => {
         const nsA = new Set(['A']); // nodeset {A}
         const nsBCDEF = new Set(['B', 'C', 'D', 'E', 'F']); // nodeset {B, C, D, E, F}
 
-        const result = ValidationHelper.testValidateAndReturn(dfg, nsA, nsBCDEF, CutType.SEQUENCE);
+        const result = ValidationHelper.validateAndReturn(dfg, nsA, nsBCDEF, CutType.SEQUENCE, logFunc);
 
         expect(result[0]).toBeTrue();
-        expect(result[1]).toBe('Sequence-Cut erfolgreich');
+        expect(result[1]).toBe('Sequence-Cut successful');
 
         expect(result[2]?.getSuccessors('play')).toContain('A');
         expect(result[2]?.getSuccessors('A')).toContain('stop');
@@ -1033,10 +959,10 @@ describe('ValidationHelper', () => {
         const nsBCEF = new Set(['B', 'C', 'E', 'F']);
         const nsD = new Set(['D']);
 
-        const resultDfgBCDEF = ValidationHelper.testValidateAndReturn(dfgBCDEF!, nsBCEF, nsD, CutType.SEQUENCE);
+        const resultDfgBCDEF = ValidationHelper.validateAndReturn(dfgBCDEF!, nsBCEF, nsD, CutType.SEQUENCE, logFunc);
 
         expect(resultDfgBCDEF[0]).toBeTrue();
-        expect(resultDfgBCDEF[1]).toBe('Sequence-Cut erfolgreich');
+        expect(resultDfgBCDEF[1]).toBe('Sequence-Cut successful');
         expect(resultDfgBCDEF[2]?.getSuccessors('B')).toContain('stop');
         expect(resultDfgBCDEF[2]?.getSuccessors('C')).toContain('stop');
         expect(resultDfgBCDEF[2]?.getSuccessors('E')).not.toContain('stop');
@@ -1057,10 +983,10 @@ describe('ValidationHelper', () => {
         const nsBC = new Set(['B', 'C']);
         const nsEF = new Set(['E', 'F']);
 
-        const resultDfgBCEF = ValidationHelper.testValidateAndReturn(dfgBCEF!, nsBC, nsEF, CutType.LOOP);
+        const resultDfgBCEF = ValidationHelper.validateAndReturn(dfgBCEF!, nsBC, nsEF, CutType.LOOP, logFunc);
 
         expect(resultDfgBCEF[0]).toBeTrue();
-        expect(resultDfgBCEF[1]).toBe('Loop-Cut erfolgreich');
+        expect(resultDfgBCEF[1]).toBe('Loop-Cut successful');
         expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('B');
         expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('C');
         expect(resultDfgBCEF[2]?.getSuccessors('B')).toContain('C');
@@ -1084,9 +1010,9 @@ describe('ValidationHelper', () => {
         const nsB = new Set(['B']);
         const nsC = new Set(['C']);
 
-        const resultDfgBC = ValidationHelper.testValidateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL);
+        const resultDfgBC = ValidationHelper.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL, logFunc);
         expect(resultDfgBC[0]).toBeTrue();
-        expect(resultDfgBC[1]).toBe('Parallel-Cut erfolgreich');
+        expect(resultDfgBC[1]).toBe('Parallel-Cut successful');
         expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
         expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
         expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
@@ -1102,9 +1028,9 @@ describe('ValidationHelper', () => {
         const nsE = new Set(['E']);
         const nsF = new Set(['F']);
 
-        const resultDfgEF = ValidationHelper.testValidateAndReturn(dfgEF!, nsE, nsF, CutType.SEQUENCE);
+        const resultDfgEF = ValidationHelper.validateAndReturn(dfgEF!, nsE, nsF, CutType.SEQUENCE, logFunc);
         expect(resultDfgEF[0]).toBeTrue();
-        expect(resultDfgEF[1]).toBe('Sequence-Cut erfolgreich');
+        expect(resultDfgEF[1]).toBe('Sequence-Cut successful');
         expect(resultDfgEF[2]?.getSuccessors('play')).toContain('E');
         expect(resultDfgEF[2]?.getSuccessors('E')).toContain('stop');
         expect(resultDfgEF[2]?.getSuccessors('E')).not.toContain('F');
@@ -1120,6 +1046,11 @@ describe('ValidationHelper', () => {
 
 describe('validator', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should return false for an invalid cut with missing nodes', () => {
         const inputStringArray: string[][] = [
             ['A', 'B', 'C'],
@@ -1135,12 +1066,17 @@ describe('validator', () => {
         const result = ValidationHelper['validator'](dfg, firstNodeSet, secondNodeSet, CutType.XOR);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('Es müssen alle Knoten in den Mengen vorkommen und sie müssen exklusiv sein');
+        expect(result[1]).toBe('All nodes must be present, and the sets must be exclusive');
     });
 });
 
 describe('allNodesUsedValidation', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should return true when all nodes are used for validation', () => {
         const inputStringArray: string[][] = [
             ['A', 'B', 'C'],
@@ -1193,6 +1129,11 @@ describe('allNodesUsedValidation', () => {
 
 describe('xorValidation', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should return true for valid XOR cut with disconnected subgraphs', () => {
         const inputStringArray: string[][] = [
             ['A', 'B'],
@@ -1207,6 +1148,7 @@ describe('xorValidation', () => {
         const result = ValidationHelper['xorValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeTrue();
+        expect(result[1]).toBe("XOR-Cut successful")
     });
 
     it('should return false for invalid XOR cut with connections between sets', () => {
@@ -1223,12 +1165,17 @@ describe('xorValidation', () => {
         const result = ValidationHelper['xorValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse(); // Verbindungen zwischen Mengen
-        expect(result[1]).toBe('Kante von B nach C gefunden');
+        expect(result[1]).toBe('arc from B to C found');
     });
 });
 
 describe('sequenceValidation', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should return true only for valid sequence cut', () => {
         // X∈{A,E}:{B,F},Y∈{B,F}:{C,G}
         const inputStringArray: string[][] = [
@@ -1251,6 +1198,7 @@ describe('sequenceValidation', () => {
         const firstResult = ValidationHelper['sequenceValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
 
         expect(firstResult[0]).toBeTrue();
+        expect(firstResult[1]).toBe("Sequence-Cut successful")
 
         // Zweite gültige Cut
         const secondCutFirstNodeSet = new Set(['A', 'B', 'E', 'F']);
@@ -1284,7 +1232,7 @@ describe('sequenceValidation', () => {
         const result = ValidationHelper['sequenceValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('Kein Weg von A nach E gefunden');
+        expect(result[1]).toBe('No path from A to E found');
     });
 
     it('should return false for invalid sequence cut with backward path', () => {
@@ -1301,12 +1249,23 @@ describe('sequenceValidation', () => {
         const result = ValidationHelper['sequenceValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('Weg von C in erste Knotenmenge gefunden');
+        expect(result[1]).toBe('Path from C to first NodeSet found');
     });
 });
 
 describe('parallelValidation', () => {
     let dfg: DirectlyFollows;
+    let log: string[];
+    let logFunc: (logMessage: string) => void;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+        log = [];
+        logFunc = (logMessage: string) => {
+            log.push(logMessage);
+        };
+    });
+
     it('should return true for valid parallel cut with elementary sub-nodesets', () => {
         const inputStringArray: string[][] = [
             ['A', 'B'],
@@ -1322,25 +1281,25 @@ describe('parallelValidation', () => {
         const firstResult = ValidationHelper['parallelValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
 
         expect(firstResult[0]).toBeTrue();
-        expect(firstResult[1]).toBe('null');
+        expect(firstResult[1]).toBe('Parallel-Cut successful');
 
         // Ungültige Cut
         const secondCutFirstNodeSet = new Set(['A', 'B']);
         const secondCutSecondNodeSet = new Set([]);
 
-        const secondResult = ValidationHelper.testValidateAndReturn(dfg, secondCutFirstNodeSet, secondCutSecondNodeSet, CutType.PARALLEL);
+        const secondResult = ValidationHelper.validateAndReturn(dfg, secondCutFirstNodeSet, secondCutSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(secondResult[0]).toBeFalse();
-        expect(secondResult[1]).toBe('Ein übergebenes NodeSet ist leer');
+        expect(secondResult[1]).toBe('A passed NodeSet is empty');
 
         // Ungültige Cut
 
         const thirdCutFirstNodeSet = new Set([]);
         const thirdCutSecondNodeSet = new Set(['B']);
 
-        const thirdResult = ValidationHelper.testValidateAndReturn(dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet, CutType.PARALLEL);
+        const thirdResult = ValidationHelper.validateAndReturn(dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet, CutType.PARALLEL, logFunc);
         expect(thirdResult[0]).toBeFalse();
-        expect(thirdResult[1]).toBe('Ein übergebenes NodeSet ist leer');
+        expect(thirdResult[1]).toBe('A passed NodeSet is empty');
 
     });
 
@@ -1364,12 +1323,17 @@ describe('parallelValidation', () => {
         const firstResult = ValidationHelper['parallelValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
 
         expect(firstResult[0]).toBeTrue();
-        expect(firstResult[1]).toBe('null');
+        expect(firstResult[1]).toBe('Parallel-Cut successful');
     });
 });
 
 describe('loopValidation', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should return true for simple valid loop cut', () => {
         // Do: A -> B, Redo: C
         const inputStringArray: string[][] = [
@@ -1387,7 +1351,7 @@ describe('loopValidation', () => {
         const firstResult = ValidationHelper['loopValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
 
         expect(firstResult[0]).toBeTrue();
-        expect(firstResult[1]).toBe('null');
+        expect(firstResult[1]).toBe('Loop-Cut successful');
 
         // Ungültige Cut
         const secondCutFirstNodeSet = new Set(['B', 'C']);
@@ -1396,7 +1360,7 @@ describe('loopValidation', () => {
         const secondResult = ValidationHelper['loopValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
 
         expect(secondResult[0]).toBeFalse();
-        expect(secondResult[1]).toBe('Kante führt von play nach A'); // weil A in playNodes nicht in firstNodeSetPlay existiert..?
+        expect(secondResult[1]).toBe('There exists a arc from play to A'); // weil A in playNodes nicht in firstNodeSetPlay existiert..?
 
     });
 
@@ -1417,7 +1381,7 @@ describe('loopValidation', () => {
         const firstResult = ValidationHelper['loopValidation'](dfg, firstCutFirstNodeSet, firstCutSecondNodeSet);
 
         expect(firstResult[0]).toBeTrue();
-        expect(firstResult[1]).toBe('null');
+        expect(firstResult[1]).toBe('Loop-Cut successful');
 
         // Ungültige Cut
         const secondCutFirstNodeSet = new Set(['D', 'E', 'F']);
@@ -1431,6 +1395,11 @@ describe('loopValidation', () => {
 
 describe('createNewDFG', () => {
     let dfg: DirectlyFollows;
+
+    beforeEach(() => {
+        dfg = new DirectlyFollows();
+    });
+
     it('should create a new DFG based on a subset of nodes', () => {
         // X∈{A,E}:{B,F},Y∈{B,F}:{C,G}
         const inputStringArray: string[][] = [

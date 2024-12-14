@@ -1,11 +1,11 @@
 import {TestBed, fakeAsync, tick} from '@angular/core/testing';
 import {ProcessGraphService} from './process-graph.service';
-import {ValidationHelper} from "../helper/ValidationHelper";
 import {DirectlyFollows} from '../classes/directly-follows';
 import {CutType} from '../classes/cut-type.enum';
 import {effect, runInInjectionContext, Injector} from '@angular/core';
 import {ProcessGraph} from "../classes/process-graph";
 import {ValidationData} from "../classes/validation-data";
+import {ValidationResult} from "../classes/validation-result";
 
 
 describe('ProcessGraphService Signal Reaktivität', () => {
@@ -51,12 +51,11 @@ describe('CutValidation on progress graph', () => {
     let dfg: DirectlyFollows;
     let processGraphService: ProcessGraphService;
 
-
     beforeEach(() => {
         processGraphService = new ProcessGraphService();
         dfg = new DirectlyFollows();
     });
-    describe('ProcessGraph after all cuts', () => {
+    describe('Inititate Processgraph', () => {
         beforeEach(() => {
             const inputStringArray: string[][] = [
                 ['A', 'B'],
@@ -68,29 +67,39 @@ describe('CutValidation on progress graph', () => {
             processGraphService.createGraph(inputStringArray);
         });
         it('should pull the correct dfg from process-graph', () => {
+            // Subscribe to the signal (observable) to capture emitted values
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
             dfg = dfgArray[0];
             expect(graph?.dfgSet.has(dfg)).toBe(true)
-            expect(graph?.dfgSet.size === 1).toBe(true)
+            expect(graph?.dfgSet.size).toBe(1);
+            expect(graph?.arcs.length).toBe(6);
         });
-        it('make a correct xor cut and have 2 dfg on petrinet', () => {
-            let graph = processGraphService.graphSignal()
-            let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
-            let valiDat: ValidationData = {
-                dfg: dfg,
-                firstNodeSet: new Set<string>(['A', 'B']),
-                cutType: CutType.XOR,
-            }
-            expect(graph?.dfgSet.size === 1).toBe(true);
-            expect(graph?.arcs.length === 6).toBe(true);
-            let result = processGraphService.validateCut(valiDat)
-            expect(graph?.dfgSet.size === 2).toBe(true);
-            expect(result.validationSuccessful).toBe(true);
-            expect(graph?.arcs.length === 8).toBe(true);
-            expect(graph?.places.size).toBe(4);
+        describe('xor cut in ProgressGraph', () => {
+            let graph: ProcessGraph | null
+            let dfgArray: DirectlyFollows[]
+            let valiDat: ValidationData
+            let result: ValidationResult
+            beforeEach(() => {
+                graph = processGraphService.graphSignal();
+                dfgArray = Array.from(graph?.dfgSet || []);
+                dfg = dfgArray[0];
+                valiDat = {
+                    dfg: dfg,
+                    firstNodeSet: new Set<string>(['A', 'B']),
+                    cutType: CutType.XOR,
+                }
+                result = processGraphService.validateCut(valiDat)
+            })
+            it('make a correct xor cut and have 2 dfg on petrinet', () => {
+                graph = processGraphService.graphSignal();
+                expect(graph?.dfgSet.size === 2).toBe(true);
+                expect(result.validationSuccessful).toBe(true);
+                expect(graph?.arcs.length).toBe(8);
+                expect(graph?.places.size).toBe(4);
+            });
         });
+
         //TODO: nächstes seqence cut, dann loop cut.. immer kantenmengen und anzahl der elemente abtesten..
         // die darauffolgenden dfgs muss man mit Logik (schau ob knoten in dfg, dann nimm ihn) aus dem dfgSet ziehen..
     });
@@ -123,7 +132,7 @@ describe('CutValidation on progress graph', () => {
             // Teste die erste XOR-Aufteilung
             const result = processGraphService.validateCut(valiDat)
             expect(result.validationSuccessful).toBeTrue();
-            expect(result.comment).toBe('XOR-Cut erfolgreich');
+            expect(result.comment).toBe('XOR-Cut successful');
             for (let dfg of graph?.dfgSet || []) {
                 if (dfg.getNodes().has('A')) {
                     for (let node of dfg.getNodes()) {
@@ -144,7 +153,9 @@ describe('ProcessGraphService', () => {
     let dfg: DirectlyFollows;
     let processGraphService: ProcessGraphService;
     beforeEach(() => {
+        processGraphService = new ProcessGraphService();
         dfg = new DirectlyFollows();
+        processGraphService = new ProcessGraphService();
         const inputStringArray: string[][] = [
             ['A', 'B'],
             ['C', 'D', 'E', 'F', 'G'],

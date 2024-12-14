@@ -1,6 +1,7 @@
 import {Arc} from "./arc";
 
 export class DirectlyFollows {
+    id: number;
     successorMap: Map<string, Set<string>>
     predecessorMap: Map<string, Set<string>>
     eventLog: string[][];
@@ -10,6 +11,7 @@ export class DirectlyFollows {
 
     //TODO: Arcs und Nodes aktualisieren
     constructor() {
+        this.id = 0;
         this.successorMap = new Map<string, Set<string>>()
         this.predecessorMap = new Map<string, Set<string>>()
         this.eventLog = [];
@@ -185,6 +187,10 @@ export class DirectlyFollows {
                 this.addPredecessor(successor, origin)
             }
         }
+    }
+
+    setID(newID: number): void {
+        this.id = newID;
     }
 
 
