@@ -193,5 +193,9 @@ export class DirectlyFollows {
         this.id = newID;
     }
 
+    hasArc(source: string, target: string): boolean {
+        const successors = this.successorMap.get(source);
+        return successors !== undefined && successors.has(target);
+    }
 
 }
