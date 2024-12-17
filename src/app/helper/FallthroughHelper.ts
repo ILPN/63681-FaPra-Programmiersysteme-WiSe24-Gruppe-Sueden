@@ -23,7 +23,7 @@ export class FallthroughHelper {
         const footprintMatrix = this.computeFootprintMatrix(dfg);
 
         // XOR-Cut detection
-        if (this.isXORCutPossible(dfg)) {
+        if (this.isXORCutPossible(nodesAsArray, footprintMatrix)) {
             return [false, 'XOR Cut possible'];
         }
 
@@ -47,9 +47,9 @@ export class FallthroughHelper {
         return [true, 'Fall Through'];
     }
 
-    // TODO: XOR-Cut detection logic
-    public static isXORCutPossible(dfg: DirectlyFollows): boolean {
-        return false;
+    public static isXORCutPossible(nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+        const wccs = this.computeWCCsFromFootprintMatrix(nodesAsArray, footprintMatrix);
+        return wccs.length > 1;
     }
 
     public static isSequenceCutPossible(nodesAsArray: string[], reachabilityMatrix: boolean[][]): boolean {
@@ -62,7 +62,7 @@ export class FallthroughHelper {
         // Initializing: one component per node, component as subarray
         let components: string[][] = nodesAsArray.map(node => [node]);
 
-        // Merging pairwise reachable components and pairwise unreachable components using reachabilityMatrix (SCCs)
+        // Merging pairwise reachable components (SCCs) using reachabilityMatrix
         for (let i = 0; i < nodesAsArray.length; i++) {
             for (let j = i + 1; j < nodesAsArray.length; j++) {
                 if (reachabilityMatrix[i][j] && reachabilityMatrix[j][i]) { // pairwise reachable
@@ -77,7 +77,7 @@ export class FallthroughHelper {
             }
         }
 
-        // Building reachability matrix on components (SCCs)
+        // Building reachability matrix of components
         const n = components.length;
         let SCCsReachabilityMatrix: boolean[][] = Array.from({ length: n }, () => Array(n).fill(false));
         for (let i = 0; i < n; i++) {
@@ -120,7 +120,7 @@ export class FallthroughHelper {
     }
 
     public static isParallelCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], inverseFootprintMatrix: string[][]): boolean {
-
+        // building wccs from inverted footprint-matrix
         const wccs = this.computeWCCsFromFootprintMatrix(nodesAsArray, inverseFootprintMatrix);
         if (wccs.length < 2) {
             return false;
