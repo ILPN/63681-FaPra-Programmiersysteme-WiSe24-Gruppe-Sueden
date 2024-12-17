@@ -11,16 +11,16 @@ export class FallthroughHelper {
     public static isFallthrough(dfg: DirectlyFollows): [boolean, string] {
         // Base case
         if (dfg.getNodes().size === 1) {
-            if (dfg.getArcs().length === 0) {
+            if (dfg.getArcs().length === 2) {
                 return [false, 'Base Case'];
-            } else if (dfg.getArcs().length === 1) {
+            } else if (dfg.getArcs().length > 2) {
                 return [false, 'Loop Cut of length 1 possible'];
             }
         }
 
         const nodesAsArray =  Array.from(dfg.getNodes()).sort();
-        const reachabilityMatrix = this.computeReachabilityMatrix(dfg);
-        const footprintMatrix = this.computeFootprintMatrix(dfg);
+        const reachabilityMatrix = this.computeReachabilityMatrix(nodesAsArray, dfg);
+        const footprintMatrix = this.computeFootprintMatrix(nodesAsArray, dfg);
 
         // XOR-Cut detection
         if (this.isXORCutPossible(nodesAsArray, footprintMatrix)) {
@@ -145,9 +145,7 @@ export class FallthroughHelper {
     }
 
 
-    public static computeReachabilityMatrix(dfg: DirectlyFollows): boolean[][] {
-        const nodesAsArray = Array.from(dfg.getNodes());
-        nodesAsArray.sort();
+    public static computeReachabilityMatrix(nodesAsArray: string[], dfg: DirectlyFollows): boolean[][] {
         const n = nodesAsArray.length;
         let reachabilityMatrix = Array.from({ length: n }, () => Array(n).fill(false));
 
@@ -173,11 +171,8 @@ export class FallthroughHelper {
         return reachabilityMatrix;
     }
 
-    public static computeFootprintMatrix(dfg: DirectlyFollows): string[][] {
-        const nodesAsArray =  Array.from(dfg.getNodes());
-        nodesAsArray.sort();
-        const n = nodesAsArray.length;
-        let footprintMatrix: string[][] = Array.from({ length: n }, () => Array(n).fill('-'));
+    public static computeFootprintMatrix(nodesAsArray: string[], dfg: DirectlyFollows): string[][] {
+        let footprintMatrix: string[][] = Array.from({ length: nodesAsArray.length }, () => Array(nodesAsArray.length).fill('-'));
 
         nodesAsArray.forEach((source, i) => {
             nodesAsArray.forEach((target, j) => {
@@ -217,7 +212,7 @@ export class FallthroughHelper {
                     case '#':
                         inverseFootprintMatrix[i][j] = '||';
                         break;
-                    default:
+                    default: // TODO: Muss noch schauen, ob es nötig ist
                         inverseFootprintMatrix[i][j] = footprintMatrix[i][j]; // Copy any other values unchanged
                 }
             }

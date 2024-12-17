@@ -19,7 +19,8 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const result = FallthroughHelper.computeReachabilityMatrix(dfg);
+            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [[true, true, true], [true, true, true], [true, true, true]];
             expect(result).toEqual(expectedResult);
         }));
@@ -34,7 +35,8 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const result = FallthroughHelper.computeReachabilityMatrix(dfg);
+            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [
                 [false, true, false, false, true, false, false],
                 [false, false, false, false, true, false, false],
@@ -56,7 +58,8 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const result = FallthroughHelper.computeReachabilityMatrix(dfg);
+            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [
                 [false, true, true, false],
                 [false, false, true, false],
@@ -102,7 +105,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(true);
@@ -118,7 +121,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(true);
@@ -134,7 +137,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(true);
@@ -149,7 +152,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(false);
@@ -164,7 +167,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(false);
@@ -181,7 +184,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
             expect(result).toEqual(false);
@@ -307,7 +310,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -324,7 +327,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -344,7 +347,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -360,7 +363,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -376,7 +379,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -393,7 +396,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
@@ -412,7 +415,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
             const nodesAsArray = Array.from(dfg.getNodes()).sort();
-            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(dfg);
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
