@@ -94,7 +94,7 @@ describe('CutValidation on progress graph', () => {
             it('make a correct xor cut and have 2 dfg on petrinet', () => {
                 graph = processGraphService.graphSignal();
                 expect(graph?.dfgSet.size === 2).toBe(true);
-                expect(result.validationSuccessful).toBe(true);
+                expect(result.success).toBe(true);
                 expect(graph?.arcs.length).toBe(8);
                 expect(graph?.places.size).toBe(4);
             });
@@ -131,7 +131,7 @@ describe('CutValidation on progress graph', () => {
 
             // Teste die erste XOR-Aufteilung
             const result = processGraphService.validateCut(valiDat)
-            expect(result.validationSuccessful).toBeTrue();
+            expect(result.success).toBeTrue();
             expect(result.comment).toBe('XOR-Cut successful');
             for (let dfg of graph?.dfgSet || []) {
                 if (dfg.getNodes().has('A')) {

@@ -3,8 +3,8 @@
 
     <!-- Filedrop area -->
     <h2 class="mb-2">Import File</h2>
-    <div class="flex items-center justify-center cursor-pointer border-2 border-dashed border-gray-500 rounded-2xl h-60"
-         [class.data-input-active]="dragCounter !== 0"
+    <div class="flex items-center justify-center cursor-pointer h-60 data-input"
+         [class.active]="dragCounter !== 0"
          (dragenter)="onDragEnter($event)"
          (dragleave)="onDragLeave($event)"
          (drop)="onDrop($event)"
@@ -38,5 +38,5 @@
             </mat-error>
         }
     </mat-form-field>
-    <button mat-flat-button color="primary" [disabled]="manualInputControl.invalid" (click)="parseEventLog()">Import</button>
+    <button mat-flat-button [disabled]="manualInputControl.invalid" (click)="parseEventLog()">Import</button>
 </div>

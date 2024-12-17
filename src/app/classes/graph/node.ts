@@ -1,8 +1,19 @@
 export interface Node {
-    id: number;
-    x: number;
-    y: number;
-    vx: number;  // Velocity x
-    vy: number;  // Velocity y
-    isDragged: boolean;  // Is the node being dragged
+    name: string
+    x: number
+    y: number
+    vx: number
+    vy: number
+    isDragged: boolean
+    isSelected: boolean
+    type: NodeType
+    height: number
+    width: number
+}
+
+export enum NodeType {
+    node,
+    place,
+    eventLog,
+    transition
 }

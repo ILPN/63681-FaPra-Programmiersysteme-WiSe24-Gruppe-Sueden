@@ -1,6 +1,7 @@
 import {Node} from './node'
 
 export interface Edge {
-    source: Node;
-    target: Node;
+    source: Node
+    target: Node
+    bidirectional: boolean
 }

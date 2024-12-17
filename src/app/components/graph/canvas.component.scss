@@ -1,0 +1,22 @@
+svg {
+    background-color: lightgray;
+    border: 1px solid black;
+    border-radius: 8px;
+}
+
+.dfg-node {
+    rect {
+        stroke: black;
+        stroke-width: 2px;
+        transition: stroke 0.3s, stroke-width 0.3s;
+    }
+
+    &:hover rect {
+        stroke-width: 3px;
+    }
+
+    &.selected rect {
+        stroke-width: 3px;
+        stroke: red;
+    }
+}

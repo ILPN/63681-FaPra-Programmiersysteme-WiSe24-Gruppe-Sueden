@@ -1,7 +1,9 @@
 import {Arc} from "./arc";
 
 export class DirectlyFollows {
-    id: number;
+    id: number
+    x: number = 0
+    y: number = 0
     successorMap: Map<string, Set<string>>
     predecessorMap: Map<string, Set<string>>
     eventLog: string[][];
@@ -190,7 +192,7 @@ export class DirectlyFollows {
     }
 
     setID(newID: number): void {
-        this.id = newID;
+        this.id = newID
     }
 
 

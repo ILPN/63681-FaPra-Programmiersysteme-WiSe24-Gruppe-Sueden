@@ -1,0 +1,25 @@
+<!-- Bounding Box -->
+<svg:rect
+    [attr.x]="0"
+    [attr.y]="0"
+    [attr.width]="width"
+    [attr.height]="height"
+    fill="gray"
+    stroke="black"
+    stroke-width="1"
+    xmlns:svg="http://www.w3.org/2000/svg"></svg:rect>
+
+<!-- Draw edges -->
+@for (edge of edges; track $index) {
+    <svg:g Edge xmlns:svg="http://www.w3.org/2000/svg" [edge]="edge"/>
+}
+
+<!-- Draw nodes -->
+@for (node of nodes; track $index) {
+    <svg:g Node
+       xmlns:svg="http://www.w3.org/2000/svg"
+       [node]="node"
+       (nodeMouseUp)="nodeMouseUp.emit($event)"
+       (nodeMouseDown)="nodeMouseDown.emit($event)"
+    />
+}

@@ -9,7 +9,7 @@ import {FormControl, ReactiveFormsModule, ValidatorFn} from "@angular/forms";
     standalone: true,
     selector: 'data-input',
     templateUrl: './data-input.component.html',
-    styleUrls: ['./data-input.component.css'],
+    styleUrls: ['./data-input.component.scss'],
     imports: [
         MatFormField,
         MatLabel,
@@ -71,17 +71,23 @@ export class DataInputComponent {
     /***************************************************************** Manual Input *****************************************************************/
     protected eventLogValidator: ValidatorFn = control => {
         const val = control?.value as string
-        if (!!val && val.match(/^[a-zA-Z0-9 +]+$/)) {
+        if (!!val && val.match(/^[a-zA-Z0-9\s\n+]+$/)) {
             return null
         }
         return {invalid: true}
     }
 
-    protected manualInputControl = new FormControl("event1 event2 event3 + event3 event1 event2 + event8 event1 event2", [this.eventLogValidator])
+    protected manualInputControl = new FormControl(
+        "SetPc SetCfp + SuggestPc SetUpCfp SendInvites ReceiveAnswers FinalizePc FinalizeCfp + SuggestPc SendInvites SetUpCfp ReceiveAnswers FinalizePc FinalizeCfp + SuggestPc SendInvites ReceiveAnswers SetUpCfp FinalizePc FinalizeCfp + SuggestPc SendInvites ReceiveAnswers UpdateInvites SendInvites ReceiveAnswers FinalizePc SetUpCfp FinalizeCfp",
+        [this.eventLogValidator]
+    )
 
     protected parseEventLog() {
-        const result: string[][] = this.manualInputControl.value!.split("+").map(rawTrace => {
-            return rawTrace.trim().split(" ").filter(it => it !== "")
+        let input = this.manualInputControl.value!
+        input = input.replaceAll("\n", " ")
+        const result: string[][] = input.split("+").map(rawTrace => {
+            rawTrace = rawTrace.trim()
+            return rawTrace.split(" ").filter(event => event !== "")
         })
         this.processGraphService.createGraph(result)
     }

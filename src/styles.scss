@@ -1,0 +1,43 @@
+/* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind utilities;
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+}
+
+body {
+    padding: 50px;
+    font-family: "Courier New", sans-serif;
+
+    --mdc-outlined-text-field-container-shape: 8px; // Match rest of the style
+}
+
+.mdc-fab {
+    --mdc-fab-container-shape: 8px !important;
+    --mdc-extended-fab-container-shape: 8px !important;
+    --mdc-fab-container-color: #ffffff !important;
+    --mat-fab-foreground-color: #000000 !important;
+
+    --mat-fab-ripple-color: rgba(0, 0, 0, 0.1) !important;
+
+    box-shadow: none !important;
+
+    border: 1px solid gray !important;
+
+    transition: background-color 0.3s !important;
+    &:hover {
+        --mdc-fab-container-color: rgba(0, 0, 0, 0.2) !important;
+    }
+}
+
+.mat-mdc-extended-fab {
+    --mdc-extended-fab-container-height: 56px !important;
+    box-shadow: none !important;
+}
+
+.mat-mdc-unelevated-button {
+    border: 1px solid gray !important;
+    border-radius: 8px !important;
+}

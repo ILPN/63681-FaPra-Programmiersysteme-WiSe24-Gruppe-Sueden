@@ -1,4 +1,4 @@
-import {effect, Injectable, signal, Signal} from '@angular/core'
+import {Injectable, signal} from '@angular/core'
 import {DirectlyFollows} from '../classes/directly-follows'
 import {ProcessGraph} from "../classes/process-graph"
 import {Place} from "../classes/graph/place";
@@ -23,12 +23,12 @@ export class ProcessGraphService {
         directlyFollowsGraph.setDFGfromStringArray(eventLog)
 
         // Erstelle Anfangs Transitionen und Places für das Petrinetz
-        const firstPlace: Place = {id: this.generateUniqueId('place')};
-        const playTransition: Transition = {id: "play"};
-        const tempPlace1: Place = {id: this.generateUniqueId('place')};
-        const tempPlace2: Place = {id: this.generateUniqueId('place')};
-        const lastPlace: Place = {id: this.generateUniqueId('place')};
-        const stopTransition: Transition = {id: "stop"};
+        const firstPlace: Place = new Place(this.generateUniqueId('place'));
+        const playTransition: Transition =  new Transition("play");
+        const tempPlace1: Place = new Place(this.generateUniqueId('place'));
+        const tempPlace2: Place = new Place(this.generateUniqueId('place'));
+        const lastPlace: Place = new Place(this.generateUniqueId('place'));
+        const stopTransition: Transition = new Transition("stop");
         const placeSet = new Set<Place>;
         const transSet = new Set<Transition>;
         placeSet.add(firstPlace);
@@ -76,8 +76,8 @@ export class ProcessGraphService {
             let secondOptional = false;
             if (data.cutType === CutType.SEQUENCE) {
                 this.updateLog("checking if subgraphs optional")
-                firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet);
-                secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']));
+                firstOptional = data.dfg.existsPath(new Set<string>(['play']), secondNodeSet, secondNodeSet);
+                secondOptional = data.dfg.existsPath(firstNodeSet, new Set<string>(['stop']), firstNodeSet);
                 if (firstOptional && secondOptional) {
                     this.updateLog('Sequence-Cut successful, both subgraphs optional');
                     result[1] = 'Sequence-Cut successful, both subgraphs optional';
@@ -101,7 +101,7 @@ export class ProcessGraphService {
         this.updateValidationSuccessful(result[0]);  // update validation successful
         this.updateReason(result[1]);               // update reason
         this.updateLog(" ")
-        return {validationSuccessful: result[0], comment: result[1]};
+        return {success: result[0], comment: result[1]};
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
@@ -145,7 +145,7 @@ export class ProcessGraphService {
                            dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                            dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                            workingGraph: ProcessGraph) {
-        //flatMap durchläuft alle arcs und ersetzt sie nach bestimmten Kriterien
+        //flatMap durchläuft alle arcs und ersetzt sie nach gegebenen Kriterien
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //Kriterium = source = originalDFG
             if (arc.source === dfgOriginal) {
@@ -173,7 +173,7 @@ export class ProcessGraphService {
                                 dfg1: DirectlyFollows, isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
                                 dfg2: DirectlyFollows, isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
                                 workingGraph: ProcessGraph) {
-        const middlePlace: Place = {id: this.generateUniqueId('place')};
+        const middlePlace: Place = new Place(this.generateUniqueId('place'));
         //middlePlace ist die stelle zwischen dfg1 und dfg2
         workingGraph.places.add(middlePlace);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
@@ -191,7 +191,6 @@ export class ProcessGraphService {
             }
             return [arc];
         });
-        //TODO: evtl nicht nötig, falls wir TAU-Übergänge noch in den DFG nehmen
         //macht dfgs optional (siehe skript)
         this.updateLog('creating silent transitions')
         if (isOptional1) {
@@ -214,19 +213,20 @@ export class ProcessGraphService {
                                 dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                                 workingGraph: ProcessGraph) {
         //Erstelle neue Stellen und Tau Transitionen
-        const firstPlaceNew1: Place = {id: this.generateUniqueId('place')};
+        const firstPlaceNew1: Place = new Place(this.generateUniqueId('place'));
+         //   Place = {id: this.generateUniqueId('place')};
         workingGraph.places.add(firstPlaceNew1);
-        const firstPlaceNew2: Place = {id: this.generateUniqueId('place')};
+        const firstPlaceNew2: Place = new Place(this.generateUniqueId('place'));
         workingGraph.places.add(firstPlaceNew2);
-        const firstTauTransition: Transition = {id: this.generateUniqueId('TAU')};
+        const firstTauTransition: Transition = new Transition(this.generateUniqueId('TAU'));
         workingGraph.transitions.add(firstTauTransition);
 
-        const lastPlaceNew1: Place = {id: this.generateUniqueId('place')};
-        workingGraph.places.add(firstPlaceNew1);
-        const lastPlaceNew2: Place = {id: this.generateUniqueId('place')};
-        workingGraph.places.add(firstPlaceNew2);
-        const lastTauTransition: Transition = {id: this.generateUniqueId('TAU')};
-        workingGraph.transitions.add(firstTauTransition);
+        const lastPlaceNew1: Place = new Place( this.generateUniqueId('place'));
+        workingGraph.places.add(lastPlaceNew1);
+        const lastPlaceNew2: Place = new Place(this.generateUniqueId('place'));
+        workingGraph.places.add(lastPlaceNew2);
+        const lastTauTransition: Transition = new Transition(this.generateUniqueId('TAU'));
+        workingGraph.transitions.add(lastTauTransition);
 
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //geh alle arcs durch und suche die stelle vor dem dfgOriginal
@@ -259,6 +259,7 @@ export class ProcessGraphService {
     /*==============================================================================================================================*/
     //LOOP
     /*==============================================================================================================================*/
+    //TODO: was wenn mehrere stellen davor / dannach?
     private incorporateLoop(dfgOriginal: DirectlyFollows,                    // der dfg der ausgetauscht werden soll
                             dfg1: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
                             dfg2: DirectlyFollows,                            // dfg1 mit dem ausgetauscht wird
@@ -290,7 +291,7 @@ export class ProcessGraphService {
 
     // macht einen DFG durch hinzufügen einer TAU-Transition optional
     private makeOptional(dfg: DirectlyFollows, workingGraph: ProcessGraph) {
-        const tauTransition: Transition = {id: this.generateUniqueId('TAU')};
+        const tauTransition: Transition = new Transition(this.generateUniqueId('TAU'));
         workingGraph.transitions.add(tauTransition);
         workingGraph.arcs.forEach(arc => {
             if (arc.source === dfg) {

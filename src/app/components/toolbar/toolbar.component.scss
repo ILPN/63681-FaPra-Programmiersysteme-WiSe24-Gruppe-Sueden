@@ -1,0 +1,37 @@
+.toolbox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: left 0.3s;
+}
+
+.toolbox-section {
+    display: flex;
+    gap: 8px;
+    position: relative;
+    padding: 10px;
+
+    border: gray 1px solid;
+    border-radius: 8px;
+}
+
+.toolbox-section-label {
+    position: absolute;
+    background: white;
+    padding: 0 10px;
+    top: 0;
+    left: 10px;
+    transform: translateY(-50%);
+}
+
+.toolbox-section-value {
+    padding: 8px;
+    border-radius: 6px;
+    transition: background-color 0.3s;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &.selected, &:hover {
+        background: rgba(0, 0, 0, 0.2);
+    }
+}

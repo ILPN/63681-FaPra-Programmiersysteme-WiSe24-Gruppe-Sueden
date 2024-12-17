@@ -1,4 +1,14 @@
-<svg #drawingArea class="canvas"
-     (drop)="processDropEvent($event)"
-     (dragover)="prevent($event)">
-</svg>
+<div class="flex flex-col gap-3">
+    <toolbar [(cutType)]="cutType"
+             [(selectionType)]="selectionType"
+             [(useSpringEmbedder)]="useSpringEmbedder"/>
+    <div class="flex">
+        <app-canvas class="grow"
+                    [cutType]="cutType()"
+                    [selectionType]="selectionType()"
+                    [useSpringEmbedder]="useSpringEmbedder()"/>
+        <!--<div> TODO
+            Here log
+        </div>-->
+    </div>
+</div>

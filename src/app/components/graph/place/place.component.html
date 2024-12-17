@@ -1,0 +1,12 @@
+<svg:circle
+    xmlns:svg="http://www.w3.org/2000/svg"
+    [attr.r]="PhysicsHelper.nodeRadius"
+    [attr.cx]="place().x"
+    [attr.cy]="place().y"
+    (mousedown)="nodeMouseDown.emit(place())"
+    (mouseup)="nodeMouseUp.emit(place())"
+    stroke-width="1"
+    stroke="black"
+    fill="white"
+>
+</svg:circle>

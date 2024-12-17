@@ -1,0 +1,29 @@
+@let _node = node();
+<svg:g xmlns:svg="http://www.w3.org/2000/svg"
+       class="dfg-node"
+       [class.selected]="_node.isSelected"
+       (mousedown)="nodeMouseDown.emit(_node)"
+       (mouseup)="nodeMouseUp.emit(_node)"
+>
+    <svg:rect
+        xmlns:svg="http://www.w3.org/2000/svg"
+        [attr.x]="_node.x - PhysicsHelper.nodeRadius"
+        [attr.y]="_node.y - PhysicsHelper.nodeRadius"
+        [attr.width]="PhysicsHelper.nodeDiameter"
+        [attr.height]="PhysicsHelper.nodeDiameter"
+        [attr.rx]="3"
+        [attr.ry]="3"
+        fill="white">
+    </svg:rect>
+    <svg:text
+        xmlns:svg="http://www.w3.org/2000/svg"
+        [attr.x]="_node.x"
+        [attr.y]="_node.y + 2"
+        text-anchor="middle"
+        font-size="12"
+        fill="black"
+        class="select-none"
+    >
+        {{ _node.name }}
+    </svg:text>
+</svg:g>

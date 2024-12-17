@@ -1,4 +1,4 @@
 export interface ValidationResult {
-    validationSuccessful: boolean;
+    success: boolean;
     comment: string;
 }

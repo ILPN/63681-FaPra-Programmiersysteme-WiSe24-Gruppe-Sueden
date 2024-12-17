@@ -1,0 +1,73 @@
+<div class="toolbox">
+    <!-- Selection -->
+    <div class="toolbox-section">
+        <span class="toolbox-section-label">Selection</span>
+        @for (type of SelectionType | keyvalue: originalOrder; track type.value) {
+            <span class="toolbox-section-value" mat-ripple [class.selected]="selectionType() === type.value" (click)="selectionType.set(type.value)">
+                {{ type.value | titlecase }}
+            </span>
+        }
+    </div>
+
+    <div class="overflow-x-clip">
+        <div class="relative toolbox" [style.left]="selectionType() === SelectionType.NONE ? '-100%' : 0">
+
+            <!-- Cut Type -->
+            <div class="toolbox-section">
+                <span class="toolbox-section-label">Cut</span>
+                @for (type of CutType | keyvalue; track type.value) {
+                    <span class="toolbox-section-value" mat-ripple [class.selected]="cutType() == type.value" (click)="cutType.set(type.value)">
+                        {{ type.value | titlecase }}
+                    </span>
+                }
+            </div>
+
+            <!-- Validate Button -->
+            <button mat-fab extended
+                    (click)="validateCut()"
+                    [disabled]="selectionService.selectedNodes().length == 0"
+                    matTooltip="Validate if cut is correct">
+                <mat-icon>check</mat-icon>
+                Validate
+            </button>
+
+        </div>
+    </div>
+
+
+    <div class="grow"></div>
+
+
+    <!-- Graph mode -->
+    <div class="toolbox-section">
+        <span class="toolbox-section-label">Graph</span>
+        <span class="toolbox-section-value" mat-ripple [class.selected]="useSpringEmbedder()" (click)="useSpringEmbedder.set(true)">
+            Spring Embedder
+        </span>
+
+        <span class="toolbox-section-value" mat-ripple [class.selected]="!useSpringEmbedder()" (click)="useSpringEmbedder.set(false)">
+            Free Layout
+        </span>
+    </div>
+
+    <!-- Export -->
+    <div matTooltip="Petrinet can only be exported after the inductive miner has terminated" [matTooltipDisabled]="false">
+        <button mat-fab matTooltip="Export Petrinet" [disabled]="true" [matMenuTriggerFor]="exportMenu">
+            <mat-icon>file_download</mat-icon>
+        </button>
+    </div>
+
+    <!-- Abort -->
+    <button mat-fab matTooltip="Abbrechen" (click)="service.graphSignal.set(null)">
+        <mat-icon>clear</mat-icon>
+    </button>
+</div>
+
+<!-- Export menu -->
+<mat-menu #exportMenu>
+    @for (type of ExportType | keyvalue; track type.value) {
+        <button mat-menu-item (click)="export(type.value)">
+            {{ type.value }}
+        </button>
+    }
+</mat-menu>

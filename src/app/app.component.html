@@ -14,34 +14,24 @@
     <hr>
 
     @if (processGraphService.graphSignal()) {
-        <app-graph class="w-full p-5 flex justify-center"/>
+        <app-display/>
     } @else {
         <data-input/>
     }
 
-    <!---->
-    <!--    Main content    -->
-    <!--<app-display class="padding full-size" (fileContent)="processSourceChange($event)"></app-display>
--->
-
-    <!--<div class="flexRowAlignSpaceEvenlyStart">
-        <app-example-button title="Button"></app-example-button>
-
-        <app-example-file title="File" link="assets/example.json" description="An example .json Petri net"></app-example-file>
-
-        <mat-form-field appearance="outline"
-                        class="textarea">
-            <mat-label>File content</mat-label>
-            <textarea matInput
-                      cdkTextareaAutosize
-                      cdkAutosizeMinRows="10"
-                      cdkAutosizeMaxRows="20"
-                      [formControl]="textareaFc"></textarea>
-        </mat-form-field>
-    </div>-->
-
     <hr>
 
     <!--  Footer  -->
-    <app-footer/>
+    <div class="footer-font">
+        ...and I know you do too!
+        <br>
+        <br>
+        <a href="https://www.fernuni-hagen.de/mi/fakultaet/lehrende/bergenthum/index.shtml">Robin Bergenthum</a> and <a href="https://www.fernuni-hagen.de/ps/team/Jakub.Kovar.shtml">Jakub Kovář</a>
+        <br>
+        Fakultät für Mathematik und Informatik
+        <br>
+        Fernuni in Hagen, Germany
+        <br>
+        <a href="https://www.fernuni-hagen.de/service/impressum.shtml">Impressum</a> · <a href="https://www.fernuni-hagen.de/service/datenschutz.shtml">Datenschutz</a>
+    </div>
 </div>
