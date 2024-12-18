@@ -23,11 +23,11 @@ export class ProcessGraphService {
         directlyFollowsGraph.setDFGfromStringArray(eventLog)
 
         // Erstelle Anfangs Transitionen und Places für das Petrinetz
-        const firstPlace: Place = new Place(this.generateUniqueId('place'));
+        const firstPlace: Place = new Place('place_play');
         const playTransition: Transition =  new Transition("play");
         const tempPlace1: Place = new Place(this.generateUniqueId('place'));
         const tempPlace2: Place = new Place(this.generateUniqueId('place'));
-        const lastPlace: Place = new Place(this.generateUniqueId('place'));
+        const lastPlace: Place = new Place('place_stop');
         const stopTransition: Transition = new Transition("stop");
         const placeSet = new Set<Place>;
         const transSet = new Set<Transition>;

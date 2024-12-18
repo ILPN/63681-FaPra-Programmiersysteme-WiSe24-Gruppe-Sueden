@@ -77,7 +77,7 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
             PhysicsHelper.calculateRepulsionForce(this.nodes)
             PhysicsHelper.calculateAttractionForce(this.edges)
         }
-        PhysicsHelper.updateNodePositions(this.nodes, this.width, this.height)
+        PhysicsHelper.updateNodePositions(this.nodes, this.width, this.height, true)
     }
 
     clearDFG(): void {

@@ -63,8 +63,8 @@ export class PhysicsHelper {
                 const isEventLog = nodeA.type === NodeType.eventLog || nodeB.type === NodeType.eventLog
 
                 // Calculate repulsive force (Coulomb-like)
-                let force = (PhysicsHelper.repulsionStrength / (distance * distance))
-                if(isEventLog) force *= 10
+                let force = (PhysicsHelper.repulsionStrength*3 / (distance * distance))
+                if(isEventLog) force *= 7
 
                 // Apply the force in opposite directions to each node
                 const fx = (dx / distance) * force
@@ -83,8 +83,32 @@ export class PhysicsHelper {
     }
 
     // Update node positions, apply damping, and enforce boundary conditions with padding
-    public static updateNodePositions(nodes: Node[], canvasWidth: number, canvasHeight: number): void {
+    public static updateNodePositions(nodes: Node[], canvasWidth: number, canvasHeight: number, isDFG: boolean): void {
         for (const node of nodes) {
+            //fixed Position for play / stop in DFG view
+            if (isDFG){
+                if (node.name==='play') {
+                    node.x=canvasWidth / 2
+                    node.y= 25
+                    continue
+                }
+                if (node.name==='stop') {
+                    node.x=canvasWidth/2
+                    node.y= canvasHeight - 25
+                    continue
+                }
+            }
+            // fixed Position start/stop in Petrinet-View
+            if (node.name==='place_play') {
+                node.x=25
+                node.y= canvasHeight / 2
+                continue
+            }
+            if (node.name==='place_stop') {
+                node.x=canvasWidth - 25
+                node.y= canvasHeight / 2
+                continue
+            }
             const halfWidth = node.width / 2
             const halfHeight = node.height / 2
             if (!node.isDragged) {
