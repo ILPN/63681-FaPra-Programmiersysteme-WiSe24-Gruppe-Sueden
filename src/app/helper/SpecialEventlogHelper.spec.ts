@@ -45,6 +45,16 @@ describe('SpecialEventlogHelper Test', () => {
             expect(result).toBe(true);
         }));
 
+        it('should return true for matched exclusively repeating pattern and eventlog, case 4', fakeAsync(() => {
+            const eventlog = [ // has only one trace, which contains alone repeating pattern
+                ['A', 'B', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = SpecialEventlogHelper.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+
         it('should return false for not matched exclusively repeating pattern and eventlog, case 1', fakeAsync(() => {
             const eventlog = [
                 ['A'],
@@ -102,6 +112,16 @@ describe('SpecialEventlogHelper Test', () => {
             const result = SpecialEventlogHelper.isPatternExclusivelyRepeated(eventlog)
             expect(result).toBe(false); // There is no trace with repeat of pattern
         }));
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 4', fakeAsync(() => {
+            const eventlog = [ // has only one trace, which contains repeating pattern, but not exclusively
+                ['A', 'B', 'C', 'A', 'B', 'D', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = SpecialEventlogHelper.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false);
+        }));
+
     });
 
 });

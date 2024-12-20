@@ -18,8 +18,33 @@ export class SpecialEventlogHelper {
             return shortestTrace;
         }
 
+        function findRepeatedPattern(row: string[]): string[] {
+            const n = row.length;
+
+            for (let patternLength = 1; patternLength <= Math.floor(n / 2); patternLength++) {
+                if (n % patternLength !== 0) continue; // Skip if the array length is not divisible by the pattern length
+
+                const pattern = row.slice(0, patternLength);
+                let isRepeated = true;
+
+                // Check if the entire array is composed of this pattern
+                for (let i = 0; i < n; i++) {
+                    if (row[i] !== pattern[i % patternLength]) {
+                        isRepeated = false;
+                        break;
+                    }
+                }
+
+                if (isRepeated) {
+                    return pattern;
+                }
+            }
+
+            return row; // If no smaller repeating pattern is found, return the array itself
+        }
+
         let isPatternRepeatedInATrace = false;
-        let pattern = shortestNotEmptyTrace(eventlog);
+        let pattern = findRepeatedPattern(shortestNotEmptyTrace(eventlog));
         if (pattern.length === 0) {
             return false; // eventlog has only empty traces
         }
