@@ -40,7 +40,7 @@ export class FallthroughHelper {
         }
 
         // Loop-Cut detection
-        if (this.isLoopCutPossible(dfg)) {
+        if (this.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix)) {
             return [false, 'Loop Cut possible'];
         }
 
@@ -140,8 +140,121 @@ export class FallthroughHelper {
     }
 
     // TODO: Loop-Cut detection logic
-    public static isLoopCutPossible(dfg: DirectlyFollows): boolean {
-        return false;
+    public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+        const mapping = this.mapArrayIndex(nodesAsArray);
+        const playNodes = Array.from(dfg.getPlayNodes() ?? []);
+        const stopNodes = Array.from(dfg.getStopNodes() ?? []);
+        let workingMatrix: string[][] = []
+        workingMatrix = this.removeIncomingEdges(mapping, footprintMatrix, playNodes)
+        workingMatrix = this.removeOutgoingEdges(mapping, workingMatrix, stopNodes)
+
+        let wCCs = this.computeWCCsFromFootprintMatrix(nodesAsArray, workingMatrix);
+        let mainWCC: string[] = []
+
+        for (let i = 0; i < wCCs.length; i++) {
+            let wCC = wCCs[i];
+            // merge jene WCCs in mainWCC, die Play oder StopNodes enthalten
+            if (wCC.some(node => dfg.getPlayNodes()?.has(node) || dfg.getStopNodes()?.has(node))) {
+                mainWCC = Array.from(new Set([...mainWCC, ...wCC]));
+                // lösche den aktuellen WCC
+                wCCs.splice(i, 1);
+                i--;
+            }
+        }
+        const amountOfWCCs = wCCs.length;
+        // nun sollten alle WCCs mit play/stopNodes in der mainWCC sein, in WCCs sollten sämtliche eventuelle redo-parts sein
+        if (amountOfWCCs === 0) {
+            return false;
+        }
+
+        // Erstelle Objekte für WCCs und die Main Component
+        const mainComponent = {
+            nodes: [] as string[],   // Array für die Nodes
+            FPM: [] as string[][],   // Footprint Matrix (2D-Array)
+            startNodes: [] as string[], // Array für die Startknoten
+            stopNodes: [] as string[],  // Array für die Stopknoten
+        };
+        mainComponent.FPM = this.removeIrrelevantEdges(workingMatrix, mainWCC, mapping);
+        mainComponent.nodes = mainWCC;
+        const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
+        mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
+        mainComponent.stopNodes = startAndStopNodesOfmainFPM.startNodes;
+
+        const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
+        for (let i = 0; i < wCCs.length; i++) {
+            const wCC = {
+                nodes: wCCs[i],
+                FPM: this.removeIrrelevantEdges(workingMatrix, wCCs[i], mapping),
+                startNodes: [] as string[],
+                stopNodes: [] as string[],
+            };
+            const startStopNodes = this.findStartAndStopNodes(wCC.FPM, wCC.nodes, mapping, nodesAsArray)
+            wCC.startNodes = startStopNodes.startNodes;
+            wCC.stopNodes = startStopNodes.stopNodes;
+            wccArray.push(wCC);
+        }
+        // nun haben wir Footprint Matrizen für die main-component sowie alle redo-components und die start / stopknoten der components...
+        // nun müssen wir mittels arcs überprüfen ob die ausgehenden und eingehenden kanten richtig verlaufen..
+
+        // lösche nun alle Arcs, die innerhalb von Komponenten sind
+        let connectingArcs = dfg.getArcs();
+        connectingArcs = connectingArcs.filter(arc => {
+            return !(mainComponent.nodes.includes(arc.source as string) && mainComponent.nodes.includes(arc.target as string));
+        })
+        for (let wcc of wccArray) {
+            connectingArcs = connectingArcs.filter(arc => {
+                // Kantenverbindungen innerhalb werden rausgefiltert
+                return !(wcc.nodes.includes(arc.source as string) && wcc.nodes.includes(arc.target as string)) ||
+                    // Kantenverbindungen von stopnodes des wcc nach start von Main werden rausgefiltert
+                    !(wcc.stopNodes.includes(arc.source as string) && mainComponent.startNodes.includes(arc.target as string)) ||
+                    // Kantenverbindungen von stopnodes des Main nach start des wcc werden rausgefiltert
+                    !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
+            })
+        }
+        //connectingArcs enthält jetzt alle Kanten, die zwischen Komponenten verbinden
+        let tempArcs = [...connectingArcs];
+
+        for (let wcc of wccArray) {
+            tempArcs = tempArcs.filter(arc => {
+                // Kantenverbindungen von stopnodes des wcc nach start von Main werden rausgefiltert
+                return !(wcc.stopNodes.includes(arc.source as string) && mainComponent.startNodes.includes(arc.target as string)) ||
+                    // Kantenverbindungen von stopnodes des Main nach start des wcc werden rausgefiltert
+                    !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
+            })
+        }
+        // nun sollte unser tempArcs array leer sein
+        if (tempArcs.length !== 0) {
+            return false;
+        }
+        // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
+        for (let wcc of wccArray) {
+            for (let sourceNode of wcc.stopNodes) {
+                let isConnectedToAllStartNodes = false
+                for (let targetNode of mainComponent.startNodes) {
+                    isConnectedToAllStartNodes = connectingArcs.some(arc => {
+                        return arc.source === sourceNode && arc.target === targetNode
+                    })
+                }
+                if (!isConnectedToAllStartNodes){
+                    return false;
+                }
+            }
+        }
+        // sowie, ob alle knoten von wcc.start von allen knoten aus Maincomponent.stop erreicht werden..
+        for (let wcc of wccArray) {
+            for (let targetNode of wcc.startNodes) {
+                let isConnectedFromAllStopNodes = false
+                for (let sourceNode of mainComponent.startNodes) {
+                    isConnectedFromAllStopNodes = connectingArcs.some(arc => {
+                        return arc.source === sourceNode && arc.target === targetNode
+                    })
+                }
+                if (!isConnectedFromAllStopNodes){
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
 
@@ -269,6 +382,168 @@ export class FallthroughHelper {
         return wccs;
     }
 
+    public static mapArrayIndex(nodesAsArray: string[]): Record<string, number> {
+        const mapping: Record<string, number> = {};
+        nodesAsArray.forEach((str, index) => {
+            mapping[str] = index;
+        });
+        return mapping
+    }
+
+    public static removeIncomingEdges(
+        nodesIndexMap: Record<string, number>,
+        footprintMatrix: string[][],
+        playNodes: string[]
+    ): string[][] {
+        // Erstelle eine Kopie der Matrix
+        const updatedMatrix = footprintMatrix.map(row => [...row]);
+        // Durchlaufe alle PlayNodes
+        playNodes.forEach(node => {
+            // Hole den Index aus dem Mapping
+            const index = nodesIndexMap[node];
+            if (index === undefined) {
+                console.log(`Node ${node} not found in nodesIndexMap`);
+                return;
+            }
+            // gehe Spalte von playNode durch
+            for (let rowIndex = 0; rowIndex < updatedMatrix.length; rowIndex++) {
+                //ändere nicht die Diagonale
+                if (rowIndex !== index) {
+                    if (updatedMatrix[rowIndex][index] === '→') {
+                        updatedMatrix[rowIndex][index] = '#';
+                    } else if (updatedMatrix[rowIndex][index] === '||') {
+                        updatedMatrix[rowIndex][index] = '←';
+                    }
+                }
+            }
+            // gehe Zeile von playNode durch
+            for (let colIndex = 0; colIndex < updatedMatrix[index].length; colIndex++) {
+                // wieder nicht Diagonale ändern
+                if (colIndex !== index) {
+                    if (updatedMatrix[index][colIndex] === '←') {
+                        updatedMatrix[index][colIndex] = '#';
+                    } else if (updatedMatrix[index][colIndex] === '||') {
+                        updatedMatrix[index][colIndex] = '→';
+                    }
+                }
+            }
+        });
+        return updatedMatrix;
+    }
+
+    public static removeOutgoingEdges(
+        nodesIndexMap: Record<string, number>,
+        footprintMatrix: string[][],
+        stopNodes: string[]
+    ): string[][] {
+        // Erstelle eine Kopie der Matrix
+        const updatedMatrix = footprintMatrix.map(row => [...row]);
+        // Durchlaufe alle PlayNodes
+        stopNodes.forEach(node => {
+            // Hole den Index aus dem Mapping
+            const index = nodesIndexMap[node];
+            if (index === undefined) {
+                console.log(`Node ${node} not found in nodesIndexMap`);
+                return;
+            }
+            // gehe Spalte von playNode durch
+            for (let rowIndex = 0; rowIndex < updatedMatrix.length; rowIndex++) {
+                //ändere nicht die Diagonale
+                if (rowIndex !== index) {
+                    if (updatedMatrix[rowIndex][index] === '←') {
+                        updatedMatrix[rowIndex][index] = '#';
+                    } else if (updatedMatrix[rowIndex][index] === '||') {
+                        updatedMatrix[rowIndex][index] = '→';
+                    }
+                }
+            }
+            // gehe Zeile von playNode durch
+            for (let colIndex = 0; colIndex < updatedMatrix[index].length; colIndex++) {
+                // wieder nicht Diagonale ändern
+                if (colIndex !== index) {
+                    if (updatedMatrix[index][colIndex] === '→') {
+                        updatedMatrix[index][colIndex] = '#';
+                    } else if (updatedMatrix[index][colIndex] === '||') {
+                        updatedMatrix[index][colIndex] = '←';
+                    }
+                }
+            }
+        });
+        return updatedMatrix;
+    }
+
+    public static removeIrrelevantEdges(
+        footprintMatrix: string[][],
+        validNodes: string[],
+        nodesIndexMap: Record<string, number>
+    ): string[][] {
+        // Kopiere die Matrix, damit die ursprüngliche nicht verändert wird
+        const updatedMatrix = footprintMatrix.map(row => [...row]);
+        // erstelle ein array der ungültigen Indizes
+        const invalidNodesIndexes: number[] = [];
+        Object.keys(nodesIndexMap).forEach(node => {
+            if (!validNodes.includes(node)) {
+                invalidNodesIndexes.push(nodesIndexMap[node]);
+            }
+        });
+        // ersetze alles in den unnötigen Zeilen durch #
+        for (let i of invalidNodesIndexes) {
+            for (let j = 0; j < updatedMatrix[i].length; j++) {
+                // ersetze alles in den unnötigen Zeilen durch #
+                updatedMatrix[i][j] = '#';
+                // ersetze alles in den unnötigen Spalten durch #
+                updatedMatrix[j][i] = '#';
+            }
+        }
+        return updatedMatrix;
+    }
+
+    public static findStartAndStopNodes(
+        footprintMatrix: string[][],
+        validNodes: string[],
+        nodesIndexMap: Record<string, number>,
+        nodesAsArray: string[]
+    ): { startNodes: string[], stopNodes: string[] } {
+        const startNodes: string[] = [];
+        const stopNodes: string[] = [];
+        // erstelle Array der validen Nodes
+        const nodesIndexes: number[] = [];
+        Object.keys(nodesIndexMap).forEach(node => {
+            if (!validNodes.includes(node)) {
+                nodesIndexes.push(nodesIndexMap[node]);
+            }
+        });
+        const matrixSize = footprintMatrix.length;
+        for (let i of nodesIndexes) {
+            let isStartNode = true;
+            let isStopNode = true;
+            //TODO: evtl ist hier bissl was redundant
+            for (let j = 0; j < matrixSize; j++) {
+                // Zeilen
+                if (footprintMatrix[i][j] === '→' || footprintMatrix[i][j] === '||') {
+                    isStopNode = false;
+                }
+                if (footprintMatrix[i][j] === '←' || footprintMatrix[i][j] === '||') {
+                    isStartNode = false;
+                }
+
+                //Spalten
+                if (footprintMatrix[j][i] !== '→' || footprintMatrix[i][j] === '||') {
+                    isStartNode = false;
+                }
+                if (footprintMatrix[j][i] === '←' || footprintMatrix[i][j] === '||') {
+                    isStopNode = false;
+                }
+            }
+            if (isStartNode) {
+                startNodes.push(nodesAsArray[i])
+            }
+            if (isStopNode) {
+                stopNodes.push(nodesAsArray[i])
+            }
+        }
+        return {startNodes, stopNodes};
+    }
 
 }
 
