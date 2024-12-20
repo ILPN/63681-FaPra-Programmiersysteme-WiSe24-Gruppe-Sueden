@@ -95,11 +95,12 @@ describe('SpecialEventlogHelper Test', () => {
                 [ ],
                 ['A', 'B'],
                 [ ],
+                ['A', 'B'],
                 ['A', 'B']
             ];
 
             const result = SpecialEventlogHelper.isPatternExclusivelyRepeated(eventlog)
-            expect(result).toBe(false);
+            expect(result).toBe(false); // There is no trace with repeat of pattern
         }));
     });
 

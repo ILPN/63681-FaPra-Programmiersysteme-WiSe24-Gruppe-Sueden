@@ -18,6 +18,7 @@ export class SpecialEventlogHelper {
             return shortestTrace;
         }
 
+        let isPatternRepeatedInATrace = false;
         let pattern = shortestNotEmptyTrace(eventlog);
         if (pattern.length === 0) {
             return false; // eventlog has only empty traces
@@ -44,15 +45,29 @@ export class SpecialEventlogHelper {
             return true;
         }
 
+        const hasPatternMultipleTimes = (row: string[], pattern: string[]): boolean => {
+            let count = 0, len = pattern.length;
+            for (let i = 0; i <= row.length - len; i++) {
+                if (row.slice(i, i + len).every((v, j) => v === pattern[j])) {
+                    count++;
+                    i += len - 1; // Skip to the end of the match
+                }
+            }
+            return count > 1;
+        };
+
         // Check each row in the eventlog
         for (const row of eventlog) {
             if (!isRowValid(row, pattern)) {
                 return false;
+            } else {
+                if (hasPatternMultipleTimes(row, pattern)) {
+                    isPatternRepeatedInATrace ||= true;
+                }
             }
         }
 
-
-        return true;
+        return true && isPatternRepeatedInATrace;
     }
 
 }
