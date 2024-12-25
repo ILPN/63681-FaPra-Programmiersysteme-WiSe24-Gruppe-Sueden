@@ -210,10 +210,10 @@ export class DirectlyFollows {
         // Check each row in the eventlog
         for (const row of eventlog) {
             if (!this.isRowValid(row, pattern)) {
-                return false;
+                return false; // there is one invalid row (trace)
             } else {
                 if (this.hasPatternMultipleTimes(row, pattern)) {
-                    isPatternRepeatedInATrace ||= true;
+                    isPatternRepeatedInATrace ||= true; // at least one trace should have pattern multiple times
                 }
             }
         }
