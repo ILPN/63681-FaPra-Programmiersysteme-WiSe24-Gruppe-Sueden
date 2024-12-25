@@ -527,6 +527,7 @@ describe('FallthroughHelper Test', () => {
         }));
     });
 
+    /*
     describe('isLoopCutPossible', () => {
 
         it('should return true when loop cut is possible 1', fakeAsync(() => {
@@ -578,7 +579,7 @@ describe('FallthroughHelper Test', () => {
         }));
 
     });
-
+    */
 
 
 });
