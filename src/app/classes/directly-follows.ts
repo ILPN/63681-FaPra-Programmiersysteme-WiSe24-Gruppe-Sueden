@@ -200,4 +200,97 @@ export class DirectlyFollows {
         return successors !== undefined && successors.has(target);
     }
 
+    isPatternExclusivelyRepeated(eventlog: string[][]): boolean {
+        let isPatternRepeatedInATrace = false;
+        let pattern = this.findRepeatedPattern(this.shortestNotEmptyTrace(eventlog));
+        if (pattern.length === 0) {
+            return false; // eventlog has only empty traces
+        }
+
+        // Check each row in the eventlog
+        for (const row of eventlog) {
+            if (!this.isRowValid(row, pattern)) {
+                return false; // there is one invalid row (trace)
+            } else {
+                if (this.hasPatternMultipleTimes(row, pattern)) {
+                    isPatternRepeatedInATrace ||= true; // at least one trace should have pattern multiple times
+                }
+            }
+        }
+
+        // isPatternRepeatedInATrace: there is at least one trace which has at least two times of pattern
+        return isPatternRepeatedInATrace;
+    }
+
+    // Helper function which returns shortest but not empty trace, as candidate of pattern
+    private shortestNotEmptyTrace(eventlog: string[][]): string[] {
+        let shortestTrace: string[] = [];
+        let minLength = Infinity;
+
+        for (const row of eventlog) {
+            // Skip empty rows
+            if (row.length > 0 && row.length < minLength) {
+                minLength = row.length;
+                shortestTrace = row;
+            }
+        }
+        return shortestTrace;
+    }
+
+    private findRepeatedPattern(row: string[]): string[] {
+        const n = row.length;
+
+        for (let patternLength = 1; patternLength <= Math.floor(n / 2); patternLength++) {
+            if (n % patternLength !== 0) continue; // Skip if the array length is not divisible by the pattern length
+
+            const pattern = row.slice(0, patternLength);
+            let isRepeated = true;
+
+            // Check if the entire array is composed of this pattern
+            for (let i = 0; i < n; i++) {
+                if (row[i] !== pattern[i % patternLength]) {
+                    isRepeated = false;
+                    break;
+                }
+            }
+
+            if (isRepeated) {
+                return pattern;
+            }
+        }
+        return row; // If no smaller repeating pattern is found, return the array itself
+    }
+
+    // Helper function to check if a row matches the pattern
+    private isRowValid(row: string[], pattern: string[]): boolean {
+        const patternLength = pattern.length;
+        const rowLength = row.length;
+
+        // Row length must be a multiple of the pattern length
+        if (rowLength % patternLength !== 0) {
+            return false;
+        }
+
+        // Check each segment in the row
+        for (let i = 0; i < rowLength; i += patternLength) {
+            for (let j = 0; j < patternLength; j++) {
+                if (row[i + j] !== pattern[j]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private hasPatternMultipleTimes(row: string[], pattern: string[]): boolean {
+        let count = 0, len = pattern.length;
+        for (let i = 0; i <= row.length - len; i++) {
+            if (row.slice(i, i + len).every((v, j) => v === pattern[j])) {
+                count++;
+                i += len - 1; // Skip to the end of the match
+            }
+        }
+        return count > 1;
+    }
+
 }

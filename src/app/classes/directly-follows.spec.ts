@@ -1,5 +1,6 @@
 import {DirectlyFollows} from './directly-follows';
 import {Arc} from './arc';
+import {fakeAsync} from "@angular/core/testing";
 
 describe('DirectlyFollows', () => {
     let directlyFollows: DirectlyFollows;
@@ -160,4 +161,132 @@ describe('DirectlyFollows', () => {
         expect(directlyFollows.getNodes()).toContain('J');
         expect(directlyFollows.getNodes()).not.toContain('stop');
     });
+
+    describe('isPatternExclusivelyRepeated', () => {
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 1', fakeAsync(() => {
+            const eventlog = [
+                ['A', 'B'],
+                [ ],
+                ['A', 'B', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 2', fakeAsync(() => {
+            const eventlog = [
+                ['A'],
+                ['A', 'A', 'A', 'A'],
+                [ ],
+                ['A', 'A']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 3', fakeAsync(() => {
+            const eventlog = [
+                ['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D'],
+                ['A', 'B', 'C', 'D'],
+                ['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D', 'A', 'B', 'C', 'D'],
+                [ ]
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 4', fakeAsync(() => {
+            const eventlog = [ // has only one trace, which contains alone repeating pattern
+                ['A', 'B', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 5', fakeAsync(() => {
+            const eventlog = [ // has different traces, all of them are built from pattern, there is no trace which is directly pattern
+                ['A', 'B', 'A', 'B'],
+                ['A', 'B', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+        it('should return true for matched exclusively repeating pattern and eventlog, case 6', fakeAsync(() => {
+            const eventlog = [ // has one kind of traces, each contains alone repeating pattern
+                ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'],
+                ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'],
+                ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(true);
+        }));
+
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 1', fakeAsync(() => {
+            const eventlog = [
+                ['A'],
+                ['A', 'A'],
+                ['A', 'B', 'A', 'A'],
+                [ ]
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false);
+        }));
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 2', fakeAsync(() => {
+            const eventlog = [
+                ['A', 'B', 'A', 'B'],
+                ['A', 'B'],
+                ['B', 'A', 'B', 'A', 'B', 'A']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false);
+        }));
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 3', fakeAsync(() => {
+            const eventlog = [
+                [ ],
+                [ ],
+                [ ]
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false);
+        }));
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 4', fakeAsync(() => {
+            const eventlog = [ // Pattern repeats in eventlog, but not repeating in one of traces
+                [ ],
+                ['A', 'B'],
+                [ ],
+                ['A', 'B'],
+                ['A', 'B']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false); // There is no trace with repeat of pattern
+        }));
+
+        it('should return false for not matched exclusively repeating pattern and eventlog, case 4', fakeAsync(() => {
+            const eventlog = [ // has only one trace, which contains repeating pattern (A, B), but not exclusively
+                ['A', 'B', 'C', 'A', 'B', 'D', 'A', 'B', 'A', 'B']
+            ];
+
+            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            expect(result).toBe(false);
+        }));
+
+    });
+
+
 });

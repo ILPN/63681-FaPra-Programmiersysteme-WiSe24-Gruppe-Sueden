@@ -143,6 +143,21 @@ describe('FallthroughHelper Test', () => {
             expect(result).toEqual(true);
         }));
 
+        it('should return true when xor cut is possible 4', fakeAsync(() => {
+            const inputStringArray = [ // with empty trace
+                ['A'],
+                [ ]
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
+            expect(result).toEqual(true);
+        }));
+
         it('should return false when xor cut is not possible 1', fakeAsync(() => {
             const inputStringArray = [
                 ['A', 'B', 'C', 'D'],
@@ -179,6 +194,20 @@ describe('FallthroughHelper Test', () => {
                 ['A', 'C', 'B'],
                 ['C', 'A', 'B'],
                 ['A', 'C', 'B']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
+            expect(result).toEqual(false);
+        }));
+
+        it('should return false when xor cut is not possible 4', fakeAsync(() => {
+            const inputStringArray = [ // with empty trace
+                ['A', 'B']
             ];
 
             let dfg = new DirectlyFollows();
@@ -253,6 +282,81 @@ describe('FallthroughHelper Test', () => {
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
             expect(result).toBe(true);
 
+        }));
+
+        it('should return true when sequence cut is possible 5', fakeAsync(() => {
+            const inputStringArray = [ // Optionale Sequence 1
+                ['A', 'B', 'C'],
+                ['A', 'C']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
+            expect(result).toEqual(true);
+        }));
+
+        it('should return true when sequence cut is possible 6', fakeAsync(() => {
+            const inputStringArray = [ // Optionale Sequence 2
+                ['A', 'B', 'C'],
+                ['B', 'C']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
+            expect(result).toEqual(true);
+        }));
+
+        it('should return true when sequence cut is possible 7', fakeAsync(() => {
+            const inputStringArray = [ // Optionale Sequence 3
+                ['A', 'B', 'C'],
+                ['A', 'B']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
+            expect(result).toEqual(true);
+        }));
+
+        it('should return true when sequence cut is possible 7', fakeAsync(() => {
+            const inputStringArray = [ // Optionale Sequence 4
+                ['A', 'B'],
+                ['B']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
+            expect(result).toEqual(true);
+        }));
+
+        it('should return true when sequence cut is possible 8', fakeAsync(() => {
+            const inputStringArray = [ // Optionale Sequence 5
+                ['A', 'B'],
+                ['A']
+            ];
+
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
+
+            const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
+            expect(result).toEqual(true);
         }));
 
         it('should return false when sequence cut is not possible 1', fakeAsync(() => {
@@ -421,56 +525,60 @@ describe('FallthroughHelper Test', () => {
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
             expect(result).toEqual(false);
         }));
-
     });
 
     /*
+    describe('isLoopCutPossible', () => {
 
-        describe('isLoopCutPossible', () => {
+        it('should return true when loop cut is possible 1', fakeAsync(() => {
+            const inputStringArray = [
+                ['A', 'B', 'C'],
+                ['A', 'B', 'C', 'A', 'B', 'C']
+            ];
 
-            it('should return true when loop cut is possible 1', fakeAsync(() => {
-                const inputStringArray = [
-                    ['A', 'B', 'C'],
-                    ['A', 'B', 'C', 'A', 'B', 'C']
-                ];
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
-                let dfg = new DirectlyFollows();
-                dfg.setDFGfromStringArray(inputStringArray)
+            const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
+            expect(result).toBe(true);
+        }));
 
-                const result = FallthroughHelper.isLoopCutPossible(dfg);
-                expect(result).toBe(true);
-            }));
+        it('should return true when loop cut is possible 2', fakeAsync(() => {
+            const inputStringArray = [ // Do: A, B, C, D, E / Redo1: F, G / Redo2: H
+                ['A', 'B', 'C', 'E'],
+                ['A', 'B', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'E'],
+                ['A', 'B', 'D', 'E', 'H', 'A', 'B', 'C', 'E'],
+            ];
 
-            it('should return true when loop cut is possible 2', fakeAsync(() => {
-                const inputStringArray = [ // {play, G, H} -> A -> {B, C} -> E -> {stop, F, H} /  F -> G -> A
-                    ['A', 'B', 'C', 'E'],
-                    ['A', 'B', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'E'],
-                    ['A', 'B', 'D', 'E', 'H', 'A', 'B', 'C', 'E'],
-                ];
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
-                let dfg = new DirectlyFollows();
-                dfg.setDFGfromStringArray(inputStringArray)
+            const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
+            expect(result).toBe(true);
+        }));
 
-                const result = FallthroughHelper.isLoopCutPossible(dfg);
-                expect(result).toBe(true);
-            }));
+        it('should return false when loop cut is not possible 1', fakeAsync(() => {
+            const inputStringArray = [
+                ['A', 'B', 'C', 'E'],
+                ['A', 'B', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'E'],
+                ['A', 'B', 'D', 'E', 'H', 'A', 'B', 'C', 'E'],
+                ['A', 'B', 'F']
+            ];
 
-            it('should return false when loop cut is not possible 1', fakeAsync(() => {
-                const inputStringArray = [
-                    ['A', 'B', 'C', 'E'],
-                    ['A', 'B', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'E'],
-                    ['A', 'B', 'D', 'E', 'H', 'A', 'B', 'C', 'E'],
-                    ['A', 'B', 'F']
-                ];
+            let dfg = new DirectlyFollows();
+            dfg.setDFGfromStringArray(inputStringArray)
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
+            const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
-                let dfg = new DirectlyFollows();
-                dfg.setDFGfromStringArray(inputStringArray)
+            const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
+            expect(result).toBe(false);
+        }));
 
-                const result = FallthroughHelper.isLoopCutPossible(dfg);
-                expect(result).toBe(false);
-            }));
-
-        });
+    });
     */
 
 
