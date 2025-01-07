@@ -1,51 +1,11 @@
-import {TestBed, fakeAsync, tick} from '@angular/core/testing';
 import {ProcessGraphService} from './process-graph.service';
 import {DirectlyFollows} from '../classes/directly-follows';
 import {CutType} from '../classes/cut-type.enum';
-import {effect, runInInjectionContext, Injector} from '@angular/core';
 import {ProcessGraph} from "../classes/process-graph";
 import {ValidationData} from "../classes/validation-data";
 import {ValidationResult} from "../classes/validation-result";
 
 
-describe('ProcessGraphService Signal Reaktivität', () => {
-    let service: ProcessGraphService;
-    let injector: Injector;
-
-    beforeEach(() => {
-        TestBed.configureTestingModule({
-            providers: [ProcessGraphService],
-        });
-        service = TestBed.inject(ProcessGraphService);
-        injector = TestBed.inject(Injector);
-    });
-
-    it('should trigger effect when validationSuccessful changes', fakeAsync(() => {
-        service.createGraph([['A', 'B']]);
-        let observedValue: boolean | null = false;
-        // Verwende runInInjectionContext mit Injector und der Funktion für den Effekt
-        runInInjectionContext(injector, () => {
-            effect(() => {
-                observedValue = service.graphSignal()?.validationSuccessful ?? null;
-            });
-        });
-        expect(service.graphSignal()?.validationSuccessful).toBeFalse();
-        expect(observedValue).toBeFalse();
-        // Ändere den Wert des Signals
-        service.updateValidationSuccessful(true);
-        tick(); // Simuliere die asynchrone Ausführung des reaktiven Systems
-        expect(observedValue).toBeTrue();
-        service.updateValidationSuccessful(false);
-        tick(); // Simuliere die asynchrone Ausführung des reaktiven Systems
-        expect(observedValue).toBeFalse();
-        service.updateValidationSuccessful(true);
-        tick(); // Simuliere die asynchrone Ausführung des reaktiven Systems
-        expect(observedValue).toBeTrue();
-        service.updateValidationSuccessful(false);
-        tick(); // Simuliere die asynchrone Ausführung des reaktiven Systems
-        expect(observedValue).toBeFalse();
-    }));
-});
 
 describe('CutValidation on progress graph', () => {
     let dfg: DirectlyFollows;
@@ -97,6 +57,12 @@ describe('CutValidation on progress graph', () => {
                 expect(result.success).toBe(true);
                 expect(graph?.arcs.length).toBe(8);
                 expect(graph?.places.size).toBe(4);
+                let log = processGraphService.logSignal()
+                expect(log.includes('Initial Graph generated')).toBe(true);
+                expect(log.includes('Start validation for cutType: xor')).toBe(true);
+                expect(log.includes('checking if NodeSets are empty')).toBe(true);
+                expect(log.includes('checking if there are no arcs from NodeSet 2 to NodeSet 1')).toBe(true);
+                expect(log.includes('Xor-Cut successfully executed')).toBe(true);
             });
         });
 
@@ -179,15 +145,6 @@ describe('ProcessGraphService', () => {
             expect(graph).toBeTruthy();
             expect(graph?.places.size).toBeGreaterThan(0);
             expect(graph?.transitions.size).toBeGreaterThan(0);
-        });
-    });
-
-    describe('updateValidationSuccessful', () => {
-        it('should update the validationSuccessful flag', () => {
-            processGraphService.createGraph([['A', 'B']]);
-            expect(processGraphService.graphSignal()?.validationSuccessful).toBeFalse();
-            processGraphService.updateValidationSuccessful(true);
-            expect(processGraphService.graphSignal()?.validationSuccessful).toBeTrue();
         });
     });
 

@@ -18,7 +18,7 @@ export class FallthroughHelper {
             }
         }
 
-        const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+        const nodesAsArray = Array.from(dfg.getNodes()).sort();
         const reachabilityMatrix = this.computeReachabilityMatrix(nodesAsArray, dfg);
         const footprintMatrix = this.computeFootprintMatrix(nodesAsArray, dfg);
 
@@ -54,10 +54,7 @@ export class FallthroughHelper {
 
     public static isSequenceCutPossible(nodesAsArray: string[], reachabilityMatrix: boolean[][]): boolean {
         // Index-Mapping for nodes
-        const mapping: Record<string, number> = {};
-        nodesAsArray.forEach((str, index) => {
-            mapping[str] = index;
-        });
+        const mapping = this.mapArrayIndex(nodesAsArray)
 
         // Initializing: one component per node, component as subarray
         let components: string[][] = nodesAsArray.map(node => [node]);
@@ -79,14 +76,14 @@ export class FallthroughHelper {
 
         // Building reachability matrix of components
         const n = components.length;
-        let SCCsReachabilityMatrix: boolean[][] = Array.from({ length: n }, () => Array(n).fill(false));
+        let SCCsReachabilityMatrix: boolean[][] = Array.from({length: n}, () => Array(n).fill(false));
         for (let i = 0; i < n; i++) {
             for (let j = i + 1; j < n; j++) {
                 for (let k = 0; k < components[i].length; k++) {
                     for (let l = 0; l < components[j].length; l++) {
                         if (reachabilityMatrix[mapping[components[i][k]]][mapping[components[j][l]]]) {
                             SCCsReachabilityMatrix[i][j] = true;
-                        } else if (reachabilityMatrix[mapping[components[j][l]]][mapping[components[i][k]]]){
+                        } else if (reachabilityMatrix[mapping[components[j][l]]][mapping[components[i][k]]]) {
                             SCCsReachabilityMatrix[j][i] = true;
                         }
                     }
@@ -177,6 +174,7 @@ export class FallthroughHelper {
         mainComponent.FPM = this.removeIrrelevantEdges(workingMatrix, mainWCC, mapping);
         mainComponent.nodes = mainWCC;
         const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
+
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.startNodes;
 
@@ -197,18 +195,18 @@ export class FallthroughHelper {
         // nun müssen wir mittels arcs überprüfen ob die ausgehenden und eingehenden kanten richtig verlaufen..
 
         // lösche nun alle Arcs, die innerhalb von Komponenten sind
-        let connectingArcs = dfg.getArcs();
+
+        let connectingArcs = [...dfg.getArcs()];
         connectingArcs = connectingArcs.filter(arc => {
-            return !(mainComponent.nodes.includes(arc.source as string) && mainComponent.nodes.includes(arc.target as string));
+            return !(mainComponent.nodes.includes(arc.source as string) && mainComponent.nodes.includes(arc.target as string)) &&
+                !(arc.source === "play") && !(arc.target === "stop");
+
         })
         for (let wcc of wccArray) {
             connectingArcs = connectingArcs.filter(arc => {
                 // Kantenverbindungen innerhalb werden rausgefiltert
-                return !(wcc.nodes.includes(arc.source as string) && wcc.nodes.includes(arc.target as string)) ||
-                    // Kantenverbindungen von stopnodes des wcc nach start von Main werden rausgefiltert
-                    !(wcc.stopNodes.includes(arc.source as string) && mainComponent.startNodes.includes(arc.target as string)) ||
-                    // Kantenverbindungen von stopnodes des Main nach start des wcc werden rausgefiltert
-                    !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
+
+                return !(wcc.nodes.includes(arc.source as string) && wcc.nodes.includes(arc.target as string))
             })
         }
         //connectingArcs enthält jetzt alle Kanten, die zwischen Komponenten verbinden
@@ -217,11 +215,14 @@ export class FallthroughHelper {
         for (let wcc of wccArray) {
             tempArcs = tempArcs.filter(arc => {
                 // Kantenverbindungen von stopnodes des wcc nach start von Main werden rausgefiltert
-                return !(wcc.stopNodes.includes(arc.source as string) && mainComponent.startNodes.includes(arc.target as string)) ||
+                return !(wcc.stopNodes.includes(arc.source as string) && mainComponent.startNodes.includes(arc.target as string)) &&
+
                     // Kantenverbindungen von stopnodes des Main nach start des wcc werden rausgefiltert
                     !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
             })
         }
+
+
         // nun sollte unser tempArcs array leer sein
         if (tempArcs.length !== 0) {
             return false;
@@ -235,7 +236,7 @@ export class FallthroughHelper {
                         return arc.source === sourceNode && arc.target === targetNode
                     })
                 }
-                if (!isConnectedToAllStartNodes){
+                if (!isConnectedToAllStartNodes) {
                     return false;
                 }
             }
@@ -244,12 +245,12 @@ export class FallthroughHelper {
         for (let wcc of wccArray) {
             for (let targetNode of wcc.startNodes) {
                 let isConnectedFromAllStopNodes = false
-                for (let sourceNode of mainComponent.startNodes) {
+                for (let sourceNode of mainComponent.stopNodes) {
                     isConnectedFromAllStopNodes = connectingArcs.some(arc => {
                         return arc.source === sourceNode && arc.target === targetNode
                     })
                 }
-                if (!isConnectedFromAllStopNodes){
+                if (!isConnectedFromAllStopNodes) {
                     return false;
                 }
             }
@@ -260,7 +261,7 @@ export class FallthroughHelper {
 
     public static computeReachabilityMatrix(nodesAsArray: string[], dfg: DirectlyFollows): boolean[][] {
         const n = nodesAsArray.length;
-        let reachabilityMatrix = Array.from({ length: n }, () => Array(n).fill(false));
+        let reachabilityMatrix = Array.from({length: n}, () => Array(n).fill(false));
 
         // mark arcs as directly reachable
         nodesAsArray.forEach((source, i) => {
@@ -285,7 +286,7 @@ export class FallthroughHelper {
     }
 
     public static computeFootprintMatrix(nodesAsArray: string[], dfg: DirectlyFollows): string[][] {
-        let footprintMatrix: string[][] = Array.from({ length: nodesAsArray.length }, () => Array(nodesAsArray.length).fill('-'));
+        let footprintMatrix: string[][] = Array.from({length: nodesAsArray.length}, () => Array(nodesAsArray.length).fill('-'));
 
         nodesAsArray.forEach((source, i) => {
             nodesAsArray.forEach((target, j) => {
@@ -509,30 +510,22 @@ export class FallthroughHelper {
         // erstelle Array der validen Nodes
         const nodesIndexes: number[] = [];
         Object.keys(nodesIndexMap).forEach(node => {
-            if (!validNodes.includes(node)) {
+            if (validNodes.includes(node)) {
                 nodesIndexes.push(nodesIndexMap[node]);
             }
         });
-        const matrixSize = footprintMatrix.length;
         for (let i of nodesIndexes) {
             let isStartNode = true;
             let isStopNode = true;
-            //TODO: evtl ist hier bissl was redundant
-            for (let j = 0; j < matrixSize; j++) {
-                // Zeilen
-                if (footprintMatrix[i][j] === '→' || footprintMatrix[i][j] === '||') {
-                    isStopNode = false;
-                }
-                if (footprintMatrix[i][j] === '←' || footprintMatrix[i][j] === '||') {
-                    isStartNode = false;
-                }
-
-                //Spalten
-                if (footprintMatrix[j][i] !== '→' || footprintMatrix[i][j] === '||') {
-                    isStartNode = false;
-                }
-                if (footprintMatrix[j][i] === '←' || footprintMatrix[i][j] === '||') {
-                    isStopNode = false;
+            for (let j of nodesIndexes) {
+                if (j !== i) {
+                    //gehe zeile entlang
+                    if (footprintMatrix[j][i] === '→' || footprintMatrix[j][i] === '||') {
+                        isStartNode = false;
+                    }
+                    if (footprintMatrix[j][i] === '←' || footprintMatrix[j][i] === '||') {
+                        isStopNode = false;
+                    }
                 }
             }
             if (isStartNode) {
@@ -545,5 +538,12 @@ export class FallthroughHelper {
         return {startNodes, stopNodes};
     }
 
+
+    //For debugging..
+    public static print2DArray(arr: string[][]): void {
+        for (let row of arr) {
+            console.log(row.join(' | ')); // Verbinde die Elemente der Zeile mit einem Trennzeichen (z.B. '|')
+        }
+    }
 }
 

@@ -1,8 +1,6 @@
 import {DirectlyFollows} from '../classes/directly-follows'
-import {ProcessGraphService} from '../services/process-graph.service'
 import {ValidationData} from '../classes/validation-data'
 import {CutType} from "../classes/cut-type.enum";
-import {ValidationResult} from '../classes/validation-result'
 import {LoopState} from '../classes/loop-state.enum'
 
 
@@ -24,6 +22,8 @@ export class ValidationHelper {
         let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
         let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
+        //TODO: Teste Eventlogs auf leeres Trace oder wiederholte Abfolgen (ABAB) (AA) (ist trace %2 dann testung ab length min)
+        // split String [] bei der hälfte -->  testen auf ===   AABB  --> A tau A B tau B
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
         return [validationResult[0], validationResult[1], dfg1, dfg2]
@@ -370,6 +370,7 @@ export class ValidationHelper {
                         }
                         if (tempIterator == trace.length - 1) {
                             firstEventlog.push(trace)
+                            secondEventlog.push([])
                         }
                     }
                 }

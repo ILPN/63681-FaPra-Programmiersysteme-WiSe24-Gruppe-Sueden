@@ -23,6 +23,31 @@ describe('ValidationHelper', () => {
         };
     });
 
+    describe('sequence with optional', () => {
+        let result: [boolean, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
+        beforeEach((): void => {
+            const inputStringArray: string[][] = [
+                ['A', 'B', 'C'],
+                ['A', 'B', 'C', 'D', 'E', 'F'],
+                ['D', 'E', 'F'],
+            ];
+            processGraphService.createGraph(inputStringArray);
+
+            let graph = processGraphService.graphSignal()
+            let dfgArray = Array.from(graph?.dfgSet || []);
+            dfg = dfgArray[0];
+
+            let firstNodeSet = new Set(['A', 'B', 'C']);
+            let secondNodeSet = new Set([ 'D', 'E', 'F']);
+
+            result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.SEQUENCE, logFunc);
+
+        });
+        it ('should validate sequence', () => {
+            expect(result[0]).toBe(true)
+        })
+    })
+
     describe('validateAndReturn', () => {
         let result: [boolean, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
         beforeEach((): void => {
@@ -45,6 +70,7 @@ describe('ValidationHelper', () => {
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
 
             result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
+
         });
         it('should correctly validate and split DFG with XOR-Cut', () => {
             expect(result[0]).toBeTrue(); // Sollte erfolgreich validieren
@@ -104,6 +130,7 @@ describe('ValidationHelper', () => {
 
             const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR, logFunc);
 
+
             expect(fsdResult[0]).toBeTrue();
             expect(fsdResult[1]).toBe('XOR-Cut successful');
 
@@ -112,7 +139,10 @@ describe('ValidationHelper', () => {
             const ssdFirstNodeSet = new Set(['G', 'H', 'I', 'J', 'K']);
             const ssdSecondNodeSet = new Set(['L', 'M', 'N', 'O']);
 
+
+
             const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR, logFunc);
+
 
             expect(ssdResult[0]).toBeTrue();
             expect(ssdResult[1]).toBe('XOR-Cut successful');
@@ -142,6 +172,7 @@ describe('ValidationHelper', () => {
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
         const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
+
 
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('XOR-Cut successful');
@@ -200,6 +231,7 @@ describe('ValidationHelper', () => {
 
         // Teste ob XOR-Validierung und Aufteilung korrekt funktioniert
         const result = ValidationHelper.validateAndReturn(dfg, firstNodeSet, secondNodeSet, CutType.XOR, logFunc);
+
 
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('XOR-Cut successful');

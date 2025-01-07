@@ -19,7 +19,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
             const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [[true, true, true], [true, true, true], [true, true, true]];
             expect(result).toEqual(expectedResult);
@@ -35,7 +35,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
             const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [
                 [false, true, false, false, true, false, false],
@@ -58,7 +58,7 @@ describe('FallthroughHelper Test', () => {
             let dfg = new DirectlyFollows();
             dfg.setDFGfromStringArray(inputStringArray)
 
-            const nodesAsArray =  Array.from(dfg.getNodes()).sort();
+            const nodesAsArray = Array.from(dfg.getNodes()).sort();
             const result = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
             const expectedResult = [
                 [false, true, true, false],
@@ -527,13 +527,13 @@ describe('FallthroughHelper Test', () => {
         }));
     });
 
-    /*
     describe('isLoopCutPossible', () => {
 
         it('should return true when loop cut is possible 1', fakeAsync(() => {
             const inputStringArray = [
                 ['A', 'B', 'C'],
-                ['A', 'B', 'C', 'A', 'B', 'C']
+                ['A', 'B', 'C','D', 'E', 'A', 'B', 'C']
+
             ];
 
             let dfg = new DirectlyFollows();
@@ -546,6 +546,7 @@ describe('FallthroughHelper Test', () => {
         }));
 
         it('should return true when loop cut is possible 2', fakeAsync(() => {
+
             const inputStringArray = [ // Do: A, B, C, D, E / Redo1: F, G / Redo2: H
                 ['A', 'B', 'C', 'E'],
                 ['A', 'B', 'D', 'E', 'F', 'G', 'A', 'B', 'C', 'E'],
@@ -579,7 +580,6 @@ describe('FallthroughHelper Test', () => {
         }));
 
     });
-    */
 
 
 });
