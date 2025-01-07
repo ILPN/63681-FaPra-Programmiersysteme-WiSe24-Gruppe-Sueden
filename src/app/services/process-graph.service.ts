@@ -103,6 +103,13 @@ export class ProcessGraphService {
                 this.addLogEntry("incorporating new DFGs into Petrinet")
                 this.incorporateNewDFGs(data.dfg, result[2], firstOptional, result[3], secondOptional, data.cutType);
             }
+            const currentGraph = this.graphSignal();
+            if (currentGraph) {
+                this.graphSignal.set({
+                    ...currentGraph,
+                    /* Entferne validationSuccessful oder passe an */
+                });
+            }
         }
         this.addLogEntry(" ")
         return {success: result[0], comment: result[1]};
