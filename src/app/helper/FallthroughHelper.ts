@@ -176,7 +176,7 @@ export class FallthroughHelper {
         const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
-        mainComponent.stopNodes = startAndStopNodesOfmainFPM.startNodes;
+        mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
 
         const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
         for (let i = 0; i < wCCs.length; i++) {
@@ -200,7 +200,6 @@ export class FallthroughHelper {
         connectingArcs = connectingArcs.filter(arc => {
             return !(mainComponent.nodes.includes(arc.source as string) && mainComponent.nodes.includes(arc.target as string)) &&
                 !(arc.source === "play") && !(arc.target === "stop");
-
         })
         for (let wcc of wccArray) {
             connectingArcs = connectingArcs.filter(arc => {
@@ -221,7 +220,6 @@ export class FallthroughHelper {
                     !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
             })
         }
-
 
         // nun sollte unser tempArcs array leer sein
         if (tempArcs.length !== 0) {
@@ -498,7 +496,7 @@ export class FallthroughHelper {
         }
         return updatedMatrix;
     }
-
+    
     public static findStartAndStopNodes(
         footprintMatrix: string[][],
         validNodes: string[],
