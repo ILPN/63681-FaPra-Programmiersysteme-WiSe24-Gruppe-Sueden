@@ -41,3 +41,14 @@ body {
     border: 1px solid gray !important;
     border-radius: 8px !important;
 }
+
+.mat-mdc-tab {
+    --mdc-tab-indicator-active-indicator-color: gray !important;
+    --mat-tab-header-active-label-text-color: black !important;
+    --mat-tab-header-active-ripple-color: gray !important;
+    --mat-tab-header-inactive-ripple-color: gray !important;
+    --mat-tab-header-active-focus-label-text-color: black !important;
+    --mat-tab-header-active-hover-label-text-color: black !important;
+    --mat-tab-header-active-focus-indicator-color: gray !important;
+    --mat-tab-header-active-hover-indicator-color: gray !important;
+}
