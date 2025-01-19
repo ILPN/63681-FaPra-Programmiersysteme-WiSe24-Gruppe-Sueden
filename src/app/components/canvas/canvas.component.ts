@@ -22,6 +22,8 @@ import {MatIcon} from "@angular/material/icon";
 import {MatTooltip} from "@angular/material/tooltip";
 import {IsNodeSelectedPipe} from "./is-node-selected.pipe";
 import {ToolbarService} from "../../services/toolbar.service";
+import {MatTab, MatTabGroup} from "@angular/material/tabs";
+import {injectLocalStorage} from "../../hooks/inject-local-storage";
 
 @Component({
     selector: 'app-canvas',
@@ -38,13 +40,17 @@ import {ToolbarService} from "../../services/toolbar.service";
         MatIconButton,
         MatIcon,
         MatTooltip,
-        IsNodeSelectedPipe
+        IsNodeSelectedPipe,
+        MatTabGroup,
+        MatTab
     ],
     encapsulation: ViewEncapsulation.None
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     @ViewChild('svgCanvas', {static: true}) svgCanvas!: ElementRef
+
+    protected showLogs = injectLocalStorage("showLogs", true)
 
     protected isDrawing: boolean = false
     protected lassoPath = ''

@@ -8,6 +8,11 @@
             </button>
         }
 
+        <!-- Logs button -->
+        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1" (click)="showLogs.set(!showLogs())">
+            <mat-icon>list</mat-icon>
+        </button>
+
         <!-- Graph -->
         <svg #svgCanvas xmlns:svg="http://www.w3.org/2000/svg"
              [class]="'w-full h-full ' + (toolbarService.selectionType() | canvasCursor: selectionService.selectedDfg() !== null)"
@@ -42,7 +47,7 @@
             } @else {
                 <!--  Draw Petri Full Graph  -->
 
-                <!-- Edges -->
+                    <!-- Edges -->
                 @for (edge of edges; track $index) {
                     <g Edge [edge]="edge"/>
                 }
@@ -82,22 +87,32 @@
     </div>
 
     <!-- Eventlog -->
-    <div class="w-80 flex flex-col gap-4 p-3 border border-solid border-black rounded-xl">
-        @if (selectionService.selectedDfg()) {
-            @for (trace of selectionService.selectedDfg()?.eventLog; track $index) {
-                <div class="flex flex-wrap gap-2">
-                    @for (node of trace; track $index) {
-                        <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null">{{node}}</span>
+    @if (showLogs()) {
+        <div class="w-80 flex flex-col gap-4 border border-solid border-black rounded-xl">
+            <mat-tab-group>
+                <mat-tab label="Event Log" bodyClass="p-2">
+                    @if (selectionService.selectedDfg()) {
+                        @for (trace of selectionService.selectedDfg()?.eventLog; track $index) {
+                            <div class="flex flex-wrap gap-2 mb-3">
+                                @for (node of trace; track $index) {
+                                    <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null">{{ node }}</span>
+                                }
+                                @if (!$last) {
+                                    <span>+</span>
+                                }
+                            </div>
+                        }
+                    } @else {
+                        <div class="text-center italic">Please open a DFG</div>
                     }
-                    @if (!$last) {
-                        <span>+</span>
+                </mat-tab>
+
+                <mat-tab label="Activity Log" bodyClass="p-2">
+                    @for (log of processGraphService.logSignal(); track $index) {
+                        <div>{{ log }}</div>
                     }
-                </div>
-            }
-        } @else {
-            @for (log of processGraphService.logSignal(); track $index) {
-                <div>{{log}}</div>
-            }
-        }
-    </div>
+                </mat-tab>
+            </mat-tab-group>
+        </div>
+    }
 </div>

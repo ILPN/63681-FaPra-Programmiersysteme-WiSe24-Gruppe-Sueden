@@ -1,8 +1,8 @@
-<div class="toolbox">
+<div class="toolbox flex-wrap">
     <div class="overflow-x-clip">
         <div class="relative toolbox" [style.left]="selectionService.selectedDfg() ? 0 : '-100%'">
 
-            <!-- Selection -->
+            <!-- Selection Type -->
             <div class="toolbox-section">
                 <span class="toolbox-section-label">Selection</span>
                 @for (type of SelectionType | keyvalue: originalOrder; track type.value) {
@@ -18,6 +18,16 @@
                     <!-- Cut Type -->
                     <div class="toolbox-section">
                         <span class="toolbox-section-label">Cut</span>
+                        @for (type of CutType | keyvalue; track type.value) {
+                            <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
+                                {{ type.value | titlecase }}
+                            </span>
+                        }
+                    </div>
+
+                    <!-- Fallthrough Type -->
+                    <div class="toolbox-section">
+                        <span class="toolbox-section-label">Fallthrough</span>
                         @for (type of CutType | keyvalue; track type.value) {
                             <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
                                 {{ type.value | titlecase }}
