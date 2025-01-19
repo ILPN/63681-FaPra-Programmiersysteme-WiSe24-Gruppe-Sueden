@@ -1,7 +1,6 @@
-import {AfterViewInit, Component, effect, ElementRef, input, OnDestroy, ViewChild, ViewEncapsulation} from '@angular/core'
+import {AfterViewInit, Component, effect, ElementRef, OnDestroy, ViewChild, ViewEncapsulation} from '@angular/core'
 import {Node, NodeType} from "../../classes/graph/node"
 import {ProcessGraphService} from "../../services/process-graph.service";
-import {CutType} from "../../classes/cut-type.enum";
 import {SelectionType} from "../../classes/selection-type.enum";
 import {Point} from "../../classes/point";
 import {SelectionService} from "../../services/selection.service";
@@ -18,6 +17,11 @@ import {EventLogComponent} from "./event-log/event-log.component";
 import {EdgeComponent} from "./edge/edge.component";
 import {DfgComponent} from "./dfg/dfg.component";
 import {CursorPipe} from "./cursor.pipe";
+import {MatIconButton} from "@angular/material/button";
+import {MatIcon} from "@angular/material/icon";
+import {MatTooltip} from "@angular/material/tooltip";
+import {IsNodeSelectedPipe} from "./is-node-selected.pipe";
+import {ToolbarService} from "../../services/toolbar.service";
 
 @Component({
     selector: 'app-canvas',
@@ -30,21 +34,22 @@ import {CursorPipe} from "./cursor.pipe";
         EventLogComponent,
         EdgeComponent,
         DfgComponent,
-        CursorPipe
+        CursorPipe,
+        MatIconButton,
+        MatIcon,
+        MatTooltip,
+        IsNodeSelectedPipe
     ],
     encapsulation: ViewEncapsulation.None
 })
 export class CanvasComponent implements AfterViewInit, OnDestroy {
-    @ViewChild('svgCanvas', { static: true }) svgCanvas!: ElementRef
 
-    cutType = input.required<CutType>()
-    selectionType = input.required<SelectionType>()
-    useSpringEmbedder = input.required<boolean>()
+    @ViewChild('svgCanvas', {static: true}) svgCanvas!: ElementRef
 
     protected isDrawing: boolean = false
     protected lassoPath = ''
     private lassoStart: Point = {x: 0, y: 0}
-    private selectionPolygon: Array<{x: number, y: number}> = []
+    private selectionPolygon: Array<{ x: number, y: number }> = []
 
     private resizeObserver!: ResizeObserver
     private physicsInterval: number = -1
@@ -61,6 +66,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     transitions: Array<Node> = []
 
     constructor(protected processGraphService: ProcessGraphService,
+                protected toolbarService: ToolbarService,
                 protected selectionService: SelectionService) {
         effect(() => { //every time the graphSignal changes
             const graph = processGraphService.graphSignal()
@@ -83,7 +89,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     updatePhysics() {
-        if(this.useSpringEmbedder()) {
+        if (this.toolbarService.useSpringEmbedder()) {
             PhysicsHelper.calculateRepulsionForce(this.nodes)
             PhysicsHelper.calculateAttractionForce(this.edges)
         }
@@ -113,20 +119,25 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     // HANDLING OF MOUSE EVENTS
     onMouseDown(event: MouseEvent) {
-        switch(this.selectionType()) {
+        switch (this.toolbarService.selectionType()) {
             case SelectionType.CLICK:
                 break
             case SelectionType.LASSO:
-                this.lassoSelectionStart(event)
+                if (this.selectionService.selectedDfg()) {
+                    this.lassoSelectionStart(event)
+                }
                 break
             case SelectionType.NONE:
-                // this.onDragStart(event)
                 break
         }
     }
 
     onMouseMove(event: MouseEvent) {
-        switch(this.selectionType()) {
+        // Always drag in petrinet view
+        if (this.selectionService.selectedDfg() === null) {
+            this.onDragMove(event)
+        }
+        switch (this.toolbarService.selectionType()) {
             case SelectionType.CLICK:
                 break
             case SelectionType.LASSO:
@@ -139,7 +150,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     onMouseUp() {
-        switch(this.selectionType()) {
+        switch (this.toolbarService.selectionType()) {
             case SelectionType.CLICK:
                 break
             case SelectionType.LASSO:
@@ -152,21 +163,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     nodeMouseDown(node: Node) {
-        switch(this.selectionType()) {
-            case SelectionType.CLICK:
-                this.toggleNodeSelected(node)
-                break
-            case SelectionType.NONE:
-                this.onDragStart(node)
-                break
+        // Always drag in petrinet view
+        if (this.selectionService.selectedDfg() == null) {
+            this.onDragStart(node)
+        } else {
+            switch (this.toolbarService.selectionType()) {
+                case SelectionType.CLICK:
+                    this.toggleNodeSelected(node)
+                    break
+                case SelectionType.NONE:
+                    this.onDragStart(node)
+                    break
+            }
         }
     }
 
     nodeMouseUp() {
-        switch(this.selectionType()) {
-            case SelectionType.NONE:
-                this.onDragEnd()
-                break
+        if (this.selectionService.selectedDfg() == null || this.toolbarService.selectionType() === SelectionType.NONE) {
+            this.onDragEnd()
         }
     }
 
@@ -177,13 +191,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     onDragMove(event: MouseEvent) {
-        if(!this.draggingNode) return
+        if (!this.draggingNode) return
         this.draggingNode.x = event.offsetX
         this.draggingNode.y = event.offsetY
     }
 
     onDragEnd() {
-        if(!this.draggingNode) return
+        if (!this.draggingNode) return
         this.draggingNode.isDragged = false
         this.draggingNode = null
     }
@@ -191,7 +205,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     //handling of SELECTIONTYPE.LASSO
     lassoSelectionStart(event: MouseEvent) {
         this.isDrawing = true
-        const point = { x: event.offsetX, y: event.offsetY };
+        const point = {x: event.offsetX, y: event.offsetY};
         this.selectionPolygon = [point]
         this.lassoStart = point
         this.lassoPath = `M ${event.offsetX} ${event.offsetY}`
@@ -201,7 +215,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         event.preventDefault()
         if (!this.isDrawing) return
 
-        const newPoint = { x: event.offsetX, y: event.offsetY }
+        const newPoint = {x: event.offsetX, y: event.offsetY}
         this.selectionPolygon.push(newPoint)
         this.lassoPath += ` L ${event.offsetX} ${event.offsetY}`
     }
@@ -221,7 +235,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     toggleNodeSelected(node: Node): void {
-        if(node.type !== NodeType.node || node.name === 'play' || node.name === 'stop') return //only allow adding nodes (not dfg or places)
+        if (node.type !== NodeType.node || node.name === 'play' || node.name === 'stop') return //only allow adding nodes (not dfg or places)
         this.selectionService.toggleNodeSelected(node)
     }
 
@@ -230,9 +244,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     initGraph(graph: ProcessGraph | null) {
-        if(!graph) return
+        if (!graph) return
 
-        for(const dfg of graph.dfgSet) {
+        for (const dfg of graph.dfgSet) {
             const dfgNode = this.getNode(dfg.id.toString(), NodeType.eventLog) as DfgNode
             dfgNode.height = PhysicsHelper.calculateEventLogHeight(dfg.eventLog)
             dfgNode.width = PhysicsHelper.eventLogWidth
@@ -242,7 +256,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
         this.nodes.push(...this.dfgs)
 
-        for(const place of graph.places) {
+        for (const place of graph.places) {
             const placeNode = this.getNode(place.id, NodeType.place)
             placeNode.width = PhysicsHelper.placeDiameter
             placeNode.height = PhysicsHelper.placeDiameter
@@ -258,7 +272,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
         this.nodes.push(...this.transitions)
 
-        for(const arc of graph.arcs) {
+        for (const arc of graph.arcs) {
             //look up source & target
             const sourceNode = arc.source instanceof DirectlyFollows ? this.findNode(arc.source.id.toString()) : this.findNode((arc.source as Place | Transition).id)
             const targetNode = arc.target instanceof DirectlyFollows ? this.findNode(arc.target.id.toString()) : this.findNode((arc.target as Place | Transition).id)
@@ -267,8 +281,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         }
 
         //Replace Tau Node Names
-        for (let node of this.nodes){
-            if (node.name.startsWith("TAU_")){
+        for (let node of this.nodes) {
+            if (node.name.startsWith("TAU_")) {
                 node.name = "τ"
             }
         }
@@ -277,7 +291,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     private findNode(name: string): Node | DfgNode | null {
         const index = this.nodes.findIndex(node => node.name === name)
-        if(index !== -1) return this.nodes[index]
+        if (index !== -1) return this.nodes[index]
 
         return null
     }

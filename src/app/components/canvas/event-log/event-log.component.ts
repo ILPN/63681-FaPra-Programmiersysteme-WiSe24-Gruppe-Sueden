@@ -13,17 +13,16 @@ import {TruncateEventLogPipe} from "./truncate-event-log.pipe";
     templateUrl: 'event-log.component.html'
 })
 export class EventLogComponent implements OnInit {
+
     dfgNode = input.required<DfgNode>()
     @Output() dfgClicked = new EventEmitter<DirectlyFollows>()
 
     boundingBox = {x: 0, y: 0, width: 0, height: 0}
-
-    constructor() {
-    }
 
     ngOnInit(): void {
         this.boundingBox = PhysicsHelper.calculateBoundingBoxEventLog(this.dfgNode().dfg.eventLog)
     }
 
     protected readonly PhysicsHelper = PhysicsHelper;
+
 }

@@ -1,11 +1,12 @@
-import {Component, model} from "@angular/core";
+import {Component, inject} from "@angular/core";
 import {SelectionType} from "../../classes/selection-type.enum";
 import {CutType} from "../../classes/cut-type.enum";
 import {ExportType} from "../../classes/export-type.enum";
 import {ProcessGraphService} from "../../services/process-graph.service";
 import {SelectionService} from "../../services/selection.service";
 import {MatDialog} from "@angular/material/dialog";
-import {FailedValidationDialog} from "../display/failed-validation-dialog/failed-validation.dialog";
+import {FailedValidationDialog} from "../failed-validation-dialog/failed-validation.dialog";
+import {ToolbarService} from "../../services/toolbar.service";
 
 @Component({
     selector: "toolbar",
@@ -14,9 +15,7 @@ import {FailedValidationDialog} from "../display/failed-validation-dialog/failed
 })
 export class ToolbarComponent {
 
-    useSpringEmbedder = model.required<boolean>()
-    cutType = model.required<CutType>()
-    selectionType = model.required<SelectionType>()
+    protected toolbarService = inject(ToolbarService)
 
     protected readonly SelectionType = SelectionType;
     protected readonly CutType = CutType;
@@ -31,12 +30,10 @@ export class ToolbarComponent {
 
     protected validateCut() {
         const result = this.service.validateCut({
-            cutType: this.cutType(),
+            cutType: this.toolbarService.cutType(),
             dfg: this.selectionService.selectedDfg()!,
             firstNodeSet: new Set(this.selectionService.selectedNodes().map(it => it.name))
         })
-
-        if (result.success) this.selectionType.set(SelectionType.NONE)
 
         if (!result.success) {
             this.dialog.open(FailedValidationDialog, {
