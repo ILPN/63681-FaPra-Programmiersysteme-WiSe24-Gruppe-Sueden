@@ -1,13 +1,20 @@
 import {Pipe, PipeTransform} from "@angular/core";
+import {PhysicsHelper} from "../../../helper/PhysicsHelper";
 
 @Pipe({
     standalone: true,
     name: 'truncateEventLog'
 })
 export class TruncateEventLogPipe implements PipeTransform {
-    transform(eventLog: string[]): string {
-        const result = eventLog.join(' ').trim()
+    transform(eventLog: string[], eventLogWidth: number): string {
+        const text = eventLog.join(' ').trim()
 
-        return result.length > 21 ? result.substring(0, 20).trim() + '...' : result
+        const maxChars = Math.floor(eventLogWidth / PhysicsHelper.characterWidth);
+
+        if (text.length > maxChars) {
+            return text.substring(0, maxChars - 3) + '...'; // Truncate and add ellipsis
+        }
+
+        return text;
     }
 }

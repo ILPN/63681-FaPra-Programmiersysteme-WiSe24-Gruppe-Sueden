@@ -3,37 +3,46 @@ import {Edge} from "../classes/graph/edge"
 import {BoundingBox} from "../classes/graph/bounding-box";
 
 export class PhysicsHelper {
-
     static k: number = 0.01
     static damping: number = 0.7
     static repulsionStrength: number = 3000
-    static boundaryForce: number = 0.1  // Force to keep nodes within boundaries
-    static nodeDiameter: number = 50  // Radius of the node, used for padding
+    static boundaryForce: number = 0.1 // Force to keep nodes within boundaries
+
+    // Node properties
+    static nodeDiameter: number = 50 // Radius of the node, used for padding
     static nodeRadius: number = PhysicsHelper.nodeDiameter / 2
 
-    //DFG EventLog Text
+    // DFG EventLog Text
     static eventLogWidth: number = 200
     static eventLogTextPadding: number = 30
     static lineHeight: number = 14
     static characterWidth: number = 9
     static eventLogRadius: number = PhysicsHelper.eventLogWidth / 2
 
-    //place
+    // Place
     static placeDiameter = 50
     static placeRadius = PhysicsHelper.placeDiameter / 2
 
     // Calculate spring (attractive) force for edges
     public static calculateAttractionForce(edges: Edge[]): void {
         for (const edge of edges) {
-            const isEventLog = edge.source.type === NodeType.eventLog || edge.target.type === NodeType.eventLog
+            const isEventLog =
+                edge.source.type === NodeType.eventLog ||
+                edge.target.type === NodeType.eventLog
 
             const dx = edge.target.x - edge.source.x
             const dy = edge.target.y - edge.source.y
-            let distance = Math.sqrt(dx * dx + dy * dy)
-            if (distance == 0) distance = 1
-            let force = (distance - 100) * PhysicsHelper.k
 
-            if(isEventLog) force *= 0.8
+            // Adjust distance to consider node sizes
+            const minDistance =
+                (edge.source.width + edge.target.width) / 2 +
+                (edge.source.height + edge.target.height) / 2
+            let distance = Math.sqrt(dx * dx + dy * dy)
+            if (distance === 0) distance = 1
+
+            let force = (distance - minDistance) * PhysicsHelper.k
+
+            if (isEventLog) force *= 0.8
 
             const fx = (dx / distance) * force
             const fy = (dy / distance) * force
@@ -51,24 +60,41 @@ export class PhysicsHelper {
 
     // Calculate repulsive force between every pair of nodes
     public static calculateRepulsionForce(nodes: Node[]): void {
-        for (let i = 0; i < nodes.length; i++) {
-            for (let j = i + 1; j < nodes.length; j++) {
+        for (let i = 0; i < nodes.length; i++)
+        {
+            for (let j = i + 1; j < nodes.length; j++)
+            {
                 const nodeA = nodes[i]
                 const nodeB = nodes[j]
 
                 const dx = nodeB.x - nodeA.x
                 const dy = nodeB.y - nodeA.y
-                const distance = Math.sqrt(dx * dx + dy * dy) || 1  // Prevent division by zero
 
-                const isEventLog = nodeA.type === NodeType.eventLog || nodeB.type === NodeType.eventLog
+                // Calculate distance (taking width and height into account)
+                const minDistance =
+                    (nodeA.width + nodeB.width) / 2 +
+                    (nodeA.height + nodeB.height) / 2
+                const distance = Math.sqrt(dx * dx + dy * dy) || 1
+
+                const isEventLog =
+                    nodeA.type === NodeType.eventLog || nodeB.type === NodeType.eventLog
 
                 // Calculate repulsive force (Coulomb-like)
-                let force = (PhysicsHelper.repulsionStrength*3 / (distance * distance))
-                if(isEventLog) force *= 7
+                let force = PhysicsHelper.repulsionStrength / (distance * distance)
+                if (isEventLog) force *= 7
 
                 // Apply the force in opposite directions to each node
                 const fx = (dx / distance) * force
                 const fy = (dy / distance) * force
+
+                if (distance < minDistance) {
+                    // Avoid overlap by pushing nodes apart
+                    const overlapForce = (minDistance - distance) * PhysicsHelper.k
+                    nodeA.vx -= (dx / distance) * overlapForce
+                    nodeA.vy -= (dy / distance) * overlapForce
+                    nodeB.vx += (dx / distance) * overlapForce
+                    nodeB.vy += (dy / distance) * overlapForce
+                }
 
                 if (!nodeA.isDragged) {
                     nodeA.vx -= fx
@@ -83,34 +109,42 @@ export class PhysicsHelper {
     }
 
     // Update node positions, apply damping, and enforce boundary conditions with padding
-    public static updateNodePositions(nodes: Node[], canvasWidth: number, canvasHeight: number, isDFG: boolean): void {
+    public static updateNodePositions(
+        nodes: Node[],
+        canvasWidth: number,
+        canvasHeight: number,
+        isDFG: boolean
+    ): void {
         for (const node of nodes) {
-            //fixed Position for play / stop in DFG view
-            if (isDFG){
-                if (node.name==='play') {
-                    node.x=canvasWidth / 2
-                    node.y= 25
+            // Fixed position for play/stop in DFG view
+            if (isDFG) {
+                if (node.name === "play") {
+                    node.x = canvasWidth / 2
+                    node.y = 25
                     continue
                 }
-                if (node.name==='stop') {
-                    node.x=canvasWidth/2
-                    node.y= canvasHeight - 25
+                if (node.name === "stop") {
+                    node.x = canvasWidth / 2
+                    node.y = canvasHeight - 25
                     continue
                 }
             }
-            // fixed Position start/stop in Petrinet-View
-            if (node.name==='place_play') {
-                node.x=25
-                node.y= canvasHeight / 2
+
+            // Fixed position for start/stop in Petrinet-View
+            if (node.name === "place_play") {
+                node.x = 25
+                node.y = canvasHeight / 2
                 continue
             }
-            if (node.name==='place_stop') {
-                node.x=canvasWidth - 25
-                node.y= canvasHeight / 2
+            if (node.name === "place_stop") {
+                node.x = canvasWidth - 25
+                node.y = canvasHeight / 2
                 continue
             }
+
             const halfWidth = node.width / 2
             const halfHeight = node.height / 2
+
             if (!node.isDragged) {
                 node.vx *= PhysicsHelper.damping
                 node.vy *= PhysicsHelper.damping
@@ -129,9 +163,12 @@ export class PhysicsHelper {
                     node.vy -= PhysicsHelper.boundaryForce
                 }
 
-                // Clamp positions to stay within the canvas, considering the node radius
+                // Clamp positions to stay within the canvas, considering the node's dimensions
                 node.x = Math.max(halfWidth, Math.min(canvasWidth - halfWidth, node.x))
-                node.y = Math.max(halfHeight, Math.min(canvasHeight - halfHeight, node.y))
+                node.y = Math.max(
+                    halfHeight,
+                    Math.min(canvasHeight - halfHeight, node.y)
+                )
             }
         }
     }

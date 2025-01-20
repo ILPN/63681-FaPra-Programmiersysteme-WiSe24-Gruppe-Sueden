@@ -1,5 +1,4 @@
-import {Component, EventEmitter, input, OnInit, Output} from "@angular/core";
-import {DirectlyFollows} from "../../../classes/directly-follows";
+import {Component, EventEmitter, HostListener, input, Output, signal, WritableSignal} from "@angular/core";
 import {PhysicsHelper} from "../../../helper/PhysicsHelper";
 import {DfgNode} from "../../../classes/graph/dfg-node";
 import {TruncateEventLogPipe} from "./truncate-event-log.pipe";
@@ -12,17 +11,46 @@ import {TruncateEventLogPipe} from "./truncate-event-log.pipe";
     ],
     templateUrl: 'event-log.component.html'
 })
-export class EventLogComponent implements OnInit {
+export class EventLogComponent {
 
     dfgNode = input.required<DfgNode>()
     @Output() dfgClicked = new EventEmitter<DfgNode>()
 
-    boundingBox = {x: 0, y: 0, width: 0, height: 0}
+    eventLogWidth: WritableSignal<number> = signal(PhysicsHelper.eventLogWidth)
+    isResizing = false
+    startX = 0
 
-    ngOnInit(): void {
-        this.boundingBox = PhysicsHelper.calculateBoundingBoxEventLog(this.dfgNode().dfg.eventLog)
+    protected readonly PhysicsHelper = PhysicsHelper
+
+    // Called when user starts dragging the resizer
+    onResizeStart(event: MouseEvent): void {
+        this.isResizing = true
+        this.startX = event.clientX
+        event.preventDefault()
     }
 
-    protected readonly PhysicsHelper = PhysicsHelper;
+    // Called when user is dragging
+    @HostListener('document:mousemove', ['$event'])
+    onResizing(event: MouseEvent): void {
+        if (this.isResizing) {
+            const deltaX = event.clientX - this.startX
+            this.eventLogWidth.update(old => old += deltaX)
+            this.dfgNode().width += deltaX
+            this.startX = event.clientX
+
+            // Ensure a minimum width
+            if (this.eventLogWidth() < PhysicsHelper.eventLogWidth) {
+                this.eventLogWidth.set(PhysicsHelper.eventLogWidth)
+            }
+        }
+    }
+
+    // Called when user releases the mouse
+    @HostListener('document:mouseup')
+    onResizeEnd(): void {
+        if (this.isResizing) {
+            this.isResizing = false
+        }
+    }
 
 }
