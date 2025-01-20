@@ -95,7 +95,7 @@
                         @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
                             <div class="flex flex-wrap gap-2 mb-3">
                                 @for (node of trace; track $index) {
-                                    <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null">{{ node }}</span>
+                                    <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null" [class.font-bold]="(node | isSelected: selectionService.selectedNodes())">{{ node }}</span>
                                 }
                                 @if (!$last) {
                                     <span>+</span>
