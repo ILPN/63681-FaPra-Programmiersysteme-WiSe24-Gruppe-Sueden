@@ -1,12 +1,12 @@
-import {DirectlyFollows} from './directly-follows'
 import {Arc} from "./arc";
-import {Place} from "./graph/place";
-import {Transition} from "./graph/transition";
+import {Node} from "./graph/node";
+import {DfgNode} from "./graph/dfg-node";
+
 
 
 export interface ProcessGraph {
-    dfgSet: Set<DirectlyFollows>
-    places: Set<Place>;
-    transitions: Set<Transition>;
+    dfgSet: Set<DfgNode>
+    places: Set<Node>;
+    transitions: Set<Node>;
     arcs: Arc[];
 }

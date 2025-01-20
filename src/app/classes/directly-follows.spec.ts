@@ -170,8 +170,9 @@ describe('DirectlyFollows', () => {
                 [ ],
                 ['A', 'B', 'A', 'B', 'A', 'B']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -182,8 +183,9 @@ describe('DirectlyFollows', () => {
                 [ ],
                 ['A', 'A']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -194,8 +196,9 @@ describe('DirectlyFollows', () => {
                 ['A', 'B', 'C', 'D', 'A', 'B', 'C', 'D', 'A', 'B', 'C', 'D'],
                 [ ]
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -203,8 +206,9 @@ describe('DirectlyFollows', () => {
             const eventlog = [ // has only one trace, which contains alone repeating pattern
                 ['A', 'B', 'A', 'B', 'A', 'B']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -213,8 +217,9 @@ describe('DirectlyFollows', () => {
                 ['A', 'B', 'A', 'B'],
                 ['A', 'B', 'A', 'B', 'A', 'B']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -224,8 +229,9 @@ describe('DirectlyFollows', () => {
                 ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C'],
                 ['A', 'B', 'C', 'A', 'B', 'C', 'A', 'B', 'C']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(true);
         }));
 
@@ -237,8 +243,10 @@ describe('DirectlyFollows', () => {
                 ['A', 'B', 'A', 'A'],
                 [ ]
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(false);
         }));
 
@@ -248,8 +256,9 @@ describe('DirectlyFollows', () => {
                 ['A', 'B'],
                 ['B', 'A', 'B', 'A', 'B', 'A']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(false);
         }));
 
@@ -259,8 +268,9 @@ describe('DirectlyFollows', () => {
                 [ ],
                 [ ]
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(false);
         }));
 
@@ -272,8 +282,9 @@ describe('DirectlyFollows', () => {
                 ['A', 'B'],
                 ['A', 'B']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(false); // There is no trace with repeat of pattern
         }));
 
@@ -281,8 +292,9 @@ describe('DirectlyFollows', () => {
             const eventlog = [ // has only one trace, which contains repeating pattern (A, B), but not exclusively
                 ['A', 'B', 'C', 'A', 'B', 'D', 'A', 'B', 'A', 'B']
             ];
+            directlyFollows.setDFGfromStringArray(eventlog)
 
-            const result = directlyFollows.isPatternExclusivelyRepeated(eventlog)
+            const result = directlyFollows.isPatternExclusivelyRepeated()
             expect(result).toBe(false);
         }));
 

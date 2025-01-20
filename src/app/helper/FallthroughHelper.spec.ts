@@ -578,7 +578,6 @@ describe('FallthroughHelper Test', () => {
             const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
             expect(result).toBe(false);
         }));
-
     });
 
 

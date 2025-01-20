@@ -8,8 +8,6 @@ import {DirectlyFollows} from "../../classes/directly-follows";
 import {Edge} from "../../classes/graph/edge";
 import {ProcessGraph} from "../../classes/process-graph";
 import {DfgNode} from "../../classes/graph/dfg-node";
-import {Place} from "../../classes/graph/place";
-import {Transition} from "../../classes/graph/transition";
 import {PhysicsHelper} from "../../helper/PhysicsHelper";
 import {NodeComponent} from "./node/node.component";
 import {PlaceComponent} from "./place/place.component";
@@ -245,43 +243,24 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.selectionService.toggleNodeSelected(node)
     }
 
-    dfgClicked(dfg: DirectlyFollows) {
+    dfgClicked(dfg: DfgNode) {
         this.selectionService.selectDfg(dfg)
     }
 
     initGraph(graph: ProcessGraph | null) {
         if (!graph) return
 
-        for (const dfg of graph.dfgSet) {
-            const dfgNode = this.getNode(dfg.id.toString(), NodeType.eventLog) as DfgNode
-            dfgNode.height = PhysicsHelper.calculateEventLogHeight(dfg.eventLog)
-            dfgNode.width = PhysicsHelper.eventLogWidth
-            dfgNode.dfg = dfg
-            this.dfgs.push(dfgNode)
-        }
-
+        this.dfgs = [...graph.dfgSet]
         this.nodes.push(...this.dfgs)
-
-        for (const place of graph.places) {
-            const placeNode = this.getNode(place.id, NodeType.place)
-            placeNode.width = PhysicsHelper.placeDiameter
-            placeNode.height = PhysicsHelper.placeDiameter
-            this.places.push(placeNode)
-        }
+        this.places = [...graph.places]
         this.nodes.push(...this.places)
-
-        for (const transition of graph.transitions) {
-            const transitionNode = this.getNode(transition.id, NodeType.transition)
-            transitionNode.width = PhysicsHelper.placeDiameter
-            transitionNode.height = PhysicsHelper.placeDiameter
-            this.transitions.push(transitionNode)
-        }
+        this.transitions =[...graph.transitions]
         this.nodes.push(...this.transitions)
 
         for (const arc of graph.arcs) {
             //look up source & target
-            const sourceNode = arc.source instanceof DirectlyFollows ? this.findNode(arc.source.id.toString()) : this.findNode((arc.source as Place | Transition).id)
-            const targetNode = arc.target instanceof DirectlyFollows ? this.findNode(arc.target.id.toString()) : this.findNode((arc.target as Place | Transition).id)
+            const sourceNode = this.findNode((arc.source as Node).name)
+            const targetNode =  this.findNode((arc.target as Node).name)
             if (!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
             this.edges.push({source: sourceNode, target: targetNode, bidirectional: false})
         }

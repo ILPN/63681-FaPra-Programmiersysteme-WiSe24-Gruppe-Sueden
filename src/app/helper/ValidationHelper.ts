@@ -13,6 +13,12 @@ export class ValidationHelper {
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
         this.log('----------------------------------------------')
+        this.log('Check for empty traces')
+        if(dfg.eventLog.some(trace => trace.length === 0)) {
+            this.log('Empty Trace found in Eventlog')
+            return [false, 'Empty Trace found in Eventlog']
+        }
+        this.log('ok')
         this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
@@ -22,8 +28,6 @@ export class ValidationHelper {
         let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
         let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
-        //TODO: Teste Eventlogs auf leeres Trace oder wiederholte Abfolgen (ABAB) (AA) (ist trace %2 dann testung ab length min)
-        // split String [] bei der hälfte -->  testen auf ===   AABB  --> A tau A B tau B
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
         return [validationResult[0], validationResult[1], dfg1, dfg2]
@@ -350,9 +354,9 @@ export class ValidationHelper {
                 // ins jeweilige Eventlog aufgenommen
                 for (let trace of originalEventlog) {
                     if (firstNodeSet.has(trace[0])) {
-                        firstEventlog.push(trace)
+                        this.pushIfTraceNotInEventlog(firstEventlog, trace)
                     } else {
-                        secondEventlog.push(trace)
+                        this.pushIfTraceNotInEventlog(secondEventlog, trace)
                     }
                 }
                 return [firstEventlog, secondEventlog]
@@ -364,13 +368,13 @@ export class ValidationHelper {
                     for (let activity of trace) {
                         tempIterator++;
                         if (secondNodeSet.has(activity)) {
-                            firstEventlog.push(trace.slice(0, tempIterator));
-                            secondEventlog.push(trace.slice(tempIterator, trace.length));
+                            this.pushIfTraceNotInEventlog(firstEventlog, trace.slice(0, tempIterator))
+                            this.pushIfTraceNotInEventlog(secondEventlog,trace.slice(tempIterator, trace.length))
                             break
                         }
                         if (tempIterator == trace.length - 1) {
-                            firstEventlog.push(trace)
-                            secondEventlog.push([])
+                            this.pushIfTraceNotInEventlog(firstEventlog, trace)
+                            this.pushIfTraceNotInEventlog(secondEventlog, [])
                         }
                     }
                 }
@@ -381,8 +385,8 @@ export class ValidationHelper {
                 for (let trace of originalEventlog) {
                     let tempTraceFirst: string[] = trace.filter(activity => firstNodeSet.has(activity));
                     let tempTraceSecond: string[] = trace.filter(activity => secondNodeSet.has(activity));
-                    firstEventlog.push(tempTraceFirst);
-                    secondEventlog.push(tempTraceSecond);
+                    this.pushIfTraceNotInEventlog(firstEventlog, tempTraceFirst)
+                    this.pushIfTraceNotInEventlog(secondEventlog, tempTraceSecond)
                 }
                 return [firstEventlog, secondEventlog]
 
@@ -401,7 +405,7 @@ export class ValidationHelper {
                                     tempTrace.push(activity);
                                 } else {
                                     // sobald die Aktivität zum 2. Nodeset gehört, ist ein Do-trace erledigt und kommt ins eventlog
-                                    firstEventlog.push(tempTrace);
+                                    this.pushIfTraceNotInEventlog(firstEventlog, tempTrace)
                                     tempTrace = [activity];
                                     state = LoopState.REDO_PART;
                                 }
@@ -412,7 +416,7 @@ export class ValidationHelper {
                                 if (secondNodeSet.has(activity)) {
                                     tempTrace.push(activity);
                                 } else {
-                                    secondEventlog.push(tempTrace);
+                                    this.pushIfTraceNotInEventlog(secondEventlog, tempTrace)
                                     tempTrace = [activity];
                                     state = LoopState.DO_PART;
                                 }
@@ -421,9 +425,9 @@ export class ValidationHelper {
                     }
                     // der letzte trace, an dem wir am arbeiten waren wird noch ins eventlog gefügt
                     if (state === LoopState.DO_PART) {
-                        firstEventlog.push(tempTrace);
+                        this.pushIfTraceNotInEventlog(firstEventlog, tempTrace)
                     } else {
-                        secondEventlog.push(tempTrace);
+                        this.pushIfTraceNotInEventlog(secondEventlog, tempTrace)
                     }
                 }
                 return [firstEventlog, secondEventlog];
@@ -433,9 +437,19 @@ export class ValidationHelper {
         }
     }
 
+    private static isTraceInEventlog(eventlog: string[][], trace: string[]):boolean {
+        return eventlog.some(array => array.length === trace.length && array.every((value, index) => value === trace[index]));
+    }
+    public static pushIfTraceNotInEventlog(eventlog: string[][], trace: string[]): void {
+        if(this.isTraceInEventlog(eventlog, trace)){
+            return
+        }
+        eventlog.push(trace)
+    }
+
     public static createSortedNodeSets(data: ValidationData): [Set<string>, Set<string>] {
         // zweites NodeSet durch Differenz mit allen Nodes
-        const allNodes = data.dfg.getNodes();
+        const allNodes = data.dfg.dfg.getNodes();
         const secondNodeSet = new Set<string>([...allNodes].filter(element => !data.firstNodeSet.has(element)));
         // filter play / stop aus dem übergeben NodeSet, falls vorhanden...
         const firstNodeSet = new Set<string>([...data.firstNodeSet].filter(element => !new Set(['play', 'stop']).has(element)))
@@ -443,7 +457,7 @@ export class ValidationHelper {
             switch (data.cutType) {
                 case CutType.LOOP:
                     //Wenn eine Kante play -> firstNodeset existiert, muss das der Do part sein
-                    const playNodes = data.dfg.getPlayNodes();
+                    const playNodes = data.dfg.dfg.getPlayNodes();
                     const hasCommonNode = [...firstNodeSet].some(node => playNodes?.has(node));
                     if (hasCommonNode) {
                         return [firstNodeSet, secondNodeSet];
@@ -452,7 +466,7 @@ export class ValidationHelper {
                     }
                 case CutType.SEQUENCE:
                     // Wenn ein weg von firstNodeSet nach secondNodeSet führt, muss die Reihenfolge so stimmen
-                    if (data.dfg.existsPath(new Set<string>([firstNodeSet.values().next().value]), secondNodeSet)) {
+                    if (data.dfg.dfg.existsPath(new Set<string>([firstNodeSet.values().next().value]), secondNodeSet)) {
                         return [firstNodeSet, secondNodeSet];
                     } else {
                         return [secondNodeSet, firstNodeSet];
