@@ -200,7 +200,8 @@ export class DirectlyFollows {
         return successors !== undefined && successors.has(target);
     }
 
-    isPatternExclusivelyRepeated(eventlog: string[][]): boolean {
+    isPatternExclusivelyRepeated(): boolean {
+        let eventlog = this.eventLog;
         let isPatternRepeatedInATrace = false;
         let pattern = this.findRepeatedPattern(this.shortestNotEmptyTrace(eventlog));
         if (pattern.length === 0) {
@@ -237,7 +238,7 @@ export class DirectlyFollows {
         return shortestTrace;
     }
 
-    private findRepeatedPattern(row: string[]): string[] {
+    public findRepeatedPattern(row: string[]): string[] {
         const n = row.length;
 
         for (let patternLength = 1; patternLength <= Math.floor(n / 2); patternLength++) {
@@ -259,6 +260,11 @@ export class DirectlyFollows {
             }
         }
         return row; // If no smaller repeating pattern is found, return the array itself
+    }
+
+    public getRepeatedPattern(): string[] {
+        let eventlog = this.eventLog ;
+        return this.findRepeatedPattern(this.shortestNotEmptyTrace(eventlog));
     }
 
     // Helper function to check if a row matches the pattern

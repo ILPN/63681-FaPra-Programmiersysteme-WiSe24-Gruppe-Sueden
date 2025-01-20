@@ -7,6 +7,7 @@ import {PolygonHelper} from "../../../helper/PolygonHelper";
 import {DirectlyFollows} from "../../../classes/directly-follows";
 import {NodeComponent} from "../node/node.component";
 import {EdgeComponent} from "../edge/edge.component";
+import {DfgNode} from "../../../classes/graph/dfg-node";
 
 @Component({
     selector: 'g[DFG]',
@@ -24,7 +25,7 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
 
     @Input() width = 800
     @Input() height = 600
-    dfg = input.required<DirectlyFollows>()
+    dfg = input.required<DfgNode>()
     useSpringEmbedder = input.required<boolean>()
 
     nodes: Array<Node> = []
@@ -40,7 +41,7 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
         }, {allowSignalWrites: true})
 
         effect(() => {
-            this.showNodes.set(this.selectionService.selectedDfg()?.id === this.dfg().id)
+            this.showNodes.set(this.selectionService.selectedDfg()?.name === this.dfg().name)
             clearInterval(this.physicsInterval)
             this.ngAfterViewInit()
         }, {allowSignalWrites: true})
@@ -89,13 +90,13 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
         const dfg = this.dfg()
         if(!dfg) return
 
-        for(const node of dfg.getNodes()) {
+        for(const node of dfg.dfg.getNodes()) {
             this.addNode(node)
         }
         this.addNode("play")
         this.addNode("stop")
 
-        for(const arc of dfg.arcs) {
+        for(const arc of dfg.dfg.arcs) {
             //look up source & target
             const sourceNode = this.findNode(arc.source as string)
             const targetNode = this.findNode(arc.target as string)

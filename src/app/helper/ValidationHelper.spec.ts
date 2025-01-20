@@ -35,7 +35,7 @@ describe('ValidationHelper', () => {
 
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
+            dfg = dfgArray[0].dfg;
 
             let firstNodeSet = new Set(['A', 'B', 'C']);
             let secondNodeSet = new Set([ 'D', 'E', 'F']);
@@ -64,7 +64,7 @@ describe('ValidationHelper', () => {
 
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
+            dfg = dfgArray[0].dfg;
 
             let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
@@ -159,12 +159,12 @@ describe('ValidationHelper', () => {
 
         let graph = processGraphService.graphSignal()
         let dfgArray = Array.from(graph?.dfgSet || []);
-        dfg = dfgArray[0];
+        dfg = dfgArray[0].dfg;
 
         const firstNodeSet = new Set(['A', 'B', 'C']);
         const secondNodeSet = new Set(['D', 'E', 'F']);
         const valiDat: ValidationData = {
-            dfg: dfg,
+            dfg: dfgArray[0],
             firstNodeSet: firstNodeSet,
             cutType: CutType.XOR,
         }
@@ -1614,6 +1614,36 @@ describe('createNewDFG', () => {
         expect(newDfg.getPredecessors('play')).toBeUndefined();
 
     });
+});
+
+describe('Is trace in Eventlog', () => {
+
+    let eventLog: string[][];
+
+        it ('should be inside eventlog', () => {
+            let trace1 = ["d", "e", "f"]
+            let trace2 = ["g", "h", "i","k"]
+            let trace3: string[] = []
+            eventLog = [["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i","k"], []]
+
+            expect(ValidationHelper['isTraceInEventlog'](eventLog, trace1 )).toEqual(true);
+            expect(ValidationHelper['isTraceInEventlog'](eventLog, trace2 )).toEqual(true);
+            expect(ValidationHelper['isTraceInEventlog'](eventLog, trace3 )).toEqual(true);
+        })
+
+    it ('should NOT be inside eventlog', () => {
+        let trace1 = ["e", "d", "f"]
+        let trace2 = ["g", "h", "i","r"]
+        let trace3: string[] = []
+        eventLog = [["a", "b", "c"], ["d", "e", "f"], ["g", "h", "i","k"],]
+        let eventLog2: string[][] = [];
+
+        expect(ValidationHelper['isTraceInEventlog'](eventLog, trace1 )).toEqual(false);
+        expect(ValidationHelper['isTraceInEventlog'](eventLog, trace2 )).toEqual(false);
+        expect(ValidationHelper['isTraceInEventlog'](eventLog, trace3 )).toEqual(false);
+        expect(ValidationHelper['isTraceInEventlog'](eventLog2, trace3 )).toEqual(false);
+    })
+
 });
 
 

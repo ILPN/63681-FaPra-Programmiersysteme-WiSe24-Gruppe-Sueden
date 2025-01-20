@@ -14,7 +14,7 @@ import {TruncateEventLogPipe} from "./truncate-event-log.pipe";
 })
 export class EventLogComponent implements OnInit {
     dfgNode = input.required<DfgNode>()
-    @Output() dfgClicked = new EventEmitter<DirectlyFollows>()
+    @Output() dfgClicked = new EventEmitter<DfgNode>()
 
     boundingBox = {x: 0, y: 0, width: 0, height: 0}
 
