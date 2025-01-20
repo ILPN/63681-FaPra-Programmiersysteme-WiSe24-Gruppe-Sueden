@@ -4,7 +4,6 @@ import {ProcessGraphService} from "../../services/process-graph.service";
 import {SelectionType} from "../../classes/selection-type.enum";
 import {Point} from "../../classes/point";
 import {SelectionService} from "../../services/selection.service";
-import {DirectlyFollows} from "../../classes/directly-follows";
 import {Edge} from "../../classes/graph/edge";
 import {ProcessGraph} from "../../classes/process-graph";
 import {DfgNode} from "../../classes/graph/dfg-node";

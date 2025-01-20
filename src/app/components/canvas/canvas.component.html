@@ -92,7 +92,7 @@
             <mat-tab-group>
                 <mat-tab label="Event Log" bodyClass="p-2">
                     @if (selectionService.selectedDfg()) {
-                        @for (trace of selectionService.selectedDfg()?.eventLog; track $index) {
+                        @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
                             <div class="flex flex-wrap gap-2 mb-3">
                                 @for (node of trace; track $index) {
                                     <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null">{{ node }}</span>
