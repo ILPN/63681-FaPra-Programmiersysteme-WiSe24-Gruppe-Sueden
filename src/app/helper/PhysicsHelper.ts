@@ -13,7 +13,7 @@ export class PhysicsHelper {
 
     //DFG EventLog Text
     static eventLogWidth: number = 200
-    static eventLogTextPadding: number = 40
+    static eventLogTextPadding: number = 30
     static lineHeight: number = 14
     static characterWidth: number = 9
     static eventLogRadius: number = PhysicsHelper.eventLogWidth / 2
@@ -154,6 +154,6 @@ export class PhysicsHelper {
     }
 
     public static calculateEventLogHeight(eventLog: string[][]): number {
-        return PhysicsHelper.eventLogTextPadding + (eventLog.length * PhysicsHelper.lineHeight)
+        return PhysicsHelper.eventLogTextPadding + ((eventLog.length - 1) * PhysicsHelper.lineHeight) - (PhysicsHelper.lineHeight / 2)
     }
 }
