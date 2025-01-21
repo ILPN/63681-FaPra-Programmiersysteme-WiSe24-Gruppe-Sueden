@@ -22,8 +22,8 @@
         <!-- Full Screen DFG -->
         <g DFG
            [dfg]="activeDfg"
-           [width]="width"
-           [height]="height"
+           [width]="displayService.width()"
+           [height]="displayService.height()"
            [useSpringEmbedder]="useSpringEmbedder()"
            (nodeMouseDown)="nodeMouseDown($event)"
            (nodeMouseUp)="nodeMouseUp()"

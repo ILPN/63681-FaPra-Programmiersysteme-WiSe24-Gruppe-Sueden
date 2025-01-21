@@ -12,6 +12,7 @@ import {FallthroughHelper} from "../helper/FallthroughHelper";
 import {NodeType, Node} from "../classes/graph/node";
 import {PhysicsHelper} from "../helper/PhysicsHelper";
 import {DfgNode} from "../classes/graph/dfg-node";
+import {DisplayService} from "./display.service";
 
 @Injectable({
     providedIn: 'root'
@@ -21,6 +22,9 @@ export class ProcessGraphService {
     logSignal: WritableSignal<string[]> = signal([]);
 
     graphSignal = signal<ProcessGraph | null>(null)
+
+    constructor(private displayService: DisplayService) {
+    }
 
     createGraph(eventLog: string[][]) {
         // Umwandeln des result in ein DFG Objekt
@@ -894,8 +898,8 @@ export class ProcessGraphService {
     private createPlace(name: string): Node {
         return {
             name: name,
-            x: 1,
-            y: 1,
+            x: this.displayService.halfWidth(),
+            y: this.displayService.halfHeight(),
             vx: 0,
             vy: 0,
             isDragged: false,
@@ -909,8 +913,8 @@ export class ProcessGraphService {
     private createTransition(name: string): Node {
         return {
             name: name,
-            x: 1,
-            y: 1,
+            x: this.displayService.halfWidth(),
+            y: this.displayService.halfHeight(),
             vx: 0,
             vy: 0,
             isDragged: false,
@@ -923,11 +927,12 @@ export class ProcessGraphService {
 
     private createEventlog(dfg: DirectlyFollows): DfgNode {
         const name = this.generateUniqueId('DFG')
+
         return {
             name: name,
             dfg: dfg,
-            x: 1,
-            y: 1,
+            x: this.displayService.halfWidth(),
+            y: this.displayService.halfHeight(),
             vx: 0,
             vy: 0,
             isDragged: false,

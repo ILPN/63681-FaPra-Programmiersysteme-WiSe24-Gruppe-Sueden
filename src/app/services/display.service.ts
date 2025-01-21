@@ -1,32 +1,14 @@
-import {Injectable, OnDestroy} from '@angular/core';
-import {BehaviorSubject, Observable} from 'rxjs';
-import {Diagram} from '../classes/diagram/diagram';
+import {computed, Injectable, signal, WritableSignal} from '@angular/core';
 
 @Injectable({
     providedIn: 'root'
 })
-export class DisplayService implements OnDestroy {
+export class DisplayService {
 
-    private _diagram$: BehaviorSubject<Diagram>;
+    height: WritableSignal<number> = signal(800)
+    width: WritableSignal<number> = signal(600)
 
-    constructor() {
-        this._diagram$ = new BehaviorSubject<Diagram>(new Diagram([]));
-    }
-
-    ngOnDestroy(): void {
-        this._diagram$.complete();
-    }
-
-    public get diagram$(): Observable<Diagram> {
-        return this._diagram$.asObservable();
-    }
-
-    public get diagram(): Diagram {
-        return this._diagram$.getValue();
-    }
-
-    public display(net: Diagram) {
-        this._diagram$.next(net);
-    }
+    halfHeight = computed(() => this.height() / 2)
+    halfWidth = computed(() => this.width() / 2)
 
 }
