@@ -13,21 +13,25 @@ export class ValidationHelper {
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
         this.log('----------------------------------')
-        this.log('Check for empty traces')
+ /*       this.log('Check for empty traces')
         if(dfg.eventLog.some(trace => trace.length === 0)) {
             this.log('Empty Trace found in Eventlog')
             return [false, 'Empty Trace found in Eventlog']
         }
         this.log('ok')
-        this.log(`Start validation for cutType: ${cutType}`);
+ */     this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
         this.log('creating new DFG from NodeSets')
-        let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
-        let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
+ //       let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
+  //      let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
+        let dfg1: DirectlyFollows = new DirectlyFollows();
+        dfg1.setDFGfromStringArray(splitEventlogs[0])
+        let dfg2: DirectlyFollows = new DirectlyFollows();
+        dfg2.setDFGfromStringArray(splitEventlogs[1])
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
         return [validationResult[0], validationResult[1], dfg1, dfg2]

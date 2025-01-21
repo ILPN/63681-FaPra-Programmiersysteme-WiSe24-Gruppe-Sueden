@@ -40,6 +40,24 @@ export class ProcessGraphService {
         const tempPlace2: Node = this.createPlace(this.generateUniqueId('place'));
         const lastPlace: Node = this.createPlace('place_stop');
         const stopTransition: Node = this.createTransition("stop");
+
+        playTransition.x=this.displayService.width()/6
+        playTransition.y=this.displayService.height()/2
+
+        tempPlace1.x=this.displayService.width()*2/6
+        tempPlace1.y=this.displayService.height()/2
+
+        eventlog.x=this.displayService.width()*3/6
+        eventlog.y=this.displayService.height()/2
+
+        tempPlace2.x=this.displayService.width()*4/6
+        tempPlace2.y=this.displayService.height()/2
+
+        stopTransition.x=this.displayService.width()*5/6
+        stopTransition.y=this.displayService.height()/2
+
+
+
         placeSet.add(firstPlace);
         placeSet.add(tempPlace1);
         placeSet.add(tempPlace2);
@@ -86,30 +104,7 @@ export class ProcessGraphService {
         // Die Ergebnisse an das ProcessGraphService weitergeben
 
         if (result[0] && result[2] !== undefined && result[3] !== undefined) {
-            /*
-            let firstOptional = false;
-            let secondOptional = false;
-            if (data.cutType === CutType.SEQUENCE || data.cutType === CutType.PARALLEL) {
-                //TODO: Optionale sollen zu Fallthrough-Logik werden?!
 
-                this.addLogEntry("checking if subgraphs optional")
-                firstOptional = this.isItOptional(result[2])
-                secondOptional = this.isItOptional(result[3]);
-                if (firstOptional && secondOptional) {
-                    this.addLogEntry('Sequence-Cut successful, both subgraphs optional');
-                    result[1] = 'Sequence-Cut successful, both subgraphs optional';
-                }
-                if (firstOptional) {
-                    this.addLogEntry('Sequence-Cut successful, first subgraph optional');
-                    result[1] = 'Sequence-Cut successful, first subgraph optional';
-                }
-                if (secondOptional) {
-                    this.addLogEntry('Sequence-Cut successful, second subgraph optional');
-                    result[1] = 'Sequence-Cut successful, second subgraph optional';
-                }
-                this.addLogEntry("no subgraph optional")
-            }
-            */
             if (result[2] && result[3]) {
                 this.addLogEntry("incorporating new DFGs into Petrinet")
                 this.incorporateNewDFGs(data.dfg, result[2], result[3], data.cutType);
@@ -127,9 +122,9 @@ export class ProcessGraphService {
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
-    incorporateNewDFGs(dfgNodeOriginal: DfgNode,                    // der dfg der ausgetauscht werden soll
-                       dfg1: DirectlyFollows, //isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
-                       dfg2: DirectlyFollows, //isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+    incorporateNewDFGs(dfgNodeOriginal: DfgNode,                     // der dfg der ausgetauscht werden soll
+                       dfg1: DirectlyFollows,                        // dfg1 mit dem ausgetauscht wird
+                       dfg2: DirectlyFollows,                        // dfg1 mit dem ausgetauscht wird
                        cutMethod: CutType) {                        // cutmethode
         const currentGraph = this.graphSignal();
         if (!currentGraph) {
@@ -168,6 +163,8 @@ export class ProcessGraphService {
                            dfg1: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            dfg2: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            workingGraph: ProcessGraph) {
+        //if (dfg1.dfg.eventLog.length===1 && dfg1.dfg.eventLog[0]===[])
+
         //flatMap durchläuft alle arcs und ersetzt sie nach gegebenen Kriterien
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //Kriterium = source = originalDFG
@@ -186,6 +183,10 @@ export class ProcessGraphService {
         });
         // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        dfg1.x = dfgOriginal.x
+        dfg1.y = dfgOriginal.y+dfgOriginal.height/2
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y-dfgOriginal.height/2
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
         this.graphSignal.set(workingGraph);
@@ -229,6 +230,12 @@ export class ProcessGraphService {
         }
         */
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        middlePlace.x = dfgOriginal.x
+        middlePlace.y = dfgOriginal.y
+        dfg1.x = dfgOriginal.x - dfgOriginal.width/2
+        dfg1.y = dfgOriginal.y
+        dfg2.x = dfgOriginal.x + dfgOriginal.width/2
+        dfg2.y = dfgOriginal.y
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
         this.graphSignal.set(workingGraph);
@@ -239,8 +246,8 @@ export class ProcessGraphService {
     //Parallel
 
     private incorporateParallel(dfgOriginal: DfgNode,                    // der dfg der ausgetauscht werden soll
-                                dfg1: DfgNode, //isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
-                                dfg2: DfgNode, //isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+                                dfg1: DfgNode,    // dfg1 mit dem ausgetauscht wird,
+                                dfg2: DfgNode,     // dfg1 mit dem ausgetauscht wird,
                                 workingGraph: ProcessGraph) {
         //Erstelle neue Places
         const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
@@ -318,16 +325,6 @@ export class ProcessGraphService {
             workingGraph.arcs.push({source: dfg1, target: lastPlaceNew1});
             workingGraph.arcs.push({source: dfg2, target: lastPlaceNew2});
         }
-        //TODO: Gehört  in fall-through behandlung
-        /*
-        if (isOptional1) {
-            this.makeOptional(dfg1, workingGraph)
-        }
-        if (isOptional2) {
-            this.makeOptional(dfg2, workingGraph)
-        }
-
-         */
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
@@ -441,7 +438,14 @@ export class ProcessGraphService {
     private transformBaseCaseToTransition(workingGraph: ProcessGraph, dfgNode: DfgNode) {
         let dfg = dfgNode.dfg;
         let node: string = dfg.getNodes().values().next().value
-        const newTransition = this.createTransition(node);
+        let newTransition: Node = this.createTransition('placeholder')
+        if (node === undefined){
+            newTransition = this.createTransition(this.generateUniqueId('TAU'));
+        } else {
+            newTransition = this.createTransition(node);
+        }
+        newTransition.x = dfgNode.x
+        newTransition.y = dfgNode.y
         workingGraph.transitions.add(newTransition)
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // eig. unnötig da davor schon check arc size..
