@@ -1,4 +1,6 @@
 <div class="toolbox flex-wrap">
+
+    <!-- Animation wrapper -->
     <div class="overflow-x-clip">
         <div class="relative toolbox" [style.left]="selectionService.selectedDfg() ? 0 : '-100%'">
 
@@ -6,12 +8,13 @@
             <div class="toolbox-section">
                 <span class="toolbox-section-label">Selection</span>
                 @for (type of SelectionType | keyvalue: originalOrder; track type.value) {
-                    <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.selectionType() === type.value" (click)="toolbarService.selectionType.set(type.value)">
+                    <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.selectionType() === type.value" (click)="toolbarService.selectionType.set(type.value)">
                         {{ type.value | titlecase }}
                     </span>
                 }
             </div>
 
+            <!-- Animation wrapper-->
             <div class="overflow-x-clip">
                 <div class="relative toolbox" [style.left]="toolbarService.selectionType() === SelectionType.NONE ? '-100%' : 0">
 
@@ -19,7 +22,7 @@
                     <div class="toolbox-section">
                         <span class="toolbox-section-label">Cut</span>
                         @for (type of CutType | keyvalue; track type.value) {
-                            <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
+                            <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
                                 {{ type.value | titlecase }}
                             </span>
                         }
@@ -28,18 +31,38 @@
                     <!-- Fallthrough Type -->
                     <div class="toolbox-section">
                         <span class="toolbox-section-label">Fallthrough</span>
-                        @for (type of CutType | keyvalue; track type.value) {
-                            <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
-                                {{ type.value | titlecase }}
-                            </span>
-                        }
+
+                        <span mat-ripple
+                              class="toolbox-section-value"
+                              matTooltip="Solve Per Tau"
+                              [class.selected]="toolbarService.fallthroughType() === Fallthrough.SPT"
+                              (click)="toolbarService.fallthroughType.set(Fallthrough.SPT)">
+                            SPT
+                        </span>
+
+                        <span mat-ripple
+                              class="toolbox-section-value"
+                              matTooltip="Activity once per Trace"
+                              [class.selected]="toolbarService.fallthroughType() === Fallthrough.AOPT"
+                              (click)="toolbarService.fallthroughType.set(Fallthrough.AOPT)">
+                            AOPT
+                        </span>
+
+                        <span mat-ripple
+                              class="toolbox-section-value"
+                              matTooltip="Converion to Flower-Model"
+                              [class.selected]="toolbarService.fallthroughType() === Fallthrough.FLOWER"
+                              (click)="toolbarService.fallthroughType.set(Fallthrough.FLOWER)">
+                            Flower
+                        </span>
                     </div>
 
                     <!-- Validate Button -->
+                    @let needsNode = toolbarService.cutType() || toolbarService.fallthroughType() === Fallthrough.AOPT;
                     <button mat-fab extended
                             (click)="validateCut()"
-                            [disabled]="selectionService.selectedNodes().length == 0"
-                            matTooltip="Validate if cut is correct">
+                            [disabled]="needsNode && selectionService.selectedNodes().length == 0"
+                            matTooltip="Validate if cut / fallthrough is correct">
                         <mat-icon>check</mat-icon>
                         Validate
                     </button>
@@ -57,11 +80,17 @@
     <!-- Graph mode -->
     <div class="toolbox-section">
         <span class="toolbox-section-label">Graph</span>
-        <span class="toolbox-section-value" mat-ripple [class.selected]="toolbarService.useSpringEmbedder()" (click)="toolbarService.useSpringEmbedder.set(true)">
+        <span mat-ripple
+              class="toolbox-section-value"
+              [class.selected]="toolbarService.useSpringEmbedder()"
+              (click)="toolbarService.useSpringEmbedder.set(true)">
             Spring Embedder
         </span>
 
-        <span class="toolbox-section-value" mat-ripple [class.selected]="!toolbarService.useSpringEmbedder()" (click)="toolbarService.useSpringEmbedder.set(false)">
+        <span mat-ripple
+              class="toolbox-section-value"
+              [class.selected]="!toolbarService.useSpringEmbedder()"
+              (click)="toolbarService.useSpringEmbedder.set(false)">
             Free Layout
         </span>
     </div>

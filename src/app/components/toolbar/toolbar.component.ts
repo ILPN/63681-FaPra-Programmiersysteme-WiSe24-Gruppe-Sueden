@@ -7,6 +7,8 @@ import {SelectionService} from "../../services/selection.service";
 import {MatDialog} from "@angular/material/dialog";
 import {FailedValidationDialog} from "../failed-validation-dialog/failed-validation.dialog";
 import {ToolbarService} from "../../services/toolbar.service";
+import {FallthroughType} from "../../classes/fallthrough.enum";
+import {ValidationResult} from "../../classes/validation-result";
 
 @Component({
     selector: "toolbar",
@@ -29,11 +31,23 @@ export class ToolbarComponent {
     protected originalOrder = () => 0
 
     protected validateCut() {
-        const result = this.service.validateCut({
-            cutType: this.toolbarService.cutType(),
-            dfg: this.selectionService.selectedDfg()!,
-            firstNodeSet: new Set(this.selectionService.selectedNodes().map(it => it.name))
-        })
+        const dfg = this.selectionService.selectedDfg()!
+        const selectedNodes = new Set(this.selectionService.selectedNodes().map(it => it.name))
+
+        let result: ValidationResult
+        if (this.toolbarService.cutType()) {
+            result = this.service.validateCut({
+                cutType: this.toolbarService.cutType()!,
+                dfg: dfg,
+                firstNodeSet: selectedNodes
+            })
+        } else {
+            result = this.service.validateFallthrough(
+                this.selectionService.selectedDfg()!,
+                this.toolbarService.fallthroughType()!,
+                selectedNodes
+            )
+        }
 
         if (!result.success) {
             this.dialog.open(FailedValidationDialog, {
@@ -49,4 +63,5 @@ export class ToolbarComponent {
         console.log("Export as " + type)
     }
 
+    protected readonly Fallthrough = FallthroughType;
 }

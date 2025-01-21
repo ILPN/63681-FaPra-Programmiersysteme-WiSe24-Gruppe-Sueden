@@ -12,7 +12,7 @@ export class ValidationHelper {
                                     cutType: CutType,
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
-        this.log('----------------------------------------------')
+        this.log('--------------------------------------')
         this.log('Check for empty traces')
         if(dfg.eventLog.some(trace => trace.length === 0)) {
             this.log('Empty Trace found in Eventlog')
