@@ -4,6 +4,7 @@ import {CutType} from '../classes/cut-type.enum';
 import {ProcessGraph} from "../classes/process-graph";
 import {ValidationData} from "../classes/validation-data";
 import {ValidationResult} from "../classes/validation-result";
+import {DfgNode} from "../classes/graph/dfg-node";
 
 
 
@@ -30,22 +31,22 @@ describe('CutValidation on progress graph', () => {
             // Subscribe to the signal (observable) to capture emitted values
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
-            expect(graph?.dfgSet.has(dfg)).toBe(true)
+            dfg = dfgArray[0].dfg;
+            expect(graph?.dfgSet.has(dfgArray[0])).toBe(true)
             expect(graph?.dfgSet.size).toBe(1);
             expect(graph?.arcs.length).toBe(6);
         });
         describe('xor cut in ProgressGraph', () => {
             let graph: ProcessGraph | null
-            let dfgArray: DirectlyFollows[]
+            let dfgArray: DfgNode[]
             let valiDat: ValidationData
             let result: ValidationResult
             beforeEach(() => {
                 graph = processGraphService.graphSignal();
                 dfgArray = Array.from(graph?.dfgSet || []);
-                dfg = dfgArray[0];
+                dfg = dfgArray[0].dfg;
                 valiDat = {
-                    dfg: dfg,
+                    dfg: dfgArray[0],
                     firstNodeSet: new Set<string>(['A', 'B']),
                     cutType: CutType.XOR,
                 }
@@ -85,12 +86,12 @@ describe('CutValidation on progress graph', () => {
 
             let graph = processGraphService.graphSignal()
             let dfgArray = Array.from(graph?.dfgSet || []);
-            dfg = dfgArray[0];
+            dfg = dfgArray[0].dfg;
 
             let firstNodeSet = new Set(['A', 'B', 'C', 'D', 'E', 'F']);
             let secondNodeSet = new Set(['G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O']);
             const valiDat: ValidationData = {
-                dfg: dfg,
+                dfg: dfgArray[0],
                 firstNodeSet: firstNodeSet,
                 cutType: CutType.XOR,
             }
@@ -100,13 +101,13 @@ describe('CutValidation on progress graph', () => {
             expect(result.success).toBeTrue();
             expect(result.comment).toBe('XOR-Cut successful');
             for (let dfg of graph?.dfgSet || []) {
-                if (dfg.getNodes().has('A')) {
-                    for (let node of dfg.getNodes()) {
+                if (dfg.dfg.getNodes().has('A')) {
+                    for (let node of dfg.dfg.getNodes()) {
                         expect(firstNodeSet.has(node)).toBe(true);
                         firstNodeSet.delete(node);
                     }
                 } else {
-                    for (let node of dfg.getNodes()) {
+                    for (let node of dfg.dfg.getNodes()) {
                         expect(secondNodeSet.has(node)).toBe(true);
                         secondNodeSet.delete(node);
                     }

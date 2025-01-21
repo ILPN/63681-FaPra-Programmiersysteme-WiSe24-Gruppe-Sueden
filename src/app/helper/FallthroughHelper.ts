@@ -496,7 +496,7 @@ export class FallthroughHelper {
         }
         return updatedMatrix;
     }
-    
+
     public static findStartAndStopNodes(
         footprintMatrix: string[][],
         validNodes: string[],
