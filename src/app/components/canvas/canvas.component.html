@@ -3,7 +3,7 @@
     <div class="relative grow p-3 bg-gray-300 border border-solid border-black rounded-xl">
         <!-- Back button -->
         @if (selectionService.selectedDfg()) {
-            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null)">
+            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
                 <mat-icon>arrow_back</mat-icon>
             </button>
         }
