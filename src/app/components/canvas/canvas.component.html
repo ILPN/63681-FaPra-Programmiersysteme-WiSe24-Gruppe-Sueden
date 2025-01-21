@@ -95,8 +95,8 @@
                         @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
                             <div class="flex flex-wrap gap-2 mb-5">
                                 @for (node of trace; track $index) {
-                                    <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null"
-                                          [class.font-bold]="(node | isSelected: selectionService.selectedNodes())">
+                                    @let isSelected = node | isSelected: selectionService.selectedNodes();
+                                    <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
                                         {{ node }}
                                     </span>
                                 } @empty {
