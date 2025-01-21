@@ -100,7 +100,13 @@
                                         {{ node }}
                                     </span>
                                 } @empty {
-                                    <span class="italic">&lt;empty trace&gt;</span>
+                                    @if (hasUndefinedSelected) {
+                                        @for (node of undefinedNodes; track node.name) {
+                                            <span class="italic" [style.color]="'red'">&lt;empty trace&gt;</span>
+                                        }
+                                    } @else {
+                                        <span class="italic">&lt;empty trace&gt;</span>
+                                    }
                                 }
                                 @if (!$last) {
                                     <span>+</span>

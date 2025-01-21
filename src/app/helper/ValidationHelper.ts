@@ -13,13 +13,7 @@ export class ValidationHelper {
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
         this.log('----------------------------------')
- /*       this.log('Check for empty traces')
-        if(dfg.eventLog.some(trace => trace.length === 0)) {
-            this.log('Empty Trace found in Eventlog')
-            return [false, 'Empty Trace found in Eventlog']
-        }
-        this.log('ok')
- */     this.log(`Start validation for cutType: ${cutType}`);
+        this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
@@ -34,6 +28,12 @@ export class ValidationHelper {
         dfg2.setDFGfromStringArray(splitEventlogs[1])
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
+        for (let node of dfg1.getNodes()){
+            console.log(node)
+        }
+        for (let node of dfg2.getNodes()){
+            console.log(node)
+        }
         return [validationResult[0], validationResult[1], dfg1, dfg2]
     }
 

@@ -285,4 +285,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.nodes = []
         this.transitions = []
     }
+    get hasUndefinedSelected(): boolean {
+        return this.selectionService.selectedNodes().some(node => node.name === undefined);
+    }
+
+    get undefinedNodes(): Node[] {
+        return this.selectionService.selectedNodes().filter(node => node.name === undefined);
+    }
 }
