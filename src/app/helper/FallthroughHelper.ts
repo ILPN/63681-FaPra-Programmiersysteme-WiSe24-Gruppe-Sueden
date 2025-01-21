@@ -136,7 +136,13 @@ export class FallthroughHelper {
         return allWCCsValid;
     }
 
-    // TODO: Loop-Cut detection logic
+    // TODO: Loop-Cut detection logic hat noch ein problem
+    /* zB wird hier loop mittels loo nicht erkannt
+    c d e f d loop c d e f d +
+    a b d e loop a b d e +
+    b a d e loop b a d e +
+    c g loop c g
+     */
     public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);

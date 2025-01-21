@@ -41,21 +41,20 @@ export class ProcessGraphService {
         const lastPlace: Node = this.createPlace('place_stop');
         const stopTransition: Node = this.createTransition("stop");
 
-        playTransition.x=this.displayService.width()/6
-        playTransition.y=this.displayService.height()/2
+        playTransition.x = this.displayService.width() / 6
+        playTransition.y = this.displayService.height() / 2
 
-        tempPlace1.x=this.displayService.width()*2/6
-        tempPlace1.y=this.displayService.height()/2
+        tempPlace1.x = this.displayService.width() * 2 / 6
+        tempPlace1.y = this.displayService.height() / 2
 
-        eventlog.x=this.displayService.width()*3/6
-        eventlog.y=this.displayService.height()/2
+        eventlog.x = this.displayService.width() * 3 / 6
+        eventlog.y = this.displayService.height() / 2
 
-        tempPlace2.x=this.displayService.width()*4/6
-        tempPlace2.y=this.displayService.height()/2
+        tempPlace2.x = this.displayService.width() * 4 / 6
+        tempPlace2.y = this.displayService.height() / 2
 
-        stopTransition.x=this.displayService.width()*5/6
-        stopTransition.y=this.displayService.height()/2
-
+        stopTransition.x = this.displayService.width() * 5 / 6
+        stopTransition.y = this.displayService.height() / 2
 
 
         placeSet.add(firstPlace);
@@ -184,9 +183,9 @@ export class ProcessGraphService {
         // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         dfg1.x = dfgOriginal.x
-        dfg1.y = dfgOriginal.y+dfgOriginal.height/2
+        dfg1.y = dfgOriginal.y + dfgOriginal.height / 2
         dfg2.x = dfgOriginal.x
-        dfg2.y = dfgOriginal.y-dfgOriginal.height/2
+        dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
         this.graphSignal.set(workingGraph);
@@ -232,9 +231,9 @@ export class ProcessGraphService {
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         middlePlace.x = dfgOriginal.x
         middlePlace.y = dfgOriginal.y
-        dfg1.x = dfgOriginal.x - dfgOriginal.width/2
+        dfg1.x = dfgOriginal.x - dfgOriginal.width / 2
         dfg1.y = dfgOriginal.y
-        dfg2.x = dfgOriginal.x + dfgOriginal.width/2
+        dfg2.x = dfgOriginal.x + dfgOriginal.width / 2
         dfg2.y = dfgOriginal.y
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
@@ -439,7 +438,7 @@ export class ProcessGraphService {
         let dfg = dfgNode.dfg;
         let node: string = dfg.getNodes().values().next().value
         let newTransition: Node = this.createTransition('placeholder')
-        if (node === undefined){
+        if (node === undefined) {
             newTransition = this.createTransition(this.generateUniqueId('TAU'));
         } else {
             newTransition = this.createTransition(node);
@@ -477,63 +476,62 @@ export class ProcessGraphService {
         switch (fallthroughType) {
             /*=====================================================SPT====================================================*/
             case FallthroughType.SPT: {
-                let doneSomething = false;
                 // Check for Empty trace
                 this.addLogEntry('Check for empty trace')
-                if (dfgNode.dfg.eventLog.some(trace => trace.length === 0)) {
+                let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.length === 0);
+                let repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
+                if (!repeatingPattern) {
+                    return {success: false, comment: 'No repeating Pattern found'}
+                }
+                if (emptyTrace) {
                     this.addLogEntry('empty trace found, creating TAU-Transition')
                     this.makeOptional(dfgNode, workingGraph)
                     //lösche empty trace
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace.length > 0);
-                    doneSomething = true;
                 } else {
                     this.addLogEntry('No empty trace found')
                 }
                 // check for repeating pattern
                 this.addLogEntry('Check for repeating pattern')
-                if (dfgNode.dfg.isPatternExclusivelyRepeated()) {
-                    // Passe eventlog sowie Arcs an
-                    let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
-                    dfgNode.dfg.setEventLog([repeatedPattern])
-                    dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
-                        !(arc.target === repeatedPattern[0] && arc.source === repeatedPattern[repeatedPattern.length - 1])
-                    );
-                    this.addLogEntry('repeating pattern found, solving per TAU-Transition')
-                    if (doneSomething) { //DFG ist im REDO Part
-                        // Drehe Kanten um
-                        this.addLogEntry('DFG part of REDO-Part')
-                        workingGraph.arcs.forEach(arc => {
-                            if (arc.target === dfgNode || arc.source === dfgNode) {
-                                [arc.source, arc.target] = [arc.target, arc.source]
-                            }
-                        })
-                    } else { //DFG ist im DO Part
-                        // Füge Tau Transition als REDO ein
-                        this.addLogEntry('DFG part of DO-Part')
-                        const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
-                        workingGraph.transitions.add(tauTransition);
-                        workingGraph.arcs.forEach(arc => {
-                            if (arc.target === dfgNode) {
-                                workingGraph.arcs.push({source: tauTransition, target: arc.source})
-                            }
-                            if (arc.source === dfgNode) {
-                                workingGraph.arcs.push({source: arc.target, target: tauTransition})
-                            }
-                        })
-                    }
-                    doneSomething = true
-                } else {
-                    this.addLogEntry('No repeating pattern found')
-                }
-                if (doneSomething) {
-                    this.addLogEntry('Solved per TAU-Transition')
-                    this.graphSignal.set({
-                        ...workingGraph
+
+                // Passe eventlog sowie Arcs an
+                let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
+                let dfgNew= new DirectlyFollows();
+                dfgNew.setDFGfromStringArray([repeatedPattern]);
+                dfgNode.dfg = dfgNew;
+                dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
+                    !(arc.target === repeatedPattern[0] && arc.source === repeatedPattern[repeatedPattern.length - 1])
+                );
+                this.addLogEntry('repeating pattern found, solving per TAU-Transition')
+                if (emptyTrace) { //DFG ist im REDO Part
+                    // Drehe Kanten um
+                    this.addLogEntry('DFG part of REDO-Part')
+                    workingGraph.arcs.forEach(arc => {
+                        if (arc.target === dfgNode || arc.source === dfgNode) {
+                            [arc.source, arc.target] = [arc.target, arc.source]
+                        }
                     })
-                    return {success: true, comment: 'Solved per TAU-Transition'}
-                } else {
-                    return {success: false, comment: 'Not solvable by TAU-Transition'}
+                } else { //DFG ist im DO Part
+                    // Füge Tau Transition als REDO ein
+                    this.addLogEntry('DFG part of DO-Part')
+                    const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
+                    workingGraph.transitions.add(tauTransition);
+                    workingGraph.arcs.forEach(arc => {
+                        if (arc.target === dfgNode) {
+                            workingGraph.arcs.push({source: tauTransition, target: arc.source})
+                        }
+                        if (arc.source === dfgNode) {
+                            workingGraph.arcs.push({source: arc.target, target: tauTransition})
+                        }
+                    })
                 }
+                this.addLogEntry('Solved per TAU-Transition')
+                this.checkAndTransformDFGtoBasecase(dfgNode, workingGraph)
+                this.graphSignal.set({
+                    ...workingGraph
+                })
+                return {success: true, comment: 'Solved per TAU-Transition'}
+
             }
             /*=====================================================AOPT====================================================*/
             case FallthroughType.AOPT: {
@@ -546,6 +544,7 @@ export class ProcessGraphService {
                         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
                         if (isFallthrough[0]) {
                             this.addLogEntry('Fallthrough detected!')
+                            this.addLogEntry(isFallthrough[1])
                             this.addLogEntry('Check for Activity Once Per Trace')
                             const node = nodeSet.values().next().value;
                             if (this.checkAOPTforOne(node, dfgNode.dfg.eventLog)) {
