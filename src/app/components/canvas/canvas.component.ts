@@ -14,6 +14,7 @@ import {EventLogComponent} from "./event-log/event-log.component";
 import {EdgeComponent} from "./edge/edge.component";
 import {DfgComponent} from "./dfg/dfg.component";
 import {CursorPipe} from "./cursor.pipe";
+import {DisplayService} from "../../services/display.service";
 import {MatIconButton} from "@angular/material/button";
 import {MatIcon} from "@angular/material/icon";
 import {MatTooltip} from "@angular/material/tooltip";
@@ -57,11 +58,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private resizeObserver!: ResizeObserver
     private physicsInterval: number = -1
     draggingNode: Node | null = null
-    width: number = 800
-    height: number = 600
 
-    startNode: Node | null = null
-    stopNode: Node | null = null
     places: Array<Node> = []
     dfgs: Array<DfgNode> = []
     edges: Array<Edge> = []
@@ -69,6 +66,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     transitions: Array<Node> = []
 
     constructor(protected processGraphService: ProcessGraphService,
+                protected displayService: DisplayService,
                 protected toolbarService: ToolbarService,
                 protected selectionService: SelectionService) {
         effect(() => { //every time the graphSignal changes
@@ -96,7 +94,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             PhysicsHelper.calculateRepulsionForce(this.nodes)
             PhysicsHelper.calculateAttractionForce(this.edges)
         }
-        PhysicsHelper.updateNodePositions(this.nodes, this.width, this.height, false)
+        PhysicsHelper.updateNodePositions(this.nodes, this.displayService.width(), this.displayService.height(), false)
     }
 
     ngOnDestroy() {
@@ -111,8 +109,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.resizeObserver = new ResizeObserver(entries => {
             for (let entry of entries) {
                 if (entry.target === svgElement) {
-                    this.width = entry.contentRect.width
-                    this.height = entry.contentRect.height
+                    this.displayService.width.set(entry.contentRect.width)
+                    this.displayService.height.set(entry.contentRect.height)
                 }
             }
         })
@@ -278,21 +276,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (index !== -1) return this.nodes[index]
 
         return null
-    }
-
-    private getNode(name: string, type: NodeType): Node {
-        return {
-            name: name,
-            x: (this.width / 2) * Math.random(),
-            y: (this.height / 2) * Math.random(),
-            vx: 0,
-            vy: 0,
-            isDragged: false,
-            isSelected: false,
-            height: PhysicsHelper.nodeDiameter,
-            width: PhysicsHelper.nodeDiameter,
-            type: type
-        }
     }
 
     reset(): void {

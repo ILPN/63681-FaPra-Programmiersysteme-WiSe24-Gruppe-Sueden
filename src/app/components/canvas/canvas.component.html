@@ -38,8 +38,8 @@
                 <!-- Full Screen DFG -->
                 <g DFG
                    [dfg]="activeDfg"
-                   [width]="width"
-                   [height]="height"
+                   [width]="displayService.width()"
+                   [height]="displayService.height()"
                    [useSpringEmbedder]="toolbarService.useSpringEmbedder()"
                    (nodeMouseDown)="nodeMouseDown($event)"
                    (nodeMouseUp)="nodeMouseUp()"

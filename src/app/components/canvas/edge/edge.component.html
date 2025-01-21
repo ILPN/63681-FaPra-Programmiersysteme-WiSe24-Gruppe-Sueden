@@ -1,45 +1,61 @@
 @let _edge = edge();
-@let edgeOffsetStart = calculateEdgeOffset(_edge.source, _edge.target, false, true);
-@let edgeOffsetEnd = calculateEdgeOffset(_edge.source, _edge.target, true, true);
-@let edgeOffsetReverseStart = calculateEdgeOffset(_edge.target, _edge.source, false, true);
-@let edgeOffsetReverseEnd = calculateEdgeOffset(_edge.target, _edge.source, true, true);
 
-@if (_edge.bidirectional) {
-    <!-- Forward arrow with offset -->
-    <svg:line
+<!-- Check if self-referencing: -->
+@if (_edge.source === _edge.target) {
+    <!-- Self-loop path -->
+    <svg:path
         xmlns:svg="http://www.w3.org/2000/svg"
-        [attr.x1]="edgeOffsetStart.x"
-        [attr.y1]="edgeOffsetStart.y"
-        [attr.x2]="edgeOffsetEnd.x"
-        [attr.y2]="edgeOffsetEnd.y"
+        [attr.d]="calculateSelfLoopPath(_edge.source)"
         stroke="black"
+        fill="none"
         stroke-width="1.5"
         marker-end="url(#arrowhead)"
-    ></svg:line>
-
-    <!-- Reverse arrow with offset -->
-    <svg:line
-        xmlns:svg="http://www.w3.org/2000/svg"
-        [attr.x1]="edgeOffsetReverseStart.x"
-        [attr.y1]="edgeOffsetReverseStart.y"
-        [attr.x2]="edgeOffsetReverseEnd.x"
-        [attr.y2]="edgeOffsetReverseEnd.y"
-        stroke="black"
-        stroke-width="1.5"
-        marker-end="url(#arrowhead)"
-    ></svg:line>
+    ></svg:path>
 } @else {
-    @let edgeNoOffsetStart = calculateEdgeOffset(_edge.source, _edge.target, false, false);
-    @let edgeNoOffsetEnd = calculateEdgeOffset(_edge.source, _edge.target, true, false);
-    <!-- Single arrow without offset -->
-    <svg:line
-        xmlns:svg="http://www.w3.org/2000/svg"
-        [attr.x1]="edgeNoOffsetStart.x"
-        [attr.y1]="edgeNoOffsetStart.y"
-        [attr.x2]="edgeNoOffsetEnd.x"
-        [attr.y2]="edgeNoOffsetEnd.y"
-        stroke="black"
-        stroke-width="1.5"
-        marker-end="url(#arrowhead)"
-    ></svg:line>
+    <!-- Not self-referencing: proceed as before -->
+    @let edgeOffsetStart = calculateEdgeOffset(_edge.source, _edge.target, false, true);
+    @let edgeOffsetEnd = calculateEdgeOffset(_edge.source, _edge.target, true, true);
+    @let edgeOffsetReverseStart = calculateEdgeOffset(_edge.target, _edge.source, false, true);
+    @let edgeOffsetReverseEnd = calculateEdgeOffset(_edge.target, _edge.source, true, true);
+
+    @if (_edge.bidirectional) {
+        <!-- Forward arrow with offset -->
+        <svg:line
+            xmlns:svg="http://www.w3.org/2000/svg"
+            [attr.x1]="edgeOffsetStart.x"
+            [attr.y1]="edgeOffsetStart.y"
+            [attr.x2]="edgeOffsetEnd.x"
+            [attr.y2]="edgeOffsetEnd.y"
+            stroke="black"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead)"
+        ></svg:line>
+
+        <!-- Reverse arrow with offset -->
+        <svg:line
+            xmlns:svg="http://www.w3.org/2000/svg"
+            [attr.x1]="edgeOffsetReverseStart.x"
+            [attr.y1]="edgeOffsetReverseStart.y"
+            [attr.x2]="edgeOffsetReverseEnd.x"
+            [attr.y2]="edgeOffsetReverseEnd.y"
+            stroke="black"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead)"
+        ></svg:line>
+    } @else {
+        @let edgeNoOffsetStart = calculateEdgeOffset(_edge.source, _edge.target, false, false);
+        @let edgeNoOffsetEnd = calculateEdgeOffset(_edge.source, _edge.target, true, false);
+
+        <!-- Single arrow without offset -->
+        <svg:line
+            xmlns:svg="http://www.w3.org/2000/svg"
+            [attr.x1]="edgeNoOffsetStart.x"
+            [attr.y1]="edgeNoOffsetStart.y"
+            [attr.x2]="edgeNoOffsetEnd.x"
+            [attr.y2]="edgeNoOffsetEnd.y"
+            stroke="black"
+            stroke-width="1.5"
+            marker-end="url(#arrowhead)"
+        ></svg:line>
+    }
 }

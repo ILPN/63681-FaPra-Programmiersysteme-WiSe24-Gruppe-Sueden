@@ -1,0 +1,70 @@
+<svg #svgCanvas xmlns:svg="http://www.w3.org/2000/svg"
+     [class]="'w-full h-[80vh] ' + (selectionType() | canvasCursor)"
+     (mousedown)="onMouseDown($event)"
+     (mousemove)="onMouseMove($event)"
+     (mouseup)="onMouseUp()"
+>
+    <!-- Definitions for arrow marker -->
+    <svg:defs>
+        <marker
+            id="arrowhead"
+            markerWidth="10"
+            markerHeight="7"
+            refX="10"
+            refY="3.5"
+            orient="auto"
+        >
+            <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+        </marker>
+    </svg:defs>
+
+    @if (selectionService.selectedDfg(); as activeDfg) {
+        <!-- Full Screen DFG -->
+        <g DFG
+           [dfg]="activeDfg"
+           [width]="displayService.width()"
+           [height]="displayService.height()"
+           [useSpringEmbedder]="useSpringEmbedder()"
+           (nodeMouseDown)="nodeMouseDown($event)"
+           (nodeMouseUp)="nodeMouseUp()"
+        />
+    } @else {
+        <!--  Draw Petri Full Graph  -->
+
+            <!-- Edges -->
+        @for (edge of edges; track $index) {
+            <g Edge [edge]="edge"/>
+        }
+
+        <!-- DFGs -->
+        @for (dfg of dfgs; track $index) {
+            <g EventLog
+               [dfgNode]="dfg"
+               (dfgClicked)="dfgClicked($event)"
+            />
+        }
+
+        <!-- Places -->
+        @for (place of places; track $index) {
+            <g Place
+               [place]="place"
+               (nodeMouseUp)="nodeMouseUp()"
+               (nodeMouseDown)="nodeMouseDown($event)"
+            />
+        }
+
+        <!-- Transitions -->
+        @for (transition of transitions; track $index) {
+            <g Node
+               [node]="transition"
+               (nodeMouseUp)="nodeMouseUp()"
+               (nodeMouseDown)="nodeMouseDown($event)"
+            />
+        }
+
+    }
+
+    @if (isDrawing) {
+        <svg:path [attr.d]="lassoPath" stroke="black" stroke-width="1.5" fill="rgba(0,0,0,0.1)"></svg:path>
+    }
+</svg>
