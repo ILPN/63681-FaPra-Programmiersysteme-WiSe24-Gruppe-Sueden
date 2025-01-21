@@ -97,8 +97,8 @@
                                 @for (node of trace; track $index) {
                                     <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null"
                                           [class.font-bold]="(node | isSelected: selectionService.selectedNodes())">
-                                    {{ node }}
-                                </span>
+                                        {{ node }}
+                                    </span>
                                 } @empty {
                                     <span class="italic">&lt;empty trace&gt;</span>
                                 }
@@ -116,7 +116,7 @@
                 <mat-tab label="Activity Log" bodyClass="p-2">
                     @for (log of processGraphService.logSignal(); track $index) {
                         <div>
-                            <span class="font-bold">{{$index + 1}}.</span>
+                            <span class="font-bold">{{ $index + 1 }}.</span>
                             <span>{{ log }}</span>
                         </div>
                     }
