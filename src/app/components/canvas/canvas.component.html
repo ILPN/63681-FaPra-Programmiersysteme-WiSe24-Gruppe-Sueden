@@ -86,16 +86,21 @@
         </svg>
     </div>
 
-    <!-- Eventlog -->
-    @if (showLogs()) {
-        <div class="w-96 flex flex-col gap-4 border border-solid border-black rounded-xl">
+    <!-- Logs -->
+    <div class="transition-all overflow-hidden" [style.max-width]="showLogs() ? '24rem' : 0">
+        <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
             <mat-tab-group>
                 <mat-tab label="Event Log" bodyClass="p-2">
                     @if (selectionService.selectedDfg()) {
                         @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
-                            <div class="flex flex-wrap gap-2 mb-3">
+                            <div class="flex flex-wrap gap-2 mb-5">
                                 @for (node of trace; track $index) {
-                                    <span [style.color]="(node | isSelected: selectionService.selectedNodes()) ? 'red' : null" [class.font-bold]="(node | isSelected: selectionService.selectedNodes())">{{ node }}</span>
+                                    @let isSelected = node | isSelected: selectionService.selectedNodes();
+                                    <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
+                                        {{ node }}
+                                    </span>
+                                } @empty {
+                                    <span class="italic">&lt;empty trace&gt;</span>
                                 }
                                 @if (!$last) {
                                     <span>+</span>
@@ -107,15 +112,16 @@
                     }
                 </mat-tab>
 
+                <!-- Activity logs -->
                 <mat-tab label="Activity Log" bodyClass="p-2">
                     @for (log of processGraphService.logSignal(); track $index) {
                         <div>
-                            <span class="font-bold">{{$index + 1}}.</span>
+                            <span class="font-bold">{{ $index + 1 }}.</span>
                             <span>{{ log }}</span>
                         </div>
                     }
                 </mat-tab>
             </mat-tab-group>
         </div>
-    }
+    </div>
 </div>
