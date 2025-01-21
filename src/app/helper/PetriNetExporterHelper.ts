@@ -14,8 +14,8 @@ export class PetrinetExporterHelper {
         }
 
         let jsonPetriNet: JsonPetriNet = {
-            places: Array.from(processGraph.places).map(place => place.id),
-            transitions: Array.from(processGraph.transitions).map(transition => transition.id),
+            places: Array.from(processGraph.places).map(place => place.name),
+            transitions: Array.from(processGraph.transitions).map(transition => transition.name),
             arcs: {},
             labels: {},
             layout: {}
@@ -23,33 +23,33 @@ export class PetrinetExporterHelper {
 
         // Add coordinates for places
         processGraph.places.forEach(place => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.id);
+            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.name);
             if (!foundNode) {
-                console.error(`Node with id ${place.id} not found on the canvas.`);
-                jsonPetriNet.layout![place.id] = { x: 0, y: 0 }; // Default position if not found
+                console.error(`Node with id ${place.name} not found on the canvas.`);
+                jsonPetriNet.layout![place.name] = { x: 0, y: 0 }; // Default position if not found
             } else {
-                jsonPetriNet.layout![place.id] = { x: foundNode.x, y: foundNode.y };
+                jsonPetriNet.layout![place.name] = { x: foundNode.x, y: foundNode.y };
             }
         });
 
         // Add coordinates for transitions
         processGraph.transitions.forEach(transition => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.id);
+            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.name);
             if (!foundNode) {
-                console.error(`Transition with id ${transition.id} not found on the canvas.`);
-                jsonPetriNet.layout![transition.id] = { x: 0, y: 0 }; // Default position if not found
+                console.error(`Transition with id ${transition.name} not found on the canvas.`);
+                jsonPetriNet.layout![transition.name] = { x: 0, y: 0 }; // Default position if not found
             } else {
-                jsonPetriNet.layout![transition.id] = { x: foundNode.x, y: foundNode.y };
+                jsonPetriNet.layout![transition.name] = { x: foundNode.x, y: foundNode.y };
             }
         });
 
         // Populate arcs
         processGraph.arcs.forEach(arc => {
-            const sourceId = typeof arc.source === "string" ? arc.source : arc.source.id;
-            const targetId = typeof arc.target === "string" ? arc.target : arc.target.id;
+            const sourceName = typeof arc.source === "string" ? arc.source : arc.source.name;
+            const targetName = typeof arc.target === "string" ? arc.target : arc.target.name;
 
-            if (sourceId && targetId && jsonPetriNet.arcs) {
-                const idPair = `${sourceId}->${targetId}`;
+            if (sourceName && targetName && jsonPetriNet.arcs) {
+                const idPair = `${sourceName}->${targetName}`;
                 jsonPetriNet.arcs[idPair] = 1; // Add the arc
             } else {
                 console.error("Invalid arc source or target:", arc);
@@ -58,8 +58,14 @@ export class PetrinetExporterHelper {
 
         // Populate labels for transitions
         processGraph.transitions.forEach(transition => {
-            if (transition.id && jsonPetriNet.labels) {
-                jsonPetriNet.labels[transition.id] = transition.id;
+            if (transition.name && jsonPetriNet.labels) {
+                // Check whether the name starts with 'TAU_'
+                if (transition.name.startsWith('TAU_')) {
+                    // If it starts with 'TAU_', assign the label 'τ'
+                    jsonPetriNet.labels[transition.name] = 'τ';
+                } else {
+                    jsonPetriNet.labels[transition.name] = transition.name;
+                }
             }
         });
 
@@ -77,31 +83,34 @@ export class PetrinetExporterHelper {
 
         // Add places with coordinates
         processGraph.places.forEach(place => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.id);
+            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.name);
             const x = foundNode ? foundNode.x : 0;
             const y = foundNode ? foundNode.y : 0;
 
-            pnml += `    <place id="${place.id}">\n`;
+            pnml += `    <place id="${place.name}">\n`;
             pnml += `      <graphics>\n        <position x="${x}" y="${y}" />\n      </graphics>\n`;
             pnml += `    </place>\n`;
         });
 
         // Add transitions with coordinates and labels
         processGraph.transitions.forEach(transition => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.id);
+            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.name);
             const x = foundNode ? foundNode.x : 0;
             const y = foundNode ? foundNode.y : 0;
 
-            pnml += `    <transition id="${transition.id}">\n`;
-            pnml += `      <name>\n        <text>${transition.id}</text>\n      </name>\n`; // Label only for transitions
+            // Determine the label: 'τ' if name starts with 'TAU_', otherwise use the original name
+            const label = transition.name.startsWith('TAU_') ? 'τ' : transition.name;
+
+            pnml += `    <transition id="${transition.name}">\n`;
+            pnml += `      <name>\n        <text>${label}</text>\n      </name>\n`;
             pnml += `      <graphics>\n        <position x="${x}" y="${y}" />\n      </graphics>\n`;
             pnml += `    </transition>\n`;
         });
 
         // Add arcs
         processGraph.arcs.forEach(arc => {
-            const sourceId = typeof arc.source === "string" ? arc.source : arc.source.id;
-            const targetId = typeof arc.target === "string" ? arc.target : arc.target.id;
+            const sourceId = typeof arc.source === "string" ? arc.source : arc.source.name;
+            const targetId = typeof arc.target === "string" ? arc.target : arc.target.name;
 
             pnml += `    <arc id="${sourceId}_${targetId}" source="${sourceId}" target="${targetId}">\n`;
             pnml += `    </arc>\n`;
