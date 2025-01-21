@@ -14,7 +14,10 @@
     <hr>
 
     @if (processGraphService.graphSignal()) {
-        <app-display/>
+        <div class="flex flex-col gap-3">
+            <toolbar/>
+            <app-canvas/>
+        </div>
     } @else {
         <data-input/>
     }

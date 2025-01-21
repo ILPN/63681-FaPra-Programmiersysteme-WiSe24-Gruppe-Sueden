@@ -6,8 +6,7 @@ import {CutType} from "../classes/cut-type.enum";
 import {ValidationResult} from '../classes/validation-result';
 import {ValidationData} from "../classes/validation-data";
 import {ValidationHelper} from "../helper/ValidationHelper";
-import {Fallthrough} from "../classes/fallthrough.enum";
-import {FallthroughResult} from "../classes/fallthrough-result";
+import {FallthroughType} from "../classes/fallthrough.enum";
 import {FallthroughHelper} from "../helper/FallthroughHelper";
 import {NodeType, Node} from "../classes/graph/node";
 import {PhysicsHelper} from "../helper/PhysicsHelper";
@@ -466,14 +465,14 @@ export class ProcessGraphService {
 
     /*==============================================================================================================================*/
 
-    public validateFallthrough(dfgNode: DfgNode, fallthroughType: Fallthrough, nodeSet: Set<string>): FallthroughResult {
+    public validateFallthrough(dfgNode: DfgNode, fallthroughType: FallthroughType, nodeSet: Set<string>): ValidationResult {
         const workingGraph = this.graphSignal();
         if (!workingGraph) {
             throw new Error("No ProcessGraph found in the Graph Signal!");
         }
         switch (fallthroughType) {
             /*=====================================================SPT====================================================*/
-            case Fallthrough.SPT: {
+            case FallthroughType.SPT: {
                 let doneSomething = false;
                 // Check for Empty trace
                 this.addLogEntry('Check for empty trace')
@@ -533,7 +532,7 @@ export class ProcessGraphService {
                 }
             }
             /*=====================================================AOPT====================================================*/
-            case Fallthrough.AOPT: {
+            case FallthroughType.AOPT: {
                 if (nodeSet && nodeSet.size === 1) {
                     // check for empty trace and repeating pattern
                     let sptResult = this.checkNotSPT(dfgNode.dfg)
@@ -591,7 +590,7 @@ export class ProcessGraphService {
 
             }
             /*=====================================================Flower====================================================*/
-            case Fallthrough.FLOWER: {
+            case FallthroughType.FLOWER: {
                 let sptResult = this.checkNotSPT(dfgNode.dfg)
                 if (sptResult.success) {
                     this.addLogEntry('ok')
@@ -704,7 +703,7 @@ export class ProcessGraphService {
         return {success: false, comment: 'No Fallthrough'};
     }
 
-    private checkNotSPT(dfg: DirectlyFollows): FallthroughResult {
+    private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
         this.addLogEntry('Check for empty trace')
         if (dfg.eventLog.some(trace => trace.length === 0)) {
             this.addLogEntry('empty trace found, AOPT not possible')

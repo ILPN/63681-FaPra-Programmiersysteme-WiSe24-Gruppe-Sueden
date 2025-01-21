@@ -1,8 +1,8 @@
 import {Injectable, signal, WritableSignal} from "@angular/core";
 import {Point} from "../classes/point";
 import {Node} from "../classes/graph/node";
-import {DirectlyFollows} from "../classes/directly-follows";
 import {DfgNode} from "../classes/graph/dfg-node";
+import {DirectlyFollows} from "../classes/directly-follows";
 
 @Injectable({
     providedIn: "root"

@@ -1,0 +1,127 @@
+<div class="flex gap-3 h-[80vh]">
+    <!-- Display -->
+    <div class="relative grow p-3 bg-gray-300 border border-solid border-black rounded-xl">
+        <!-- Back button -->
+        @if (selectionService.selectedDfg()) {
+            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null)">
+                <mat-icon>arrow_back</mat-icon>
+            </button>
+        }
+
+        <!-- Logs button -->
+        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1" (click)="showLogs.set(!showLogs())">
+            <mat-icon>list</mat-icon>
+        </button>
+
+        <!-- Graph -->
+        <svg #svgCanvas xmlns:svg="http://www.w3.org/2000/svg"
+             [class]="'w-full h-full ' + (toolbarService.selectionType() | canvasCursor: selectionService.selectedDfg() !== null)"
+             (mousedown)="onMouseDown($event)"
+             (mousemove)="onMouseMove($event)"
+             (mouseup)="onMouseUp()"
+        >
+            <!-- Definitions for arrow marker -->
+            <svg:defs>
+                <marker
+                    id="arrowhead"
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="10"
+                    refY="3.5"
+                    orient="auto"
+                >
+                    <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
+                </marker>
+            </svg:defs>
+
+            @if (selectionService.selectedDfg(); as activeDfg) {
+                <!-- Full Screen DFG -->
+                <g DFG
+                   [dfg]="activeDfg"
+                   [width]="displayService.width()"
+                   [height]="displayService.height()"
+                   [useSpringEmbedder]="toolbarService.useSpringEmbedder()"
+                   (nodeMouseDown)="nodeMouseDown($event)"
+                   (nodeMouseUp)="nodeMouseUp()"
+                />
+            } @else {
+                <!--  Draw Petri Full Graph  -->
+
+                    <!-- Edges -->
+                @for (edge of edges; track $index) {
+                    <g Edge [edge]="edge"/>
+                }
+
+                <!-- DFGs -->
+                @for (dfg of dfgs; track $index) {
+                    <g EventLog
+                       [dfgNode]="dfg"
+                       (dfgClicked)="dfgClicked($event)"
+                    />
+                }
+
+                <!-- Places -->
+                @for (place of places; track $index) {
+                    <g Place
+                       [place]="place"
+                       (nodeMouseUp)="nodeMouseUp()"
+                       (nodeMouseDown)="nodeMouseDown($event)"
+                    />
+                }
+
+                <!-- Transitions -->
+                @for (transition of transitions; track $index) {
+                    <g Node
+                       [node]="transition"
+                       (nodeMouseUp)="nodeMouseUp()"
+                       (nodeMouseDown)="nodeMouseDown($event)"
+                    />
+                }
+
+            }
+
+            @if (isDrawing) {
+                <svg:path [attr.d]="lassoPath" stroke="black" stroke-width="1.5" fill="rgba(0,0,0,0.1)"></svg:path>
+            }
+        </svg>
+    </div>
+
+    <!-- Logs -->
+    <div class="transition-all overflow-hidden" [style.max-width]="showLogs() ? '24rem' : 0">
+        <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
+            <mat-tab-group>
+                <mat-tab label="Event Log" bodyClass="p-2">
+                    @if (selectionService.selectedDfg()) {
+                        @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
+                            <div class="flex flex-wrap gap-2 mb-5">
+                                @for (node of trace; track $index) {
+                                    @let isSelected = node | isSelected: selectionService.selectedNodes();
+                                    <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
+                                        {{ node }}
+                                    </span>
+                                } @empty {
+                                    <span class="italic">&lt;empty trace&gt;</span>
+                                }
+                                @if (!$last) {
+                                    <span>+</span>
+                                }
+                            </div>
+                        }
+                    } @else {
+                        <div class="text-center italic">Please open a DFG</div>
+                    }
+                </mat-tab>
+
+                <!-- Activity logs -->
+                <mat-tab label="Activity Log" bodyClass="p-2">
+                    @for (log of processGraphService.logSignal(); track $index) {
+                        <div>
+                            <span class="font-bold">{{ $index + 1 }}.</span>
+                            <span>{{ log }}</span>
+                        </div>
+                    }
+                </mat-tab>
+            </mat-tab-group>
+        </div>
+    </div>
+</div>

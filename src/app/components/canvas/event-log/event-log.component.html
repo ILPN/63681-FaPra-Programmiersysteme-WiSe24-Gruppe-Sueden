@@ -1,0 +1,45 @@
+<!-- Bounding Box -->
+<svg:rect
+    [attr.x]="dfgNode().x - (eventLogWidth() / 2)"
+    [attr.y]="dfgNode().y - (dfgNode().height / 2)"
+    [attr.width]="eventLogWidth()"
+    [attr.height]="dfgNode().height"
+    [attr.rx]="3"
+    [attr.ry]="3"
+    (click)="dfgClicked.emit(dfgNode())"
+    class="cursor-pointer"
+    fill="#c5c5c5"
+    stroke="black"
+    stroke-width="1"
+    xmlns:svg="http://www.w3.org/2000/svg"
+></svg:rect>
+
+<!-- Resizer Handle -->
+<svg:circle
+    xmlns:svg="http://www.w3.org/2000/svg"
+    [attr.cx]="dfgNode().x + (eventLogWidth() / 2)"
+    [attr.cy]="dfgNode().y"
+    r="5"
+    fill="gray"
+    class="cursor-ew-resize"
+    (mousedown)="onResizeStart($event)"
+></svg:circle>
+
+<!-- Text Content -->
+@for (event of dfgNode().dfg.eventLog; track $index) {
+    @let eventText = event | truncateEventLog : eventLogWidth();
+    <svg:text
+        xmlns:svg="http://www.w3.org/2000/svg"
+        [attr.x]="dfgNode().x"
+        [attr.y]="dfgNode().y - (dfgNode().height / 2) + (PhysicsHelper.eventLogTextPadding / 2) + ($index * PhysicsHelper.lineHeight)"
+        text-anchor="middle"
+        font-size="12"
+        fill="black"
+        class="select-none pointer-events-none max-w-[160px] overflow-hidden overflow-ellipsis"
+    >
+        {{eventText}}
+        @if(!$last) {
+            +
+        }
+    </svg:text>
+}

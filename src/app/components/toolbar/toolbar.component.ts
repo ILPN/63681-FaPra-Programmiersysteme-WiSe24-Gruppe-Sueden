@@ -1,11 +1,14 @@
-import {Component, model} from "@angular/core";
+import {Component, inject} from "@angular/core";
 import {SelectionType} from "../../classes/selection-type.enum";
 import {CutType} from "../../classes/cut-type.enum";
 import {ExportType} from "../../classes/export-type.enum";
 import {ProcessGraphService} from "../../services/process-graph.service";
 import {SelectionService} from "../../services/selection.service";
 import {MatDialog} from "@angular/material/dialog";
-import {FailedValidationDialog} from "../display/failed-validation-dialog/failed-validation.dialog";
+import {FailedValidationDialog} from "../failed-validation-dialog/failed-validation.dialog";
+import {ToolbarService} from "../../services/toolbar.service";
+import {FallthroughType} from "../../classes/fallthrough.enum";
+import {ValidationResult} from "../../classes/validation-result";
 
 @Component({
     selector: "toolbar",
@@ -14,9 +17,7 @@ import {FailedValidationDialog} from "../display/failed-validation-dialog/failed
 })
 export class ToolbarComponent {
 
-    useSpringEmbedder = model.required<boolean>()
-    cutType = model.required<CutType>()
-    selectionType = model.required<SelectionType>()
+    protected toolbarService = inject(ToolbarService)
 
     protected readonly SelectionType = SelectionType;
     protected readonly CutType = CutType;
@@ -30,13 +31,23 @@ export class ToolbarComponent {
     protected originalOrder = () => 0
 
     protected validateCut() {
-        const result = this.service.validateCut({
-            cutType: this.cutType(),
-            dfg: this.selectionService.selectedDfg()!,
-            firstNodeSet: new Set(this.selectionService.selectedNodes().map(it => it.name))
-        })
+        const dfg = this.selectionService.selectedDfg()!
+        const selectedNodes = new Set(this.selectionService.selectedNodes().map(it => it.name))
 
-        if (result.success) this.selectionType.set(SelectionType.NONE)
+        let result: ValidationResult
+        if (this.toolbarService.cutType()) {
+            result = this.service.validateCut({
+                cutType: this.toolbarService.cutType()!,
+                dfg: dfg,
+                firstNodeSet: selectedNodes
+            })
+        } else {
+            result = this.service.validateFallthrough(
+                this.selectionService.selectedDfg()!,
+                this.toolbarService.fallthroughType()!,
+                selectedNodes
+            )
+        }
 
         if (!result.success) {
             this.dialog.open(FailedValidationDialog, {
@@ -52,4 +63,5 @@ export class ToolbarComponent {
         console.log("Export as " + type)
     }
 
+    protected readonly Fallthrough = FallthroughType;
 }
