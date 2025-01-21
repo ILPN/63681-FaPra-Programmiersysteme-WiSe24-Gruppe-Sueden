@@ -2,6 +2,7 @@ import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationData} from '../classes/validation-data'
 import {CutType} from "../classes/cut-type.enum";
 import {LoopState} from '../classes/loop-state.enum'
+import {Dir} from "@angular/cdk/bidi";
 
 
 export class ValidationHelper {
@@ -13,14 +14,24 @@ export class ValidationHelper {
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
         this.log('----------------------------------')
-        this.log(`Start validation for cutType: ${cutType}`);
+
+        // teste auf wiederholte Muster, falls undefined Node übergeben
+        if (this.hasUndefined(firstNodeSet) || this.hasUndefined(secondNodeSet)) {
+            if (dfg.isPatternExclusivelyRepeated()) {
+                this.log('Found repeating pattern in combination with empty trace');
+                return [false, 'Found repeating pattern in combination with empty trace \n' +
+                'Please Solve per Tau']
+            }
+        }
+
+        this.log('Start validation for cutType: ${cutType}');
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
         this.log('creating new DFG from NodeSets')
- //       let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
-  //      let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
+        //       let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
+        //      let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         let dfg1: DirectlyFollows = new DirectlyFollows();
         dfg1.setDFGfromStringArray(splitEventlogs[0])
@@ -28,12 +39,6 @@ export class ValidationHelper {
         dfg2.setDFGfromStringArray(splitEventlogs[1])
         dfg1.setEventLog(splitEventlogs[0]);
         dfg2.setEventLog(splitEventlogs[1]);
-        for (let node of dfg1.getNodes()){
-            console.log(node)
-        }
-        for (let node of dfg2.getNodes()){
-            console.log(node)
-        }
         return [validationResult[0], validationResult[1], dfg1, dfg2]
     }
 
@@ -373,7 +378,7 @@ export class ValidationHelper {
                         tempIterator++;
                         if (secondNodeSet.has(activity)) {
                             this.pushIfTraceNotInEventlog(firstEventlog, trace.slice(0, tempIterator))
-                            this.pushIfTraceNotInEventlog(secondEventlog,trace.slice(tempIterator, trace.length))
+                            this.pushIfTraceNotInEventlog(secondEventlog, trace.slice(tempIterator, trace.length))
                             break
                         }
                         if (tempIterator == trace.length - 1) {
@@ -441,11 +446,12 @@ export class ValidationHelper {
         }
     }
 
-    private static isTraceInEventlog(eventlog: string[][], trace: string[]):boolean {
+    private static isTraceInEventlog(eventlog: string[][], trace: string[]): boolean {
         return eventlog.some(array => array.length === trace.length && array.every((value, index) => value === trace[index]));
     }
+
     public static pushIfTraceNotInEventlog(eventlog: string[][], trace: string[]): void {
-        if(this.isTraceInEventlog(eventlog, trace)){
+        if (this.isTraceInEventlog(eventlog, trace)) {
             return
         }
         eventlog.push(trace)
@@ -480,5 +486,9 @@ export class ValidationHelper {
             }
         }
         return [firstNodeSet, secondNodeSet]
+    }
+
+    private static hasUndefined(mySet: Set<any>): boolean {
+        return mySet.has(undefined);
     }
 }
