@@ -109,7 +109,10 @@
 
                 <mat-tab label="Activity Log" bodyClass="p-2">
                     @for (log of processGraphService.logSignal(); track $index) {
-                        <div>{{ log }}</div>
+                        <div>
+                            <span class="font-bold">{{$index + 1}}.</span>
+                            <span>{{ log }}</span>
+                        </div>
                     }
                 </mat-tab>
             </mat-tab-group>
