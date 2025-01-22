@@ -551,8 +551,10 @@ export class ProcessGraphService {
                                 this.addLogEntry('Activity Once Per Trace possible')
                                 //lösche node aus eventlog
                                 let eventlogWithoutAopt = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
+                                /*
                                 let eventlogWithoutAoptTemp: string[][] = [];
                                 let emptytraceExists = false;
+
                                 for (let trace of eventlogWithoutAopt) {
                                     if (trace.length === 0) {
                                         emptytraceExists = true; // Leeren Trace speichern
@@ -561,20 +563,23 @@ export class ProcessGraphService {
                                         // Nicht-leeren Trace speichern falls noch nicht vorhanden
                                     }
                                 }
+                                 */
                                 // erstelle neue DFGs und inkorporiere sie ins petrinetz
                                 const dfg1 = new DirectlyFollows();
-                                dfg1.setDFGfromStringArray(eventlogWithoutAoptTemp)
+                                dfg1.setDFGfromStringArray(eventlogWithoutAopt)
+                                /*
                                 if (emptytraceExists) {
                                     dfg1.eventLog.push([])
                                 }
+                                */
                                 const newDfg1 = this.createEventlog(dfg1)
                                 const dfg2 = new DirectlyFollows();
                                 dfg2.setDFGfromStringArray([[node]])
                                 const newDfg2 = this.createEventlog(dfg2)
-                                this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph)
+                                this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph!)
                                 this.addLogEntry('Activity Once Per Trace executed')
                                 this.graphSignal.set({
-                                    ...workingGraph
+                                    ...workingGraph!
                                 })
                                 return {success: true, comment: 'Activity Once Per Trace executed'}
                             } else {

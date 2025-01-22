@@ -261,13 +261,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             if (!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
             this.edges.push({source: sourceNode, target: targetNode, bidirectional: false})
         }
-
+        //TODO: Im frontend bei der anzeige tau anzeigen lassen
+/*
         //Replace Tau Node Names
         for (let node of this.nodes) {
             if (node.name.startsWith("TAU_")) {
                 node.name = "τ"
             }
         }
+
+ */
 
     }
 

@@ -1,4 +1,15 @@
-import {AfterViewInit, Component, effect, EventEmitter, Input, input, OnDestroy, Output, signal, WritableSignal} from "@angular/core";
+import {
+    AfterViewInit,
+    Component,
+    effect,
+    EventEmitter,
+    Input,
+    input,
+    OnDestroy,
+    Output,
+    signal,
+    WritableSignal
+} from "@angular/core";
 import {Node, NodeType} from "../../../classes/graph/node";
 import {Edge} from "../../../classes/graph/edge";
 import {PhysicsHelper} from "../../../helper/PhysicsHelper";
@@ -49,8 +60,8 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
         effect(() => { //writing nodes laying inside polygon to SelectionService onSelectionPolygonChange
             const polygon = selectionService.lassoSelectionPolygon()
             const selectedNodes: Array<Node> = []
-            for(const node of this.nodes) {
-                if(PolygonHelper.isPointInPolygon(node.x, node.y, polygon)) {
+            for (const node of this.nodes) {
+                if (PolygonHelper.isPointInPolygon(node.x, node.y, polygon)) {
                     node.isSelected = true
                     selectedNodes.push(node)
                 }
@@ -74,7 +85,7 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
     }
 
     updatePhysics() {
-        if(this.useSpringEmbedder()) {
+        if (this.useSpringEmbedder()) {
             PhysicsHelper.calculateRepulsionForce(this.nodes)
             PhysicsHelper.calculateAttractionForce(this.edges)
         }
@@ -88,19 +99,19 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
 
     initDfg() {
         const dfg = this.dfg()
-        if(!dfg) return
+        if (!dfg) return
 
-        for(const node of dfg.dfg.getNodes()) {
+        for (const node of dfg.dfg.getNodes()) {
             this.addNode(node)
         }
         this.addNode("play")
         this.addNode("stop")
 
-        for(const arc of dfg.dfg.arcs) {
+        for (const arc of dfg.dfg.arcs) {
             //look up source & target
             const sourceNode = this.findNode(arc.source as string)
             const targetNode = this.findNode(arc.target as string)
-            if(!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
+            if (!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
             this.edges.push({source: sourceNode, target: targetNode, bidirectional: false})
         }
         //process bidirectionality
@@ -109,13 +120,13 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
             const isBidirectional = this.edges.some(
                 other => other.source === edge.target && other.target === edge.source
             )
-            return { ...edge, bidirectional: isBidirectional }
+            return {...edge, bidirectional: isBidirectional}
         })
     }
 
-    private addNode(name: string): void {
+    private addNode(id: string): void {
         this.nodes.push({
-            name: name,
+            name: id,
             x: (this.width / 2) * Math.random(),
             y: (this.height / 2) * Math.random(),
             vx: 0,
@@ -126,6 +137,8 @@ export class DfgComponent implements AfterViewInit, OnDestroy {
             height: PhysicsHelper.nodeDiameter,
             type: NodeType.node
         })
+
+
     }
 
     private findNode(name: string): Node | undefined {

@@ -147,11 +147,18 @@ export class FallthroughHelper {
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);
         const stopNodes = Array.from(dfg.getStopNodes() ?? []);
-        let workingMatrix: string[][] = []
+        let workingMatrix: string[][]
         workingMatrix = this.removeIncomingEdges(mapping, footprintMatrix, playNodes)
         workingMatrix = this.removeOutgoingEdges(mapping, workingMatrix, stopNodes)
 
         let wCCs = this.computeWCCsFromFootprintMatrix(nodesAsArray, workingMatrix);
+        for (let wcc of wCCs){
+            console.log('wcc:')
+            for (let node of wcc) {
+             console.log(node);
+            }
+            console.log('\n')
+        }
         let mainWCC: string[] = []
 
         for (let i = 0; i < wCCs.length; i++) {
@@ -164,8 +171,20 @@ export class FallthroughHelper {
                 i--;
             }
         }
+        console.log('main wcc:')
+        for (let node of mainWCC){
+            console.log(node)
+        }
         const amountOfWCCs = wCCs.length;
         // nun sollten alle WCCs mit play/stopNodes in der mainWCC sein, in WCCs sollten sämtliche eventuelle redo-parts sein
+        console.log('wccs:' + amountOfWCCs)
+        for (let wcc of wCCs){
+            console.log('wcc:')
+            for (let node of wcc) {
+                console.log(node);
+            }
+            console.log('\n')
+        }
         if (amountOfWCCs === 0) {
             return false;
         }
@@ -183,6 +202,8 @@ export class FallthroughHelper {
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
+        console.log('mstart: ' +mainComponent.startNodes);
+        console.log('mstop: '+ mainComponent.stopNodes);
 
         const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
         for (let i = 0; i < wCCs.length; i++) {
@@ -197,6 +218,11 @@ export class FallthroughHelper {
             wCC.stopNodes = startStopNodes.stopNodes;
             wccArray.push(wCC);
         }
+        for (let wcc of wccArray){
+            console.log('wstart: ' +wcc.startNodes);
+            console.log('wstop: '+ wcc.stopNodes);
+        }
+
         // nun haben wir Footprint Matrizen für die main-component sowie alle redo-components und die start / stopknoten der components...
         // nun müssen wir mittels arcs überprüfen ob die ausgehenden und eingehenden kanten richtig verlaufen..
 
