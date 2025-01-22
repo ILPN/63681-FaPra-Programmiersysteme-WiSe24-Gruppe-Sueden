@@ -125,13 +125,20 @@ export class FallthroughHelper {
 
         let allWCCsValid = true;
         for (const wcc of wccs) {
+            for (let node of wcc){
+                if (!dfg.existsFullPathOverNode(node, new Set(wcc))){
+                    allWCCsValid = false;
+                }
+            }
+            /*
             const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node));
             const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node));
-
             if (!containsPlayNode || !containsStopNode) {
                 allWCCsValid = false;
                 break; // Exit the loop early if a WCC is invalid
             }
+
+             */
         }
         return allWCCsValid;
     }
