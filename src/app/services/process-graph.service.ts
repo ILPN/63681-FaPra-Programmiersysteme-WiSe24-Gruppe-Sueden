@@ -217,17 +217,7 @@ export class ProcessGraphService {
             }
             return [arc];
         });
-        //macht dfgs optional (siehe skript)
-        //TODO: Rausnehmen da über Fallthrough behandlung
-        /*
-        this.addLogEntry('creating silent transitions')
-        if (isOptional1) {
-            this.makeOptional(dfg1, workingGraph)
-        }
-        if (isOptional2) {
-            this.makeOptional(dfg2, workingGraph)
-        }
-        */
+
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         middlePlace.x = dfgOriginal.x
         middlePlace.y = dfgOriginal.y
@@ -307,12 +297,11 @@ export class ProcessGraphService {
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
             firstTauTransition.y= dfgOriginal.y
-            //TODO: 1 mit 2 vertauschen!!!!!
             workingGraph.transitions.add(firstTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //geh alle arcs durch und suche die stelle vor dem dfgOriginal
                 if (arc.target === dfgOriginal) {
-                    let placebefore = arc.source as Node;;
+                    let placebefore = arc.source as Node;
                     placebefore.x = firstTauTransition.x - PhysicsHelper.placeDiameter
                     placebefore.y= dfgOriginal.y
                     // tausche verknüpfung zu DfgOriginal mit verknüpfung zu firstTauTransition
