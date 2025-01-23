@@ -255,14 +255,14 @@ export class ProcessGraphService {
         dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
 
         //Erstelle neue Places
-        const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
-        firstPlaceNew1.x = dfg2.x - dfgOriginal.width / 2;
-        firstPlaceNew1.y = dfg2.y;
-        workingGraph.places.add(firstPlaceNew1);
-        const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
-        lastPlaceNew1.x = dfg2.x + dfgOriginal.width / 2;
-        lastPlaceNew1.y = dfg2.y;
-        workingGraph.places.add(lastPlaceNew1);
+        const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        firstPlaceNew2.x = dfg2.x - dfgOriginal.width / 2;
+        firstPlaceNew2.y = dfg2.y;
+        workingGraph.places.add(firstPlaceNew2);
+        const lastPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        lastPlaceNew2.x = dfg2.x + dfgOriginal.width / 2;
+        lastPlaceNew2.y = dfg2.y;
+        workingGraph.places.add(lastPlaceNew2);
         // Erstelle boolen um zu checken ob Tau transitionen nötig
         let firstTauNeeded = true;
         let lastTauNeeded = true;
@@ -280,8 +280,8 @@ export class ProcessGraphService {
                     let transitionOrDFGbefore = this.findSingularSourceForTarget(workingGraph.arcs, arc.source);
                     // tausche dfg original mit dfg1
                     return [{source: arc.source, target: dfg1},
-                        {source: transitionOrDFGbefore, target: firstPlaceNew1},
-                        {source: firstPlaceNew1, target: dfg2}];
+                        {source: transitionOrDFGbefore, target: firstPlaceNew2},
+                        {source: firstPlaceNew2, target: dfg2}];
                 }
                 //geh alle arcs durch und suche die stelle nach dem dfgOriginal // checke ob stelle nur mit einer transition verbunden ist und nur 2 kanten hat
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
@@ -293,16 +293,21 @@ export class ProcessGraphService {
                     //Finde transition NACH place
                     let transitionOrDFGafter = this.findTargetForSource(workingGraph.arcs, arc.target);
                     return [{source: dfg1, target: arc.target},
-                        {source: dfg2, target: lastPlaceNew1},
-                        {source: lastPlaceNew1, target: transitionOrDFGafter}];
+                        {source: dfg2, target: lastPlaceNew2},
+                        {source: lastPlaceNew2, target: transitionOrDFGafter}];
                 }
                 return arc
             });
         }
         if (firstTauNeeded) {
-            const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+            const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+            firstPlaceNew1.y = dfg1.y;
             workingGraph.places.add(firstPlaceNew2);
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
+            firstTauTransition.y= dfgOriginal.y
+            //TODO: 1 mit 2 vertauschen!!!!!
             workingGraph.transitions.add(firstTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //geh alle arcs durch und suche die stelle vor dem dfgOriginal
