@@ -312,6 +312,9 @@ export class ProcessGraphService {
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //geh alle arcs durch und suche die stelle vor dem dfgOriginal
                 if (arc.target === dfgOriginal) {
+                    let placebefore = arc.source as Node;;
+                    placebefore.x = firstTauTransition.x - PhysicsHelper.placeDiameter
+                    placebefore.y= dfgOriginal.y
                     // tausche verknüpfung zu DfgOriginal mit verknüpfung zu firstTauTransition
                     return [{source: arc.source, target: firstTauTransition}];
                 }
@@ -325,13 +328,20 @@ export class ProcessGraphService {
             workingGraph.arcs.push({source: firstPlaceNew2, target: dfg2});
         }
         if (lastTauNeeded) {
-            const lastPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
-            workingGraph.places.add(lastPlaceNew2);
+            const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+            lastPlaceNew1.y = dfg1.y;
+            workingGraph.places.add(lastPlaceNew1);
             const lastTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
+            lastTauTransition.y = dfgOriginal.y
             workingGraph.transitions.add(lastTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //suche stelle nach dem dfgOriginal
                 if (arc.source === dfgOriginal) {
+                    let placeafter = arc.target as Node;
+                    placeafter.x = lastTauTransition.x + PhysicsHelper.placeDiameter;
+                    placeafter.y = dfgOriginal.y
                     // tausche verknüpfung zu DfgOriginal mit verknüpfung zu lastTauTransition
                     return [{source: lastTauTransition, target: arc.target}];
                 }
