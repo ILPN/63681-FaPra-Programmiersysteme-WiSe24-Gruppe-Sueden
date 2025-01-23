@@ -369,12 +369,16 @@ export class ProcessGraphService {
                             dfg1: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                             dfg2: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                             workingGraph: ProcessGraph) {
-
+        dfg1.x = dfgOriginal.x;
+        dfg1.y = dfgOriginal.y + dfgOriginal.height
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y -  dfgOriginal.height;
         //check if original dfg has just one source-place and source place has just one outgoing edge
         if (this.occursInThisManyArcsAsTarget(workingGraph.arcs, dfgOriginal, 1).count === 1) {
             let sourcePlace = this.findSingularSourceForTarget(workingGraph.arcs, dfgOriginal)
             let sourceOccurs = this.occursInThisManyArcsAsSource(workingGraph.arcs, sourcePlace, 1)
             let placeHasJustOneFollower: boolean = sourceOccurs.count === 1 && sourceOccurs.underThreshold
+            // then there is no tau needed..
             if (placeHasJustOneFollower) {
                 workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                     // stelle nach dfgOriginal gefunden
@@ -399,8 +403,12 @@ export class ProcessGraphService {
         }
         // Falls eine Tau transition benötigt wird...
         const newPlace: Node = this.createPlace(this.generateUniqueId('place'));
+        newPlace.x = dfg1.x-dfgOriginal.width/2-PhysicsHelper.placeDiameter;
+        newPlace.y = dfg1.y;
         workingGraph.places.add(newPlace);
         const newTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        newTransition.x = newPlace.x - PhysicsHelper.placeDiameter
+        newTransition.y = newPlace.y
         workingGraph.transitions.add(newTransition);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // stelle nach dfgOriginal gefunden
