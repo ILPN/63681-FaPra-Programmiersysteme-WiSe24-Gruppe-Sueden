@@ -125,20 +125,20 @@ export class FallthroughHelper {
 
         let allWCCsValid = true;
         for (const wcc of wccs) {
-            const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node))
+           /* const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node))
             const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node))
             if (!containsPlayNode || !containsStopNode){
                 allWCCsValid = false
                 break; // Exit the loop early if WCC is invalid
             }
-            /*
+            */
             for (let node of wcc){
                  if (!dfg.existsFullPathOverNode(node, new Set(wcc))){
                  allWCCsValid = false;
                   break;
                 }
                 }
-            */
+
         }
         return allWCCsValid;
     }
@@ -344,7 +344,7 @@ export class FallthroughHelper {
         });
         return footprintMatrix;
     }
-
+//TODO: mby sthg still wrong here
     public static invertFootprintMatrix(footprintMatrix: string[][]): string[][] {
         // Clone the footprint-matrix to avoid modifying the original
         const inverseFootprintMatrix = footprintMatrix.map(row => [...row]);
@@ -362,9 +362,9 @@ export class FallthroughHelper {
                         inverseFootprintMatrix[i][j] = '#';
                         break;
                     case '#':
-                        inverseFootprintMatrix[i][j] = '#';
+                        inverseFootprintMatrix[i][j] = '||';
                         break;
-                    default: // TODO: Muss noch schauen, ob es nötig ist
+                    default:
                         inverseFootprintMatrix[i][j] = footprintMatrix[i][j]; // Copy any other values unchanged
                 }
             }

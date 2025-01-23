@@ -248,10 +248,20 @@ export class ProcessGraphService {
                                 dfg1: DfgNode,    // dfg1 mit dem ausgetauscht wird,
                                 dfg2: DfgNode,     // dfg1 mit dem ausgetauscht wird,
                                 workingGraph: ProcessGraph) {
+        // set x/y of new dfgs
+        dfg1.x = dfgOriginal.x
+        dfg1.y = dfgOriginal.y + dfgOriginal.height / 2
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
+
         //Erstelle neue Places
         const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+        firstPlaceNew1.x = dfg2.x - dfgOriginal.width / 2;
+        firstPlaceNew1.y = dfg2.y;
         workingGraph.places.add(firstPlaceNew1);
         const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+        lastPlaceNew1.x = dfg2.x + dfgOriginal.width / 2;
+        lastPlaceNew1.y = dfg2.y;
         workingGraph.places.add(lastPlaceNew1);
         // Erstelle boolen um zu checken ob Tau transitionen nötig
         let firstTauNeeded = true;
@@ -263,6 +273,9 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition davor benötigt
                 if (arc.target === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.source as Node, 2).underThreshold) {
                     firstTauNeeded = false;
+                    let x = arc.source as Node
+                    x.y=dfg1.y
+                    x.x = dfgOriginal.x - dfgOriginal.width / 2
                     //Finde transition VOR place
                     let transitionOrDFGbefore = this.findSingularSourceForTarget(workingGraph.arcs, arc.source);
                     // tausche dfg original mit dfg1
@@ -274,6 +287,9 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
                 if (arc.source === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.target as Node, 2).underThreshold) {
                     lastTauNeeded = false;
+                    let x = arc.target as Node
+                    x.y = dfg1.y
+                    x.x = dfg1.x + dfgOriginal.width / 2
                     //Finde transition NACH place
                     let transitionOrDFGafter = this.findTargetForSource(workingGraph.arcs, arc.target);
                     return [{source: dfg1, target: arc.target},
