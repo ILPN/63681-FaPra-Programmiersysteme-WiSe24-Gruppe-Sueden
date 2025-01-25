@@ -4,7 +4,7 @@ import {ProcessGraph} from "../classes/process-graph";
 export class PetrinetExporterHelper {
 
     // Function to generate a JSON as String from a Petri-Net
-    public generateJsonString(processGraph: ProcessGraph): string | null {
+    public static generateJsonString(processGraph: ProcessGraph): string | null {
         if (processGraph.dfgSet.size > 0) {
             console.error("The object is not a valid Petri net.");
             return null;
@@ -58,7 +58,7 @@ export class PetrinetExporterHelper {
     }
 
     // Function to generate PNML as String from a Petri-Net
-    public generatePnmlString(processGraph: ProcessGraph): string | null {
+    public static generatePnmlString(processGraph: ProcessGraph): string | null {
         if (processGraph.dfgSet.size > 0) {
             console.error("The object is not a valid Petri net.");
             return null;
@@ -101,20 +101,6 @@ export class PetrinetExporterHelper {
 
         pnml += `  </net>\n</pnml>`;
         return pnml;
-    }
-
-    generateFileName(extension: 'json' | 'pnml'): string {
-        const timestamp = new Date().toISOString().replace(/[-:T.]/g, '_');
-        return `petri_net_${timestamp}.${extension}`;
-    }
-
-    downloadFile(content: string, fileName: string) {
-        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = fileName;
-        link.click();
-        URL.revokeObjectURL(link.href);
     }
 
 }

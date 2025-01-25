@@ -97,13 +97,13 @@
 
     <!-- Export -->
     <div matTooltip="Petrinet can only be exported after the inductive miner has terminated" [matTooltipDisabled]="false">
-        <button mat-fab matTooltip="Export Petrinet" [disabled]="true" [matMenuTriggerFor]="exportMenu">
+        <button mat-fab matTooltip="Export Petrinet" [disabled]="graphService.graphSignal()?.dfgSet > 0" [matMenuTriggerFor]="exportMenu">
             <mat-icon>file_download</mat-icon>
         </button>
     </div>
 
     <!-- Abort -->
-    <button mat-fab matTooltip="Abort" (click)="service.graphSignal.set(null)">
+    <button mat-fab matTooltip="Abort" (click)="graphService.graphSignal.set(null)">
         <mat-icon>clear</mat-icon>
     </button>
 </div>

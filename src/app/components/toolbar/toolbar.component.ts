@@ -9,6 +9,7 @@ import {FailedValidationDialog} from "../failed-validation-dialog/failed-validat
 import {ToolbarService} from "../../services/toolbar.service";
 import {FallthroughType} from "../../classes/fallthrough.enum";
 import {ValidationResult} from "../../classes/validation-result";
+import {PetrinetExporterHelper} from "../../helper/PetriNetExporterHelper";
 
 @Component({
     selector: "toolbar",
@@ -18,17 +19,9 @@ import {ValidationResult} from "../../classes/validation-result";
 export class ToolbarComponent {
 
     protected toolbarService = inject(ToolbarService)
-
-    protected readonly SelectionType = SelectionType;
-    protected readonly CutType = CutType;
-    protected readonly ExportType = ExportType;
-
-    constructor(protected service: ProcessGraphService,
-                protected selectionService: SelectionService,
-                protected dialog: MatDialog) {
-    }
-
-    protected originalOrder = () => 0
+    protected graphService = inject(ProcessGraphService)
+    protected selectionService = inject(SelectionService)
+    protected dialog = inject(MatDialog)
 
     protected validateCut() {
         const dfg = this.selectionService.selectedDfg()!
@@ -36,13 +29,13 @@ export class ToolbarComponent {
 
         let result: ValidationResult
         if (this.toolbarService.cutType()) {
-            result = this.service.validateCut({
+            result = this.graphService.validateCut({
                 cutType: this.toolbarService.cutType()!,
                 dfg: dfg,
                 firstNodeSet: selectedNodes
             })
         } else {
-            result = this.service.validateFallthrough(
+            result = this.graphService.validateFallthrough(
                 this.selectionService.selectedDfg()!,
                 this.toolbarService.fallthroughType()!,
                 selectedNodes
@@ -60,8 +53,31 @@ export class ToolbarComponent {
     }
 
     protected export(type: ExportType) {
-        console.log("Export as " + type)
+        let data: string
+        switch (type) {
+            case ExportType.JSON:
+                data = PetrinetExporterHelper.generateJsonString(this.graphService.graphSignal()!)!
+                break
+            case ExportType.PNML:
+                data = PetrinetExporterHelper.generatePnmlString(this.graphService.graphSignal()!)!
+                break
+        }
+
+        const now = new Date()
+        const fileName = `petri_net_${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}_${now.getHours()}_${now.getMinutes()}.${type}`
+
+        const blob = new Blob([data], {type: "text/plain;charset=utf-8"})
+        const link = document.createElement("a")
+        link.href = URL.createObjectURL(blob)
+        link.download = fileName
+        link.click()
+        setTimeout(() => URL.revokeObjectURL(link.href), 100) // For firefox
     }
 
+    protected originalOrder = () => 0
+
+    protected readonly SelectionType = SelectionType;
+    protected readonly CutType = CutType;
+    protected readonly ExportType = ExportType;
     protected readonly Fallthrough = FallthroughType;
 }

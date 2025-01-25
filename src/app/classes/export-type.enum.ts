@@ -1,4 +1,4 @@
 export enum ExportType {
-    JSON = "JSON",
-    PNML = "PNML"
+    JSON = "json",
+    PNML = "pnml"
 }
