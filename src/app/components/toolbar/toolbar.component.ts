@@ -66,7 +66,7 @@ export class ToolbarComponent {
         const now = new Date()
         const fileName = `petri_net_${now.getDate()}.${now.getMonth() + 1}.${now.getFullYear()}_${now.getHours()}_${now.getMinutes()}.${type}`
 
-        const blob = new Blob([data], {type: "text/plain;charset=utf-8"})
+        const blob = new Blob([data])
         const link = document.createElement("a")
         link.href = URL.createObjectURL(blob)
         link.download = fileName
