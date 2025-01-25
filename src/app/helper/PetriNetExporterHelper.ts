@@ -108,5 +108,14 @@ export class PetrinetExporterHelper {
         return `petri_net_${timestamp}.${extension}`;
     }
 
+    downloadFile(content: string, fileName: string) {
+        const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
+        URL.revokeObjectURL(link.href);
+    }
+
 }
 
