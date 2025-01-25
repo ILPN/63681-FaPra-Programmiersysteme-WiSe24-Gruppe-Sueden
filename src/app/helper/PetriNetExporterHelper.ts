@@ -1,13 +1,10 @@
 import {JsonPetriNet} from "../classes/json-petri-net";
 import {ProcessGraph} from "../classes/process-graph";
-import {CanvasComponent} from "../components/graph/canvas.component";
-import {Node} from "../classes/graph/node";
-import {DfgNode} from "../classes/graph/dfg-node";
 
 export class PetrinetExporterHelper {
 
     // Function to generate a JSON as String from a Petri-Net
-    public generateJsonString(processGraph: ProcessGraph, canvasComponent: CanvasComponent): string | null {
+    public generateJsonString(processGraph: ProcessGraph): string | null {
         if (processGraph.dfgSet.size > 0) {
             console.error("The object is not a valid Petri net.");
             return null;
@@ -23,24 +20,12 @@ export class PetrinetExporterHelper {
 
         // Add coordinates for places
         processGraph.places.forEach(place => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.name);
-            if (!foundNode) {
-                console.error(`Node with id ${place.name} not found on the canvas.`);
-                jsonPetriNet.layout![place.name] = { x: 0, y: 0 }; // Default position if not found
-            } else {
-                jsonPetriNet.layout![place.name] = { x: foundNode.x, y: foundNode.y };
-            }
+                jsonPetriNet.layout![place.name] = { x: place.x, y: place.y };
         });
 
         // Add coordinates for transitions
         processGraph.transitions.forEach(transition => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.name);
-            if (!foundNode) {
-                console.error(`Transition with id ${transition.name} not found on the canvas.`);
-                jsonPetriNet.layout![transition.name] = { x: 0, y: 0 }; // Default position if not found
-            } else {
-                jsonPetriNet.layout![transition.name] = { x: foundNode.x, y: foundNode.y };
-            }
+            jsonPetriNet.layout![transition.name] = { x: transition.x, y: transition.y }
         });
 
         // Populate arcs
@@ -73,7 +58,7 @@ export class PetrinetExporterHelper {
     }
 
     // Function to generate PNML as String from a Petri-Net
-    public generatePnmlString(processGraph: ProcessGraph, canvasComponent: CanvasComponent): string | null {
+    public generatePnmlString(processGraph: ProcessGraph): string | null {
         if (processGraph.dfgSet.size > 0) {
             console.error("The object is not a valid Petri net.");
             return null;
@@ -83,9 +68,8 @@ export class PetrinetExporterHelper {
 
         // Add places with coordinates
         processGraph.places.forEach(place => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, place.name);
-            const x = foundNode ? foundNode.x : 0;
-            const y = foundNode ? foundNode.y : 0;
+            const x = place.x;
+            const y = place.y;
 
             pnml += `    <place id="${place.name}">\n`;
             pnml += `      <graphics>\n        <position x="${x}" y="${y}" />\n      </graphics>\n`;
@@ -94,9 +78,8 @@ export class PetrinetExporterHelper {
 
         // Add transitions with coordinates and labels
         processGraph.transitions.forEach(transition => {
-            const foundNode = this.findNodeFromCanvasComponent(canvasComponent, transition.name);
-            const x = foundNode ? foundNode.x : 0;
-            const y = foundNode ? foundNode.y : 0;
+            const x = transition.x;
+            const y = transition.y;
 
             // Determine the label: 'τ' if name starts with 'TAU_', otherwise use the original name
             const label = transition.name.startsWith('TAU_') ? 'τ' : transition.name;
@@ -123,13 +106,6 @@ export class PetrinetExporterHelper {
     generateFileName(extension: 'json' | 'pnml'): string {
         const timestamp = new Date().toISOString().replace(/[-:T.]/g, '_');
         return `petri_net_${timestamp}.${extension}`;
-    }
-
-    findNodeFromCanvasComponent(canvasComponent: CanvasComponent, name: string): Node | DfgNode | null {
-        const index = canvasComponent.nodes.findIndex(node => node.name === name)
-        if (index !== -1) return canvasComponent.nodes[index]
-
-        return null
     }
 
 }
