@@ -293,7 +293,7 @@ export class ProcessGraphService {
             const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
             firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
             firstPlaceNew1.y = dfg1.y;
-            workingGraph.places.add(firstPlaceNew2);
+            workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
             firstTauTransition.y= dfgOriginal.y
