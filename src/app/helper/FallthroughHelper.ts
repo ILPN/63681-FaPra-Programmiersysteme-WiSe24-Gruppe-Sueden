@@ -1,4 +1,5 @@
 import {DirectlyFollows} from "../classes/directly-follows";
+import {main} from "@angular/compiler-cli/src/main";
 
 export class FallthroughHelper {
 
@@ -151,21 +152,15 @@ export class FallthroughHelper {
     c g loop c g
      */
     public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);
         const stopNodes = Array.from(dfg.getStopNodes() ?? []);
+        // erstelle eine kopie von gootprintmatrix, in der die play/stopnodes keine incoming or outgoing edges haben
         let workingMatrix: string[][]
         workingMatrix = this.removeIncomingEdges(mapping, footprintMatrix, playNodes)
         workingMatrix = this.removeOutgoingEdges(mapping, workingMatrix, stopNodes)
-
         let wCCs = this.computeWCCsFromFootprintMatrix(nodesAsArray, workingMatrix);
-        for (let wcc of wCCs){
-            console.log('wcc:')
-            for (let node of wcc) {
-             console.log(node);
-            }
-            console.log('\n')
-        }
         let mainWCC: string[] = []
 
         for (let i = 0; i < wCCs.length; i++) {
@@ -178,20 +173,10 @@ export class FallthroughHelper {
                 i--;
             }
         }
-        console.log('main wcc:')
-        for (let node of mainWCC){
-            console.log(node)
-        }
+
         const amountOfWCCs = wCCs.length;
         // nun sollten alle WCCs mit play/stopNodes in der mainWCC sein, in WCCs sollten sämtliche eventuelle redo-parts sein
-        console.log('wccs:' + amountOfWCCs)
-        for (let wcc of wCCs){
-            console.log('wcc:')
-            for (let node of wcc) {
-                console.log(node);
-            }
-            console.log('\n')
-        }
+
         if (amountOfWCCs === 0) {
             return false;
         }
@@ -203,14 +188,22 @@ export class FallthroughHelper {
             startNodes: [] as string[], // Array für die Startknoten
             stopNodes: [] as string[],  // Array für die Stopknoten
         };
-        mainComponent.FPM = this.removeIrrelevantEdges(workingMatrix, mainWCC, mapping);
+        mainComponent.FPM = this.removeIrrelevantEdges(footprintMatrix, mainWCC, mapping);
         mainComponent.nodes = mainWCC;
         const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
+        for (let node of playNodes){
+            if (!mainComponent.startNodes.includes(node)){
+                mainComponent.startNodes.push(node);
+            }
+        }
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
-        console.log('mstart: ' +mainComponent.startNodes);
-        console.log('mstop: '+ mainComponent.stopNodes);
+        for (let node of stopNodes){
+            if (!mainComponent.stopNodes.includes(node)){
+                mainComponent.stopNodes.push(node);
+            }
+        }
 
         const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
         for (let i = 0; i < wCCs.length; i++) {
@@ -224,10 +217,6 @@ export class FallthroughHelper {
             wCC.startNodes = startStopNodes.startNodes;
             wCC.stopNodes = startStopNodes.stopNodes;
             wccArray.push(wCC);
-        }
-        for (let wcc of wccArray){
-            console.log('wstart: ' +wcc.startNodes);
-            console.log('wstop: '+ wcc.stopNodes);
         }
 
         // nun haben wir Footprint Matrizen für die main-component sowie alle redo-components und die start / stopknoten der components...
@@ -243,7 +232,6 @@ export class FallthroughHelper {
         for (let wcc of wccArray) {
             connectingArcs = connectingArcs.filter(arc => {
                 // Kantenverbindungen innerhalb werden rausgefiltert
-
                 return !(wcc.nodes.includes(arc.source as string) && wcc.nodes.includes(arc.target as string))
             })
         }
@@ -437,15 +425,15 @@ export class FallthroughHelper {
         // Erstelle eine Kopie der Matrix
         const updatedMatrix = footprintMatrix.map(row => [...row]);
         // Durchlaufe alle PlayNodes
-        playNodes.forEach(node => {
+        const length = footprintMatrix.length;
+        for (let node of playNodes) {
             // Hole den Index aus dem Mapping
             const index = nodesIndexMap[node];
             if (index === undefined) {
                 console.log(`Node ${node} not found in nodesIndexMap`);
-                return;
             }
             // gehe Spalte von playNode durch
-            for (let rowIndex = 0; rowIndex < updatedMatrix.length; rowIndex++) {
+            for (let rowIndex = 0; rowIndex < length; rowIndex++) {
                 //ändere nicht die Diagonale
                 if (rowIndex !== index) {
                     if (updatedMatrix[rowIndex][index] === '→') {
@@ -456,7 +444,7 @@ export class FallthroughHelper {
                 }
             }
             // gehe Zeile von playNode durch
-            for (let colIndex = 0; colIndex < updatedMatrix[index].length; colIndex++) {
+            for (let colIndex = 0; colIndex < length; colIndex++) {
                 // wieder nicht Diagonale ändern
                 if (colIndex !== index) {
                     if (updatedMatrix[index][colIndex] === '←') {
@@ -466,7 +454,7 @@ export class FallthroughHelper {
                     }
                 }
             }
-        });
+        }
         return updatedMatrix;
     }
 
@@ -525,6 +513,7 @@ export class FallthroughHelper {
                 invalidNodesIndexes.push(nodesIndexMap[node]);
             }
         });
+
         // ersetze alles in den unnötigen Zeilen durch #
         for (let i of invalidNodesIndexes) {
             for (let j = 0; j < updatedMatrix[i].length; j++) {
@@ -552,6 +541,15 @@ export class FallthroughHelper {
                 nodesIndexes.push(nodesIndexMap[node]);
             }
         });
+        /*
+        const nodesNotIndexes: number[] = [];
+        Object.keys(nodesIndexMap).forEach(node => {
+            if (!validNodes.includes(node)) {
+                nodesNotIndexes.push(nodesIndexMap[node]);
+            }
+        });
+
+         */
         for (let i of nodesIndexes) {
             let isStartNode = true;
             let isStopNode = true;
@@ -578,10 +576,26 @@ export class FallthroughHelper {
 
 
     //For debugging..
-    public static print2DArray(arr: string[][]): void {
-        for (let row of arr) {
-            console.log(row.join(' | ')); // Verbinde die Elemente der Zeile mit einem Trennzeichen (z.B. '|')
+    public static print2DArray(arr: string[][], nodesIndexMap: Record<string, number>): void {
+        // Erstelle ein Mapping von Index zu Name (für Zeilen und Spalten)
+        const indexToNode = Object.keys(nodesIndexMap).reduce<Record<number, string>>((acc, node) => {
+            acc[nodesIndexMap[node]] = node;
+            return acc;
+        }, {});
+
+        // Ausgabe der Spaltennamen als Kopfzeile
+        const header = [''] // Leeres Feld oben links (für den Fall, dass Zeilen- und Spaltennamen die gleiche Indexstruktur haben)
+            .concat(Object.values(nodesIndexMap).map(index => indexToNode[index]));
+        console.log(header.join(' | '));
+
+        // Ausgabe jeder Zeile mit Zeilenname
+        for (let rowIndex = 0; rowIndex < arr.length; rowIndex++) {
+            const row = arr[rowIndex];
+            // Ausgabe des Zeilennamens und der jeweiligen Zeilenwerte
+            const rowOutput = [indexToNode[rowIndex]].concat(row); // Füge Zeilenname hinzu
+            console.log(rowOutput.join(' | '));
         }
     }
+
 }
 
