@@ -643,10 +643,20 @@ export class ProcessGraphService {
                         } else {
                             this.addLogEntry('No AOPT possible')
                             this.addLogEntry('Executing Flower-Model...')
-                            let tempTransitionSet: Set<Node> = new Set()
+                            let tempTransitionArray:Node[] = [];
+                            let nodeAmount = dfgNode.dfg.getNodes().size
+                            let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter*2,nodeAmount)
+                            console.log('x: '+ dfgNode.x + '   y: '+dfgNode.y);
+                            for (let position of circularPositions){
+                                console.log(position)
+                            }
                             for (let node of dfgNode.dfg.getNodes()) {
                                 let newTransition = this.createTransition(node);
-                                tempTransitionSet.add(newTransition)
+                                tempTransitionArray.push(newTransition)
+                            }
+                            for (let i=0; i<tempTransitionArray.length; i++) {
+                                tempTransitionArray[i].x=circularPositions[i].x
+                                tempTransitionArray[i].y=circularPositions[i].y
                             }
                             let counter = 0;
                             let placeBefore: Node | undefined;
@@ -675,6 +685,8 @@ export class ProcessGraphService {
                             }
                             //verschmelze Stelle davor und danach, falls counter auf 2 steht
                             if (counter === 2 && placeBefore && placeAfter) {
+                                placeBefore.x = dfgNode.x
+                                placeBefore.y = dfgNode.y
                                 workingGraph.arcs = workingGraph.arcs
                                     //lösche original DFG aus arcs
                                     .filter(arc => arc.source !== dfgNode && arc.target !== dfgNode)
@@ -689,7 +701,7 @@ export class ProcessGraphService {
                                     })
                                 workingGraph?.places.delete(placeAfter)
                                 workingGraph?.dfgSet.delete(dfgNode)
-                                for (let transition of tempTransitionSet) {
+                                for (let transition of tempTransitionArray) {
                                     workingGraph?.transitions.add(transition)
                                     workingGraph?.arcs.push({source: placeBefore, target: transition})
                                     workingGraph?.arcs.push({source: transition, target: placeBefore})
@@ -697,10 +709,16 @@ export class ProcessGraphService {
                             } else {
                                 //Löse via TAU
                                 let tauTransitionBefore: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                tauTransitionBefore.x = dfgNode.x-PhysicsHelper.nodeDiameter*3
+                                tauTransitionBefore.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionBefore)
                                 let middlePlace: Node = this.createPlace(this.generateUniqueId('place'))
+                                middlePlace.x = dfgNode.x
+                                middlePlace.y = dfgNode.y
                                 workingGraph?.places.add(middlePlace)
                                 let tauTransitionAfter: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                tauTransitionAfter.x = dfgNode.x+PhysicsHelper.nodeDiameter*3
+                                tauTransitionAfter.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionAfter)
                                 workingGraph?.dfgSet.delete(dfgNode)
                                 workingGraph.arcs = workingGraph.arcs
@@ -716,7 +734,7 @@ export class ProcessGraphService {
                                 workingGraph?.arcs.push({source: tauTransitionBefore, target: middlePlace})
                                 workingGraph?.arcs.push({source: middlePlace, target: tauTransitionAfter})
                                 workingGraph?.dfgSet.delete(dfgNode)
-                                for (let transition of tempTransitionSet) {
+                                for (let transition of tempTransitionArray) {
                                     workingGraph?.transitions.add(transition)
                                     workingGraph?.arcs.push({source: middlePlace, target: transition})
                                     workingGraph?.arcs.push({source: transition, target: middlePlace})
@@ -978,6 +996,26 @@ export class ProcessGraphService {
             width: PhysicsHelper.eventLogWidth,
         };
     }
+    private generateCircularPositions(x: number, y: number, distance: number, n: number): { x: number; y: number }[] {
+        const positions: { x: number; y: number }[] = [];
+        const angleStep = (2 * Math.PI) / n;
+        console.log('x: '+x)
+        console.log('y: '+y)
+        console.log('distance: '+distance)
+        console.log('n: '+n)
+
+        for (let i = 0; i < n; i++) {
+            const angle = i * angleStep;
+            const newX = x + distance * Math.cos(angle);
+            const newY = y + distance * Math.sin(angle);
+            console.log('newx: '+newX)
+            console.log('newy: '+newY)
+            positions.push({ x: newX, y: newY });
+        }
+
+        return positions;
+    }
+
 
 
 }
