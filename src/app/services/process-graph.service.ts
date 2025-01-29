@@ -542,6 +542,7 @@ export class ProcessGraphService {
                 if (emptyTrace) { //DFG ist im REDO Part
                     // Drehe Kanten um
                     dfgNode.y = dfgNode.y - dfgNode.height
+                    dfgNode.dfg.isDo = false;
                     this.addLogEntry('DFG part of REDO-Part')
                     workingGraph.arcs.forEach(arc => {
                         if (arc.target === dfgNode || arc.source === dfgNode) {
