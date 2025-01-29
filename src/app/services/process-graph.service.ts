@@ -541,6 +541,7 @@ export class ProcessGraphService {
                 this.addLogEntry('repeating pattern found, solving per TAU-Transition')
                 if (emptyTrace) { //DFG ist im REDO Part
                     // Drehe Kanten um
+                    dfgNode.y = dfgNode.y - dfgNode.height
                     this.addLogEntry('DFG part of REDO-Part')
                     workingGraph.arcs.forEach(arc => {
                         if (arc.target === dfgNode || arc.source === dfgNode) {
@@ -551,6 +552,9 @@ export class ProcessGraphService {
                     // Füge Tau Transition als REDO ein
                     this.addLogEntry('DFG part of DO-Part')
                     const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
+                    tauTransition.x = dfgNode.x
+                    tauTransition.y = dfgNode.y-dfgNode.height
+                    dfgNode.y = dfgNode.y + dfgNode.height
                     workingGraph.transitions.add(tauTransition);
                     workingGraph.arcs.forEach(arc => {
                         if (arc.target === dfgNode) {
@@ -587,20 +591,12 @@ export class ProcessGraphService {
                                 this.addLogEntry('Activity Once Per Trace possible')
                                 //lösche node aus eventlog
                                 let eventlogWithoutAopt: string[][] = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
-                                console.log(eventlogWithoutAopt);
-                                console.log('..............')
                                 eventlogWithoutAopt = eventlogWithoutAopt.map(trace =>
                                     trace.length === 0 ? ['empty_trace'] : trace
                                 );
-                                console.log(eventlogWithoutAopt);
                                 // erstelle neue DFGs und inkorporiere sie ins petrinetz
                                 const dfg1 = new DirectlyFollows();
                                 dfg1.setDFGfromStringArray(eventlogWithoutAopt)
-                                /*
-                                if (emptytraceExists) {
-                                    dfg1.eventLog.push([])
-                                }
-                                */
                                 const newDfg1 = this.createEventlog(dfg1)
                                 const dfg2 = new DirectlyFollows();
                                 dfg2.setDFGfromStringArray([[node]])
@@ -807,6 +803,8 @@ export class ProcessGraphService {
     // macht einen DFG durch hinzufügen einer TAU-Transition optional
     private makeOptional(dfg: DfgNode, workingGraph: ProcessGraph) {
         const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        tauTransition.x=dfg.x
+        tauTransition.y=dfg.y +dfg.height
         workingGraph.transitions.add(tauTransition);
         workingGraph.arcs.forEach(arc => {
             if (arc.source === dfg) {
