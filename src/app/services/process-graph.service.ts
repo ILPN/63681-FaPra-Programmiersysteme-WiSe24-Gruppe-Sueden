@@ -746,7 +746,7 @@ export class ProcessGraphService {
                         return {success: isFallthrough[0], comment: isFallthrough[1]};
                     }
                 } else {
-                    return {success: false, comment: 'Repeating Pattern found'}
+                    return {success: false, comment: sptResult.comment}
                 }
             }
             default:
@@ -757,8 +757,8 @@ export class ProcessGraphService {
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
         this.addLogEntry('Check for empty trace in combination with repeating pattern')
-        let result = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
-        return {success: !result[0], comment: result[1]}
+        let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
+        return {success: result[0], comment: result[1]}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt

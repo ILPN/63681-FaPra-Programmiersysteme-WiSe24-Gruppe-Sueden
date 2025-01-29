@@ -26,8 +26,6 @@ export class ValidationHelper {
             return validationResult
         }
         this.log('creating new DFG from NodeSets')
-        //       let dfg1: DirectlyFollows = this.createNewDFG(dfg, firstNodeSet)
-        //      let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         let dfg1: DirectlyFollows = new DirectlyFollows();
         const eventlog0 = splitEventlogs[0].map(innerArray =>
@@ -506,6 +504,18 @@ export class ValidationHelper {
                 '\nPlease Solve Per Tau!']
             }
             return [true, '']
+        }
+        return [true, '']
+    }
+    public static testForTauOrRepeatingPattern(eventLog: string[][]): [boolean, string] {
+        let tauAnd = this.testForTauAndRepeatingPattern(eventLog);
+        if (!tauAnd[0]) {
+            return tauAnd
+        }
+        let tempDfg = new DirectlyFollows();
+        tempDfg.setDFGfromStringArray(eventLog)
+        if (tempDfg.isPatternExclusivelyRepeated()){
+            return [false, 'Repeating pattern found.']
         }
         return [true, '']
     }

@@ -9,6 +9,7 @@ export class DirectlyFollows {
     eventLog: string[][];
     nodes: Set<string>
     arcs: Arc[]
+    isDo: boolean = true;
 
 
     //TODO: Arcs und Nodes aktualisieren
