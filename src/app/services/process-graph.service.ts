@@ -507,7 +507,6 @@ export class ProcessGraphService {
                 // Check for Empty trace
                 this.addLogEntry('Check for empty trace')
                 let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
-                console.log(emptyTrace)
                //
                 let repeatingPattern : boolean
                 if (emptyTrace){
@@ -643,10 +642,6 @@ export class ProcessGraphService {
                             let tempTransitionArray:Node[] = [];
                             let nodeAmount = dfgNode.dfg.getNodes().size
                             let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter*2,nodeAmount)
-                            console.log('x: '+ dfgNode.x + '   y: '+dfgNode.y);
-                            for (let position of circularPositions){
-                                console.log(position)
-                            }
                             for (let node of dfgNode.dfg.getNodes()) {
                                 let newTransition = this.createTransition(node);
                                 tempTransitionArray.push(newTransition)
@@ -988,17 +983,11 @@ export class ProcessGraphService {
     private generateCircularPositions(x: number, y: number, distance: number, n: number): { x: number; y: number }[] {
         const positions: { x: number; y: number }[] = [];
         const angleStep = (2 * Math.PI) / n;
-        console.log('x: '+x)
-        console.log('y: '+y)
-        console.log('distance: '+distance)
-        console.log('n: '+n)
 
         for (let i = 0; i < n; i++) {
             const angle = i * angleStep;
             const newX = x + distance * Math.cos(angle);
             const newY = y + distance * Math.sin(angle);
-            console.log('newx: '+newX)
-            console.log('newy: '+newY)
             positions.push({ x: newX, y: newY });
         }
 
