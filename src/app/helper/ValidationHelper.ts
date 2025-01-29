@@ -15,12 +15,17 @@ export class ValidationHelper {
         this.setLogFunction(updateLog);
         this.log('----------------------------------')
 
-        // teste auf wiederholte Muster, falls undefined Node übergeben
-        if (this.hasUndefined(firstNodeSet) || this.hasUndefined(secondNodeSet)) {
-            if (dfg.isPatternExclusivelyRepeated()) {
-                this.log('Found repeating pattern in combination with empty trace');
-                return [false, 'Found repeating pattern in combination with empty trace \n' +
-                'Please Solve per Tau']
+        let eventlog = dfg.getEventLog()
+        if (eventlog.some(trace => trace.includes('empty_trace'))) {
+            console.log('hier')
+            let tempLog = dfg.eventLog.filter(trace => !trace.includes('empty_trace'));
+            let tempDfg: DirectlyFollows = new DirectlyFollows();
+            tempDfg.setDFGfromStringArray(tempLog)
+            console.log(tempDfg.eventLog)
+            if (tempDfg.isPatternExclusivelyRepeated()) {
+                console.log('hier2')
+                return [false, 'Combination of empty trace and repeating pattern found.' +
+                '\nPlease Solve Per Tau!']
             }
         }
 
@@ -34,11 +39,17 @@ export class ValidationHelper {
         //      let dfg2: DirectlyFollows = this.createNewDFG(dfg, secondNodeSet)
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         let dfg1: DirectlyFollows = new DirectlyFollows();
-        dfg1.setDFGfromStringArray(splitEventlogs[0])
+        const eventlog0 = splitEventlogs[0].map(innerArray =>
+            innerArray.length === 0 ? ['empty_trace'] : innerArray
+        );
+        const eventlog1 = splitEventlogs[1].map(innerArray =>
+            innerArray.length === 0 ? ['empty_trace'] : innerArray
+        );
+        dfg1.setDFGfromStringArray(eventlog0)
         let dfg2: DirectlyFollows = new DirectlyFollows();
-        dfg2.setDFGfromStringArray(splitEventlogs[1])
-        dfg1.setEventLog(splitEventlogs[0]);
-        dfg2.setEventLog(splitEventlogs[1]);
+        dfg2.setDFGfromStringArray(eventlog1)
+        dfg1.setEventLog(eventlog0);
+        dfg2.setEventLog(eventlog1);
         return [validationResult[0], validationResult[1], dfg1, dfg2]
     }
 
@@ -397,6 +408,7 @@ export class ValidationHelper {
                     this.pushIfTraceNotInEventlog(firstEventlog, tempTraceFirst)
                     this.pushIfTraceNotInEventlog(secondEventlog, tempTraceSecond)
                 }
+
                 return [firstEventlog, secondEventlog]
 
             // In der Ausgabe ist im firstEventlog der Do-Part und in secondEventlog der Redo-Part

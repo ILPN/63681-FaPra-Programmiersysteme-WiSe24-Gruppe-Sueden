@@ -18,6 +18,17 @@ export class FallthroughHelper {
                 return [false, 'Loop Cut of length 1 possible'];
             }
         }
+        //TODO: passe alles für empty trace an
+        let eventlog = dfg.getEventLog()
+        if (eventlog.some(trace => trace.includes('empty_trace'))) {
+            let tempLog = dfg.eventLog.filter(trace => trace[0][0] !== 'empty_trace');
+            let tempDfg: DirectlyFollows = new DirectlyFollows();
+            tempDfg.setDFGfromStringArray(tempLog)
+            if (tempDfg.isPatternExclusivelyRepeated()) {
+                return [true, 'Combination of empty trace and repeating pattern found.' +
+                '\nPlease Solve Per Tau!']
+            }
+        }
 
         const nodesAsArray = Array.from(dfg.getNodes()).sort();
         const reachabilityMatrix = this.computeReachabilityMatrix(nodesAsArray, dfg);
@@ -126,19 +137,19 @@ export class FallthroughHelper {
 
         let allWCCsValid = true;
         for (const wcc of wccs) {
-           /* const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node))
-            const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node))
-            if (!containsPlayNode || !containsStopNode){
-                allWCCsValid = false
-                break; // Exit the loop early if WCC is invalid
+            /* const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node))
+             const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node))
+             if (!containsPlayNode || !containsStopNode){
+                 allWCCsValid = false
+                 break; // Exit the loop early if WCC is invalid
+             }
+             */
+            for (let node of wcc) {
+                if (!dfg.existsFullPathOverNode(node, new Set(wcc))) {
+                    allWCCsValid = false;
+                    break;
+                }
             }
-            */
-            for (let node of wcc){
-                 if (!dfg.existsFullPathOverNode(node, new Set(wcc))){
-                 allWCCsValid = false;
-                  break;
-                }
-                }
 
         }
         return allWCCsValid;
@@ -193,14 +204,14 @@ export class FallthroughHelper {
         const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
-        for (let node of playNodes){
-            if (!mainComponent.startNodes.includes(node)){
+        for (let node of playNodes) {
+            if (!mainComponent.startNodes.includes(node)) {
                 mainComponent.startNodes.push(node);
             }
         }
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
-        for (let node of stopNodes){
-            if (!mainComponent.stopNodes.includes(node)){
+        for (let node of stopNodes) {
+            if (!mainComponent.stopNodes.includes(node)) {
                 mainComponent.stopNodes.push(node);
             }
         }
@@ -332,6 +343,7 @@ export class FallthroughHelper {
         });
         return footprintMatrix;
     }
+
 //TODO: mby sthg still wrong here
     public static invertFootprintMatrix(footprintMatrix: string[][]): string[][] {
         // Clone the footprint-matrix to avoid modifying the original

@@ -506,7 +506,8 @@ export class ProcessGraphService {
             case FallthroughType.SPT: {
                 // Check for Empty trace
                 this.addLogEntry('Check for empty trace')
-                let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.length === 0);
+                let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace[0][0]==='empty_trace');
+                dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace[0][0] !== 'empty_trace');
                 let repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
                 if (!repeatingPattern) {
                     return {success: false, comment: 'No repeating Pattern found'}
