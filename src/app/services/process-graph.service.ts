@@ -466,7 +466,7 @@ export class ProcessGraphService {
         let dfg = dfgNode.dfg;
         let node: string = dfg.getNodes().values().next().value
         let newTransition: Node = this.createTransition('placeholder')
-        if (node === undefined) {
+        if (node === 'empty_trace') {
             newTransition = this.createTransition(this.generateUniqueId('TAU'));
         } else {
             newTransition = this.createTransition(node);
@@ -586,20 +586,13 @@ export class ProcessGraphService {
                             if (this.checkAOPTforOne(node, dfgNode.dfg.eventLog)) {
                                 this.addLogEntry('Activity Once Per Trace possible')
                                 //lösche node aus eventlog
-                                let eventlogWithoutAopt = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
-                                /*
-                                let eventlogWithoutAoptTemp: string[][] = [];
-                                let emptytraceExists = false;
-
-                                for (let trace of eventlogWithoutAopt) {
-                                    if (trace.length === 0) {
-                                        emptytraceExists = true; // Leeren Trace speichern
-                                    } else {
-                                        ValidationHelper.pushIfTraceNotInEventlog(eventlogWithoutAoptTemp, trace)
-                                        // Nicht-leeren Trace speichern falls noch nicht vorhanden
-                                    }
-                                }
-                                 */
+                                let eventlogWithoutAopt: string[][] = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
+                                console.log(eventlogWithoutAopt);
+                                console.log('..............')
+                                eventlogWithoutAopt = eventlogWithoutAopt.map(trace =>
+                                    trace.length === 0 ? ['empty_trace'] : trace
+                                );
+                                console.log(eventlogWithoutAopt);
                                 // erstelle neue DFGs und inkorporiere sie ins petrinetz
                                 const dfg1 = new DirectlyFollows();
                                 dfg1.setDFGfromStringArray(eventlogWithoutAopt)
