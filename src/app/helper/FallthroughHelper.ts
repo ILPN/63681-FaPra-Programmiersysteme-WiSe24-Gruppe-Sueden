@@ -151,13 +151,6 @@ export class FallthroughHelper {
         return allWCCsValid;
     }
 
-    // TODO: Loop-Cut detection logic hat noch ein problem
-    /* zB wird hier loop mittels loo nicht erkannt
-    c d e f d loop c d e f d +
-    a b d e loop a b d e +
-    b a d e loop b a d e +
-    c g loop c g
-     */
     public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
 
         const mapping = this.mapArrayIndex(nodesAsArray);
@@ -197,20 +190,12 @@ export class FallthroughHelper {
         };
         mainComponent.FPM = this.removeIrrelevantEdges(footprintMatrix, mainWCC, mapping);
         mainComponent.nodes = mainWCC;
-        const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
+        const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(dfg, mainWCC)
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
-        for (let node of playNodes) {
-            if (!mainComponent.startNodes.includes(node)) {
-                mainComponent.startNodes.push(node);
-            }
-        }
+
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
-        for (let node of stopNodes) {
-            if (!mainComponent.stopNodes.includes(node)) {
-                mainComponent.stopNodes.push(node);
-            }
-        }
+
 
         const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
         for (let i = 0; i < wCCs.length; i++) {
@@ -220,7 +205,7 @@ export class FallthroughHelper {
                 startNodes: [] as string[],
                 stopNodes: [] as string[],
             };
-            const startStopNodes = this.findStartAndStopNodes(wCC.FPM, wCC.nodes, mapping, nodesAsArray)
+            const startStopNodes = this.findStartAndStopNodes(dfg, wCCs[i])
             wCC.startNodes = startStopNodes.startNodes;
             wCC.stopNodes = startStopNodes.stopNodes;
             wccArray.push(wCC);
@@ -340,7 +325,6 @@ export class FallthroughHelper {
         return footprintMatrix;
     }
 
-//TODO: mby sthg still wrong here
     public static invertFootprintMatrix(footprintMatrix: string[][]): string[][] {
         // Clone the footprint-matrix to avoid modifying the original
         const inverseFootprintMatrix = footprintMatrix.map(row => [...row]);
@@ -534,55 +518,6 @@ export class FallthroughHelper {
         return updatedMatrix;
     }
 
-    public static findStartAndStopNodes(
-        footprintMatrix: string[][],
-        validNodes: string[],
-        nodesIndexMap: Record<string, number>,
-        nodesAsArray: string[]
-    ): { startNodes: string[], stopNodes: string[] } {
-        const startNodes: string[] = [];
-        const stopNodes: string[] = [];
-        // erstelle Array der validen Nodes
-        const nodesIndexes: number[] = [];
-        Object.keys(nodesIndexMap).forEach(node => {
-            if (validNodes.includes(node)) {
-                nodesIndexes.push(nodesIndexMap[node]);
-            }
-        });
-        /*
-        const nodesNotIndexes: number[] = [];
-        Object.keys(nodesIndexMap).forEach(node => {
-            if (!validNodes.includes(node)) {
-                nodesNotIndexes.push(nodesIndexMap[node]);
-            }
-        });
-
-         */
-        for (let i of nodesIndexes) {
-            let isStartNode = true;
-            let isStopNode = true;
-            for (let j of nodesIndexes) {
-                if (j !== i) {
-                    //gehe zeile entlang
-                    if (footprintMatrix[j][i] === '→' || footprintMatrix[j][i] === '||') {
-                        isStartNode = false;
-                    }
-                    if (footprintMatrix[j][i] === '←' || footprintMatrix[j][i] === '||') {
-                        isStopNode = false;
-                    }
-                }
-            }
-            if (isStartNode) {
-                startNodes.push(nodesAsArray[i])
-            }
-            if (isStopNode) {
-                stopNodes.push(nodesAsArray[i])
-            }
-        }
-        return {startNodes, stopNodes};
-    }
-
-
     //For debugging..
     public static print2DArray(arr: string[][], nodesIndexMap: Record<string, number>): void {
         // Erstelle ein Mapping von Index zu Name (für Zeilen und Spalten)
@@ -605,5 +540,28 @@ export class FallthroughHelper {
         }
     }
 
+    public static findStartAndStopNodes(
+        dfg: DirectlyFollows,
+        validNodes: string[],
+    ): { startNodes: string[], stopNodes: string[] } {
+        const startNodes: string[] = [];
+        const stopNodes: string[] = [];
+        let arcs = dfg.getArcs();
+        let stopArcs = arcs.filter(arc => validNodes.includes(arc.source as string) && !validNodes.includes(arc.target as string));
+        let startArcs = arcs.filter(arc => validNodes.includes(arc.target as string) && !validNodes.includes(arc.source as string));
+        for (let arc of startArcs) {
+            if (!startNodes.includes(arc.target as string)){
+                startNodes.push(arc.target as string);
+            }
+        }
+        for (let arc of stopArcs) {
+            if (!stopNodes.includes(arc.source as string)) {
+                stopNodes.push(arc.source as string);
+            }
+        }
+
+
+        return {startNodes: startNodes, stopNodes: stopNodes}
+    }
 }
 
