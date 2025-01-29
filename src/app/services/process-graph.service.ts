@@ -619,7 +619,7 @@ export class ProcessGraphService {
                             return {success: isFallthrough[0], comment: isFallthrough[1]};
                         }
                     } else {
-                        return sptResult
+                        return {success: false, comment: 'Repeating Pattern found'}
                     }
                 } else {
                     return {success: false, comment: 'You need to select exactly 1 node'}
@@ -749,7 +749,7 @@ export class ProcessGraphService {
                         return {success: isFallthrough[0], comment: isFallthrough[1]};
                     }
                 } else {
-                    return sptResult
+                    return {success: false, comment: 'Repeating Pattern found'}
                 }
             }
             default:
@@ -759,19 +759,9 @@ export class ProcessGraphService {
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
-        this.addLogEntry('Check for empty trace')
-        if (dfg.eventLog.some(trace => trace.length === 0)) {
-            this.addLogEntry('empty trace found, AOPT not possible')
-            return {success: false, comment: 'AOPT not possible'}
-        }
-        this.addLogEntry('ok')
-        // check for repeating pattern
-        this.addLogEntry('Check for exclusively repeating pattern')
-        if (dfg.isPatternExclusivelyRepeated()) {
-            this.addLogEntry('exclusively repeating pattern found, AOPT not possible')
-            return {success: false, comment: 'AOPT not possible'}
-        }
-        return {success: true, comment: 'ok'}
+        this.addLogEntry('Check for empty trace in combination with repeating pattern')
+        let result = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
+        return {success: !result[0], comment: result[1]}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt
