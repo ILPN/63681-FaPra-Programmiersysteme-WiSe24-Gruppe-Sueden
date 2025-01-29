@@ -15,18 +15,9 @@ export class ValidationHelper {
         this.setLogFunction(updateLog);
         this.log('----------------------------------')
 
-        let eventlog = dfg.getEventLog()
-        if (eventlog.some(trace => trace.includes('empty_trace'))) {
-            console.log('hier')
-            let tempLog = dfg.eventLog.filter(trace => !trace.includes('empty_trace'));
-            let tempDfg: DirectlyFollows = new DirectlyFollows();
-            tempDfg.setDFGfromStringArray(tempLog)
-            console.log(tempDfg.eventLog)
-            if (tempDfg.isPatternExclusivelyRepeated()) {
-                console.log('hier2')
-                return [false, 'Combination of empty trace and repeating pattern found.' +
-                '\nPlease Solve Per Tau!']
-            }
+        let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
+        if (!isRepWithTau[0]) {
+            return isRepWithTau
         }
 
         this.log('Start validation for cutType: ${cutType}');
@@ -503,4 +494,18 @@ export class ValidationHelper {
     private static hasUndefined(mySet: Set<any>): boolean {
         return mySet.has(undefined);
     }
+    public static testForTauAndRepeatingPattern(eventLog:string[][]): [boolean, string] {
+        if (eventLog.some(trace => trace.includes('empty_trace'))) {
+            let tempLog = eventLog.filter(trace => !trace.includes('empty_trace'));
+            let tempDfg: DirectlyFollows = new DirectlyFollows();
+            tempDfg.setDFGfromStringArray(tempLog)
+            if (tempDfg.isPatternExclusivelyRepeated()) {
+                return [false, 'Combination of empty trace and repeating pattern found.' +
+                '\nPlease Solve Per Tau!']
+            }
+            return [true, '']
+        }
+        return [true, '']
+    }
+
 }

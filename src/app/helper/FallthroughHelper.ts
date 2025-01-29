@@ -1,5 +1,6 @@
 import {DirectlyFollows} from "../classes/directly-follows";
 import {main} from "@angular/compiler-cli/src/main";
+import {ValidationHelper} from "./ValidationHelper";
 
 export class FallthroughHelper {
 
@@ -19,15 +20,10 @@ export class FallthroughHelper {
             }
         }
         //TODO: passe alles für empty trace an
-        let eventlog = dfg.getEventLog()
-        if (eventlog.some(trace => trace.includes('empty_trace'))) {
-            let tempLog = dfg.eventLog.filter(trace => trace[0][0] !== 'empty_trace');
-            let tempDfg: DirectlyFollows = new DirectlyFollows();
-            tempDfg.setDFGfromStringArray(tempLog)
-            if (tempDfg.isPatternExclusivelyRepeated()) {
-                return [true, 'Combination of empty trace and repeating pattern found.' +
-                '\nPlease Solve Per Tau!']
-            }
+        // Teste auf empty_string
+        let isRepWithTau = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
+        if (!isRepWithTau[0]) {
+            return isRepWithTau
         }
 
         const nodesAsArray = Array.from(dfg.getNodes()).sort();
