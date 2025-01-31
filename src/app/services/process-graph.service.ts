@@ -202,9 +202,7 @@ export class ProcessGraphService {
         const middlePlace: Node = this.createPlace(this.generateUniqueId('place'));
         //middlePlace ist die stelle zwischen dfg1 und dfg2
 
-        //new
         let predPlace: Node;
-        //
 
         workingGraph.places.add(middlePlace);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
@@ -239,10 +237,8 @@ export class ProcessGraphService {
         dfg2.x = dfgOriginal.x + dfgOriginal.width / 2
         dfg2.y = dfgOriginal.y
 
-
-        //new
+        //exchange positions if it's necessary
         this.exchangePositionsOfNodesIfNeeded(dfg1, dfg2, predPlace!, workingGraph);
-        //
 
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
@@ -1012,46 +1008,18 @@ export class ProcessGraphService {
         return positions;
     }
 
-    // new
+    // helps to locate the transitions or dfgs after sequence-cut in better positions
     exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, place: Node, workingGraph: ProcessGraph) {
         // find place, which follows transition(param) and which is before transtiion(param)
-        let succPlace: Node | null;
-        //let predPlace: Node | null;
+        let middlePlace: Node | null;
         let predPlace = place;
         for (const place of workingGraph.places) {
             for (const arc of workingGraph.arcs) {
                 if (arc.source === node1.name && arc.target === place.name) {
-                    succPlace = place;
-                }
-
-                /*
-                else if (arc.source === place.name && arc.target === node1.name) {
-                    predPlace = place;
-                }
-                 */
-            }
-        }
-        /*
-        // find node, which follows succPlace
-        let nextNode: Node;
-        for (const nd of workingGraph.transitions) {
-            for (const arc of workingGraph.arcs) {
-                if (succPlace! && arc.source === succPlace.name && arc.target === nd.name) {
-                    nextNode = nd;
-                    break;
+                    middlePlace = place;
                 }
             }
         }
-        for (const nd of workingGraph.dfgSet) {
-            for (const arc of workingGraph.arcs) {
-                if (succPlace! && arc.source === succPlace.name && arc.target === nd.name) {
-                    nextNode = nd;
-                    break;
-                }
-            }
-        }
-         */
-
         // check, if the succTransOfSuccPlace is closer to predPlace than transition(param)
         const dist1 = this.calculateSquaredEuclideanDistance(node1.x, node1.y, predPlace.x, predPlace.y);
         const dist2 = this.calculateSquaredEuclideanDistance(node2.x, node2.y, predPlace.x, predPlace.y);
@@ -1066,13 +1034,11 @@ export class ProcessGraphService {
         }
     }
 
-    // help function to calculate euclidean distance
+    // help function to calculate squared euclidean distance
     calculateSquaredEuclideanDistance(x1: number, y1: number, x2: number, y2: number): number {
         const dx = x2 - x1;
         const dy = y2 - y1;
         return dx * dx + dy * dy;
     }
-
-    //
 
 }
