@@ -1014,7 +1014,7 @@ export class ProcessGraphService {
         const dist1 = this.calculateSquaredEuclideanDistance(node1.x, node1.y, predPlace.x, predPlace.y);
         const dist2 = this.calculateSquaredEuclideanDistance(node2.x, node2.y, predPlace.x, predPlace.y);
         if (dist2 <= dist1) {
-            // switch positions of two transitions
+            // switch positions of two nodes
             const tempX = node1.x
             const tempY = node1.y
             node1.x = node2.x
