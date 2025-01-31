@@ -238,7 +238,7 @@ export class ProcessGraphService {
         dfg2.y = dfgOriginal.y
 
         //exchange positions if it's necessary
-        this.exchangePositionsOfNodesIfNeeded(dfg1, dfg2, predPlace!, workingGraph);
+        this.exchangePositionsOfNodesIfNeeded(dfg1, dfg2, predPlace!);
 
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
@@ -1009,18 +1009,8 @@ export class ProcessGraphService {
     }
 
     // helps to locate the transitions or dfgs after sequence-cut in better positions
-    exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, place: Node, workingGraph: ProcessGraph) {
-        // find place, which follows transition(param) and which is before transtiion(param)
-        let middlePlace: Node | null;
-        let predPlace = place;
-        for (const place of workingGraph.places) {
-            for (const arc of workingGraph.arcs) {
-                if (arc.source === node1.name && arc.target === place.name) {
-                    middlePlace = place;
-                }
-            }
-        }
-        // check, if the succTransOfSuccPlace is closer to predPlace than transition(param)
+    exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, predPlace: Node) {
+        // check, if the node2 (which comes after node1, middlePlace) is closer to predPlace than node1
         const dist1 = this.calculateSquaredEuclideanDistance(node1.x, node1.y, predPlace.x, predPlace.y);
         const dist2 = this.calculateSquaredEuclideanDistance(node2.x, node2.y, predPlace.x, predPlace.y);
         if (dist2 <= dist1) {
