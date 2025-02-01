@@ -20,7 +20,7 @@ export class ValidationHelper {
             return isRepWithTau
         }
 
-        this.log('Start validation for cutType: ${cutType}');
+        this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult

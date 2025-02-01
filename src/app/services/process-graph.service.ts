@@ -489,27 +489,6 @@ export class ProcessGraphService {
     /*==========================================================BaseCase============================================================*/
     /*==============================================================================================================================*/
 
-    //__Methode um mehrere DFG gleichzeitig zu wandeln
-    /*
-    private transformMultipleBaseCases(dfgSet: Set<DirectlyFollows>): [boolean, Set<DirectlyFollows>] {
-        let workingGraph = this.graphSignal()!;
-        let invalidDFGs = new Set<DirectlyFollows>()
-        for (let dfg of dfgSet) {
-            if (!this.isBaseCase(dfg)) {
-                invalidDFGs.add(dfg);
-            }
-        }
-        if (invalidDFGs.size > 0) {
-            return [false, invalidDFGs]
-        }
-        for (let dfg of dfgSet) {
-            this.transformBaseCaseToTransition(workingGraph, dfg)
-        }
-        this.graphSignal.set(workingGraph);
-        return [true, invalidDFGs]
-    }
-    */
-
     private checkAndTransformDFGtoBasecase(dfg: DfgNode, workingGraph: ProcessGraph): void {
         if (this.isBaseCase(dfg)) {
             this.transformBaseCaseToTransition(workingGraph, dfg)
@@ -526,11 +505,13 @@ export class ProcessGraphService {
     private transformBaseCaseToTransition(workingGraph: ProcessGraph, dfgNode: DfgNode) {
         let dfg = dfgNode.dfg;
         let node: string = dfg.getNodes().values().next().value
-        let newTransition: Node = this.createTransition('placeholder')
+        let newTransition: Node;
         if (node === 'empty_trace') {
             newTransition = this.createTransition(this.generateUniqueId('TAU'));
+            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to TAU-Transition`)
         } else {
             newTransition = this.createTransition(node);
+            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to Transition`)
         }
         newTransition.x = dfgNode.x
         newTransition.y = dfgNode.y
@@ -565,7 +546,7 @@ export class ProcessGraphService {
             /*=====================================================SPT====================================================*/
             case FallthroughType.SPT: {
                 // Check for Empty trace
-                this.addLogEntry('Check for empty trace')
+                this.addLogEntry('Check for Repeating Pattern')
                 let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
                //
                 let repeatingPattern : boolean
@@ -578,16 +559,15 @@ export class ProcessGraphService {
                 if (!repeatingPattern) {
                     return {success: false, comment: 'No repeating Pattern found'}
                 }
+                this.addLogEntry('found')
                 if (emptyTrace) {
-                    this.addLogEntry('empty trace found, creating TAU-Transition')
+                    this.addLogEntry('empty trace found, solving per Tau-Transition')
                     this.makeOptional(dfgNode, workingGraph)
                     //lösche empty trace
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace.length > 0);
                 } else {
                     this.addLogEntry('No empty trace found')
                 }
-                // check for repeating pattern
-                this.addLogEntry('Check for repeating pattern')
 
                 // Passe eventlog sowie Arcs an
                 let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
@@ -597,7 +577,6 @@ export class ProcessGraphService {
                 dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
                     !(arc.target === repeatedPattern[0] && arc.source === repeatedPattern[repeatedPattern.length - 1])
                 );
-                this.addLogEntry('repeating pattern found, solving per TAU-Transition')
                 if (emptyTrace) { //DFG ist im REDO Part
                     // Drehe Kanten um
                     dfgNode.y = dfgNode.y - dfgNode.height
