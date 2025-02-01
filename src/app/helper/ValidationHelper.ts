@@ -38,8 +38,6 @@ export class ValidationHelper {
         let dfg2: DirectlyFollows = new DirectlyFollows();
         dfg2.setDFGfromStringArray(eventlog1)
         dfg1.setEventLog(eventlog0);
-        dfg1.isDo = dfg.isDo
-        dfg2.isDo = dfg.isDo
         dfg2.setEventLog(eventlog1);
         return [validationResult[0], validationResult[1], dfg1, dfg2]
     }
