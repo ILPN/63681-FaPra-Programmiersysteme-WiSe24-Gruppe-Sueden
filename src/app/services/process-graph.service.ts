@@ -259,6 +259,20 @@ export class ProcessGraphService {
         dfg2.x = dfgOriginal.x
         dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
 
+        //finde place vor dfgOriginal
+        let predPlace: Node;
+        workingGraph.arcs.forEach((arc) => {
+            if (arc.target === dfgOriginal) {
+                // find the pred-Place of Original-DFG
+                workingGraph.places.forEach((place) => {
+                    if (place === arc.source) {
+                        predPlace = place;
+                    }
+                })
+            }
+        })
+
+
         //Erstelle neue Places
         const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
         firstPlaceNew2.x = dfg2.x - dfgOriginal.width / 2;
@@ -268,6 +282,7 @@ export class ProcessGraphService {
         lastPlaceNew2.x = dfg2.x + dfgOriginal.width / 2;
         lastPlaceNew2.y = dfg2.y;
         workingGraph.places.add(lastPlaceNew2);
+        this.exchangePositionsOfNodesIfNeeded(firstPlaceNew2, lastPlaceNew2, predPlace!)
         // Erstelle boolen um zu checken ob Tau transitionen nötig
         let firstTauNeeded = true;
         let lastTauNeeded = true;
@@ -278,6 +293,7 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition davor benötigt
                 if (arc.target === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.source as Node, 2).underThreshold) {
                     firstTauNeeded = false;
+                    //TODO: was soll das?
                     let x = arc.source as Node
                     x.y=dfg1.y
                     x.x = dfgOriginal.x - dfgOriginal.width / 2
@@ -292,7 +308,8 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
                 if (arc.source === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.target as Node, 2).underThreshold) {
                     lastTauNeeded = false;
-                    let x = arc.target as Node
+                    //TODO: Was soll das?
+                   let x = arc.target as Node
                     x.y = dfg1.y
                     x.x = dfg1.x + dfgOriginal.width / 2
                     //Finde transition NACH place
@@ -308,17 +325,20 @@ export class ProcessGraphService {
             const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
             firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
             firstPlaceNew1.y = dfg1.y;
+            if(!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)){
+                firstPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+            }
             workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
             firstTauTransition.y= dfgOriginal.y
+            if(!this.checkIfNodeCloser(firstTauTransition, firstPlaceNew1, predPlace!)){
+                firstTauTransition.x += 2*PhysicsHelper.placeDiameter
+            }
             workingGraph.transitions.add(firstTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //geh alle arcs durch und suche die stelle vor dem dfgOriginal
                 if (arc.target === dfgOriginal) {
-                    let placebefore = arc.source as Node;
-                    placebefore.x = firstTauTransition.x - PhysicsHelper.placeDiameter
-                    placebefore.y= dfgOriginal.y
                     // tausche verknüpfung zu DfgOriginal mit verknüpfung zu firstTauTransition
                     return [{source: arc.source, target: firstTauTransition}];
                 }
@@ -335,17 +355,20 @@ export class ProcessGraphService {
             const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
             lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
             lastPlaceNew1.y = dfg1.y;
+            if(this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)){
+                lastPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+            }
             workingGraph.places.add(lastPlaceNew1);
             const lastTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
             lastTauTransition.y = dfgOriginal.y
+            if(this.checkIfNodeCloser(lastTauTransition, lastPlaceNew1, predPlace!)){
+                lastTauTransition.x -= 2*PhysicsHelper.placeDiameter
+            }
             workingGraph.transitions.add(lastTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //suche stelle nach dem dfgOriginal
                 if (arc.source === dfgOriginal) {
-                    let placeafter = arc.target as Node;
-                    placeafter.x = lastTauTransition.x + PhysicsHelper.placeDiameter;
-                    placeafter.y = dfgOriginal.y
                     // tausche verknüpfung zu DfgOriginal mit verknüpfung zu lastTauTransition
                     return [{source: lastTauTransition, target: arc.target}];
                 }
@@ -838,16 +861,6 @@ export class ProcessGraphService {
         });
     }
 
-    // checks via eventlog empty trace if dfg is optional
-    // if yes return true and delete empty traces from eventlog
-    private isItOptional(dfg: DirectlyFollows): boolean {
-        if (dfg.eventLog.some(trace => trace.length === 0)) {
-            dfg.eventLog = dfg.eventLog.filter(trace => trace.length > 0);
-            return true
-        }
-        return false;
-    }
-
     //schaut wie oft ein node in arcs vorkommt und somit, wie viele kanten mit einem node verbunden sind.
     // es kann auch durch übergabe einer number geprüft werden, ob mehr als x kanten ausgehen...
     private occursInThisManyArcs<T>(arcs: Arc[], node: Node, maxCount: number = Infinity): {
@@ -1021,7 +1034,7 @@ export class ProcessGraphService {
     }
 
     // helps to locate the transitions or dfgs after sequence-cut in better positions
-    exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, predPlace: Node) {
+    private exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, predPlace: Node) {
         // check, if the node2 (which comes after node1, middlePlace) is closer to predPlace than node1
         const dist1 = this.calculateSquaredEuclideanDistance(node1.x, node1.y, predPlace.x, predPlace.y);
         const dist2 = this.calculateSquaredEuclideanDistance(node2.x, node2.y, predPlace.x, predPlace.y);
@@ -1037,10 +1050,17 @@ export class ProcessGraphService {
     }
 
     // help function to calculate squared euclidean distance
-    calculateSquaredEuclideanDistance(x1: number, y1: number, x2: number, y2: number): number {
+    private calculateSquaredEuclideanDistance(x1: number, y1: number, x2: number, y2: number): number {
         const dx = x2 - x1;
         const dy = y2 - y1;
         return dx * dx + dy * dy;
+    }
+
+    private checkIfNodeCloser(nodeCloser: Node, nodeFurther: Node, predPlace:Node){
+        const dist1 = this.calculateSquaredEuclideanDistance(nodeCloser.x, nodeCloser.y, predPlace.x, predPlace.y);
+        const dist2 = this.calculateSquaredEuclideanDistance(nodeFurther.x, nodeFurther.y, predPlace.x, predPlace.y);
+        return dist1 <= dist2;
+
     }
 
 }
