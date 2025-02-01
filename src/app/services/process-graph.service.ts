@@ -293,7 +293,6 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition davor benötigt
                 if (arc.target === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.source as Node, 2).underThreshold) {
                     firstTauNeeded = false;
-                    //TODO: was soll das?
                     let x = arc.source as Node
                     x.y=dfg1.y
                     x.x = dfgOriginal.x - dfgOriginal.width / 2
@@ -308,7 +307,6 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
                 if (arc.source === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.target as Node, 2).underThreshold) {
                     lastTauNeeded = false;
-                    //TODO: Was soll das?
                    let x = arc.target as Node
                     x.y = dfg1.y
                     x.x = dfg1.x + dfgOriginal.width / 2
@@ -325,14 +323,16 @@ export class ProcessGraphService {
             const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
             firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
             firstPlaceNew1.y = dfg1.y;
+            let transitionNeedsChange = false;
             if(!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)){
                 firstPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+                transitionNeedsChange = true;
             }
             workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
             firstTauTransition.y= dfgOriginal.y
-            if(!this.checkIfNodeCloser(firstTauTransition, firstPlaceNew1, predPlace!)){
+            if(transitionNeedsChange){
                 firstTauTransition.x += 2*PhysicsHelper.placeDiameter
             }
             workingGraph.transitions.add(firstTauTransition);
@@ -355,14 +355,16 @@ export class ProcessGraphService {
             const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
             lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
             lastPlaceNew1.y = dfg1.y;
+            let transitionNeedsChange = false;
             if(this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)){
                 lastPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+                transitionNeedsChange = true;
             }
             workingGraph.places.add(lastPlaceNew1);
             const lastTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
             lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
             lastTauTransition.y = dfgOriginal.y
-            if(this.checkIfNodeCloser(lastTauTransition, lastPlaceNew1, predPlace!)){
+            if(transitionNeedsChange){
                 lastTauTransition.x -= 2*PhysicsHelper.placeDiameter
             }
             workingGraph.transitions.add(lastTauTransition);
@@ -400,6 +402,19 @@ export class ProcessGraphService {
         dfg1.y = dfgOriginal.y + dfgOriginal.height
         dfg2.x = dfgOriginal.x
         dfg2.y = dfgOriginal.y -  dfgOriginal.height;
+
+        //finde place vor dfgOriginal
+        let predPlace: Node;
+        workingGraph.arcs.forEach((arc) => {
+            if (arc.target === dfgOriginal) {
+                // find the pred-Place of Original-DFG
+                workingGraph.places.forEach((place) => {
+                    if (place === arc.source) {
+                        predPlace = place;
+                    }
+                })
+            }
+        })
         //check if original dfg has just one source-place and source place has just one outgoing edge
         if (this.occursInThisManyArcsAsTarget(workingGraph.arcs, dfgOriginal, 1).count === 1) {
             let sourcePlace = this.findSingularSourceForTarget(workingGraph.arcs, dfgOriginal)
@@ -432,10 +447,18 @@ export class ProcessGraphService {
         const newPlace: Node = this.createPlace(this.generateUniqueId('place'));
         newPlace.x = dfg1.x-dfgOriginal.width/2-PhysicsHelper.placeDiameter;
         newPlace.y = dfg1.y;
+        let transitionNeedsChange = false;
+        if(!this.checkIfNodeCloser(newPlace, dfgOriginal, predPlace!)){
+            newPlace.x = dfg1.x + dfgOriginal.width/2 + PhysicsHelper.placeDiameter;
+            transitionNeedsChange = true;
+        }
         workingGraph.places.add(newPlace);
         const newTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
         newTransition.x = newPlace.x - PhysicsHelper.placeDiameter
         newTransition.y = newPlace.y
+        if(transitionNeedsChange){
+            newTransition.x = newPlace.x + PhysicsHelper.placeDiameter
+        }
         workingGraph.transitions.add(newTransition);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // stelle nach dfgOriginal gefunden
