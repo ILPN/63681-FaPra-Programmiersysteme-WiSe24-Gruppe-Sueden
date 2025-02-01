@@ -745,6 +745,18 @@ export class ProcessGraphService {
                                     workingGraph?.arcs.push({source: middlePlace, target: transition})
                                     workingGraph?.arcs.push({source: transition, target: middlePlace})
                                 }
+
+                                let predNode: Node;
+                                workingGraph.arcs.forEach(arc => {
+                                    // find the pred-Place
+                                    workingGraph.places.forEach((place) => {
+                                        if (tauTransitionBefore === arc.target && place === arc.source) {
+                                            predNode = place;
+                                        }
+                                    })
+                                })
+                                // exchange positions if it's necessary
+                                this.exchangePositionsOfNodesIfNeeded(tauTransitionBefore, tauTransitionAfter, predNode!);
                             }
                             this.graphSignal.set({
                                 ...workingGraph
