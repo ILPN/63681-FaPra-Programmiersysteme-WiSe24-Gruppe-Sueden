@@ -3,13 +3,15 @@
     <div class="relative grow p-3 bg-gray-300 border border-solid border-black rounded-xl">
         <!-- Back button -->
         @if (selectionService.selectedDfg()) {
-            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
+            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1"
+                    (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
                 <mat-icon>arrow_back</mat-icon>
             </button>
         }
 
         <!-- Logs button -->
-        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1" (click)="showLogs.set(!showLogs())">
+        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1"
+                (click)="showLogs.set(!showLogs())">
             <mat-icon>list</mat-icon>
         </button>
 
@@ -87,45 +89,49 @@
     </div>
 
     <!-- Logs -->
-    <div class="transition-all overflow-hidden" [style.max-width]="showLogs() ? '24rem' : 0">
-        <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
-            <mat-tab-group>
-                <mat-tab label="Event Log" bodyClass="p-2">
-                    @if (selectionService.selectedDfg()) {
-                        @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
-                            <div class="flex flex-wrap gap-2 mb-5">
-                                @for (node of trace; track $index) {
-                                    @let isSelected = node | isSelected: selectionService.selectedNodes();
-                                    <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
+    <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
+        <div class="transition-all overflow-hidden flex flex-col h-full" [style.max-width]="showLogs() ? '24rem' : 0">
+            <mat-tab-group class="flex flex-col h-full">
+                <mat-tab label="Event Log" bodyClass="p-2 h-full flex flex-col">
+                    <div class="tab-content flex-grow overflow-y-auto">
+                        @if (selectionService.selectedDfg()) {
+                            @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
+                                <div class="flex flex-wrap gap-2 mb-5">
+                                    @for (node of trace; track $index) {
+                                        @let isSelected = node | isSelected: selectionService.selectedNodes() ;
+                                        <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
                                         {{ node }}
                                     </span>
-                                } @empty {
-                                    @if (hasUndefinedSelected) {
-                                        @for (node of undefinedNodes; track node.name) {
-                                            <span class="italic" [style.color]="'red'">&lt;empty trace&gt;</span>
+                                    } @empty {
+                                        @if (hasUndefinedSelected) {
+                                            @for (node of undefinedNodes; track node.name) {
+                                                <span class="italic" [style.color]="'red'">&lt;empty trace&gt;</span>
+                                            }
+                                        } @else {
+                                            <span class="italic">&lt;empty trace&gt;</span>
                                         }
-                                    } @else {
-                                        <span class="italic">&lt;empty trace&gt;</span>
                                     }
-                                }
-                                @if (!$last) {
-                                    <span>+</span>
-                                }
-                            </div>
+                                    @if (!$last) {
+                                        <span>+</span>
+                                    }
+                                </div>
+                            }
+                        } @else {
+                            <div class="text-center italic">Please open a DFG</div>
                         }
-                    } @else {
-                        <div class="text-center italic">Please open a DFG</div>
-                    }
+                    </div>
                 </mat-tab>
 
                 <!-- Activity logs -->
-                <mat-tab label="Activity Log" bodyClass="p-2">
-                    @for (log of processGraphService.logSignal(); track $index) {
-                        <div>
-                            <span class="font-bold">{{ $index + 1 }}.</span>
-                            <span>{{ log }}</span>
-                        </div>
-                    }
+                <mat-tab label="Transformation Steps" bodyClass="p-2 h-full flex flex-col">
+                    <div class="tab-content flex-grow overflow-y-auto">
+                        @for (log of processGraphService.logSignal(); track $index) {
+                            <div>
+                                <span class="font-bold">{{ $index + 1 }}.</span>
+                                <span>{{ log }}</span>
+                            </div>
+                        }
+                    </div>
                 </mat-tab>
             </mat-tab-group>
         </div>

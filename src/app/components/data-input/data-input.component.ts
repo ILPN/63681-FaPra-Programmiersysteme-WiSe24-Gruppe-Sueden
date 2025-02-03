@@ -59,7 +59,12 @@ export class DataInputComponent {
         for (let i = 0; i < traceNodes.length; i++) {
             const events: string[] = []
             const traceEventNodes = traceNodes[i].getElementsByTagName("event")
+            const forbiddenNodes = ['start','play','stop','end']
             for (let j = 0; j < traceEventNodes.length; j++) {
+                const eventValue = traceEventNodes[j].firstElementChild!.getAttribute("value") as string
+                if (forbiddenNodes.includes(eventValue.toLowerCase())){
+                    continue
+                }
                 events.push(traceEventNodes[j].firstElementChild!.getAttribute("value") as string)
             }
             eventLog.push(events)
