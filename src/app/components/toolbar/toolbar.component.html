@@ -112,7 +112,7 @@
 <mat-menu #exportMenu>
     @for (type of ExportType | keyvalue; track type.value) {
         <button mat-menu-item (click)="export(type.value)">
-            {{ type.value }}
+            {{ type.value | uppercase }}
         </button>
     }
 </mat-menu>
