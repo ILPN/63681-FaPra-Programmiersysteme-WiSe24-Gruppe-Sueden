@@ -56,6 +56,9 @@
                 @for (dfg of dfgs; track $index) {
                     <g EventLog
                        [dfgNode]="dfg"
+                       (mousedown)="dfgMouseDown(dfg, $event)"
+                       (mouseup)="dfgMouseUp()"
+                       (mousemove)="onMouseMove($event)"
                        (dfgClicked)="dfgClicked($event)"
                     />
                 }

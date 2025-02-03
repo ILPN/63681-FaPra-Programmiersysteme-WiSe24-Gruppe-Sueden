@@ -60,6 +60,8 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     private physicsInterval: number = -1
     draggingNode: Node | null = null
 
+    private wasDragging: boolean = false;
+
     places: Array<Node> = []
     dfgs: Array<DfgNode> = []
     edges: Array<Edge> = []
@@ -144,6 +146,11 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // Always drag in petrinet view
         if (this.selectionService.selectedDfg() === null) {
             this.onDragMove(event)
+        }
+        if (this.draggingNode) {
+            this.draggingNode.x = event.offsetX;
+            this.draggingNode.y = event.offsetY;
+            this.wasDragging = true;
         }
         switch (this.toolbarService.selectionType()) {
             case SelectionType.CLICK:
@@ -248,8 +255,23 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     dfgClicked(dfg: DfgNode) {
-        this.selectionService.selectDfg(dfg)
+        if(!this.wasDragging){
+            this.selectionService.selectDfg(dfg)
+        }
     }
+    dfgMouseDown(dfg: DfgNode, event: MouseEvent) {
+        this.draggingNode = dfg;
+        dfg.isDragged = true;
+        this.wasDragging = false;
+    }
+    dfgMouseUp() {
+        if (this.draggingNode) {
+            this.draggingNode.isDragged = false;
+            this.draggingNode = null
+        }
+    }
+
+
 
     initGraph(graph: ProcessGraph | null) {
         if (!graph) return

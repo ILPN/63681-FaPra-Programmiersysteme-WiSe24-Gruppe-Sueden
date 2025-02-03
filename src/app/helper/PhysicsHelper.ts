@@ -6,7 +6,7 @@ export class PhysicsHelper {
     static k: number = 0.01
     static damping: number = 0.7
     static repulsionStrength: number = 3000
-    static boundaryForce: number = 0.1 // Force to keep nodes within boundaries
+    static boundaryForce: number = 0.2 // Force to keep nodes within boundaries
 
     // Node properties
     static nodeDiameter: number = 50 // Radius of the node, used for padding
@@ -81,7 +81,7 @@ export class PhysicsHelper {
 
                 // Calculate repulsive force (Coulomb-like)
                 let force = PhysicsHelper.repulsionStrength / (distance * distance)
-                if (isEventLog) force *= 7
+                if (isEventLog) force *= 2
 
                 // Apply the force in opposite directions to each node
                 const fx = (dx / distance) * force
@@ -120,24 +120,24 @@ export class PhysicsHelper {
             if (isDFG) {
                 if (node.name === "play") {
                     node.x = canvasWidth / 2
-                    node.y = 25
+                    node.y = 26
                     continue
                 }
                 if (node.name === "stop") {
                     node.x = canvasWidth / 2
-                    node.y = canvasHeight - 25
+                    node.y = canvasHeight - 27
                     continue
                 }
             }
 
             // Fixed position for start/stop in Petrinet-View
             if (node.name === "place_play") {
-                node.x = 25
+                node.x = 26
                 node.y = canvasHeight / 2
                 continue
             }
             if (node.name === "place_stop") {
-                node.x = canvasWidth - 25
+                node.x = canvasWidth - 26
                 node.y = canvasHeight / 2
                 continue
             }
