@@ -1,4 +1,4 @@
-import {AfterViewInit, Component, effect, ElementRef, OnDestroy, ViewChild, ViewEncapsulation} from '@angular/core'
+import {AfterViewInit, Component, effect, ElementRef, OnDestroy, viewChild, ViewChild, ViewEncapsulation} from '@angular/core'
 import {Node, NodeType} from "../../classes/graph/node"
 import {ProcessGraphService} from "../../services/process-graph.service";
 import {SelectionType} from "../../classes/selection-type.enum";
@@ -49,6 +49,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     @ViewChild('svgCanvas', {static: true}) svgCanvas!: ElementRef
 
     protected showLogs = injectLocalStorage("showLogs", true)
+    protected activityLog = viewChild<ElementRef<HTMLDivElement>>("activityLog")
 
     protected isDrawing: boolean = false
     protected lassoPath = ''
@@ -75,6 +76,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             this.reset()
             this.initGraph(graph)
         }, {allowSignalWrites: true})
+
+        // Scroll activity log to bottom
+        effect(() => {
+            this.processGraphService.logSignal()
+            setTimeout(() => this.activityLog()!.nativeElement.parentElement!.scrollTo({top: 999999999, behavior: "smooth"}))
+        });
     }
 
     ngAfterViewInit() {

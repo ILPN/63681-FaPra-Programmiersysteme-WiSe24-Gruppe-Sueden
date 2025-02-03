@@ -74,6 +74,11 @@ export class ToolbarComponent {
         setTimeout(() => URL.revokeObjectURL(link.href), 100) // For firefox
     }
 
+    protected abort() {
+        this.graphService.graphSignal.set(null)
+        this.graphService.logSignal.set([])
+    }
+
     protected originalOrder = () => 0
 
     protected readonly SelectionType = SelectionType;

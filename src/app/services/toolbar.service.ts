@@ -7,7 +7,7 @@ import {FallthroughType} from "../classes/fallthrough.enum";
 export class ToolbarService {
 
     useSpringEmbedder = signal(true)
-    cutType = signal<CutType | null>(CutType.SEQUENCE)
+    cutType = signal<CutType | null>(CutType.XOR)
     fallthroughType = signal<FallthroughType | null>(null)
     selectionType = signal(SelectionType.NONE)
 

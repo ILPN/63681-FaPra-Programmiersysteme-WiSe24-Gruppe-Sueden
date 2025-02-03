@@ -21,7 +21,7 @@
                     <!-- Cut Type -->
                     <div class="toolbox-section">
                         <span class="toolbox-section-label">Cut</span>
-                        @for (type of CutType | keyvalue; track type.value) {
+                        @for (type of CutType | keyvalue: originalOrder; track type.value) {
                             <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
                                 {{ type.value | titlecase }}
                             </span>
@@ -103,7 +103,7 @@
     </div>
 
     <!-- Abort -->
-    <button mat-fab matTooltip="Abort" (click)="graphService.graphSignal.set(null)">
+    <button mat-fab matTooltip="Abort" (click)="abort()">
         <mat-icon>clear</mat-icon>
     </button>
 </div>

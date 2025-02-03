@@ -3,15 +3,13 @@
     <div class="relative grow p-3 bg-gray-300 border border-solid border-black rounded-xl">
         <!-- Back button -->
         @if (selectionService.selectedDfg()) {
-            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1"
-                    (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
+            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
                 <mat-icon>arrow_back</mat-icon>
             </button>
         }
 
         <!-- Logs button -->
-        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1"
-                (click)="showLogs.set(!showLogs())">
+        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1" (click)="showLogs.set(!showLogs())">
             <mat-icon>list</mat-icon>
         </button>
 
@@ -93,7 +91,7 @@
         <div class="transition-all overflow-hidden flex flex-col h-full" [style.max-width]="showLogs() ? '24rem' : 0">
             <mat-tab-group class="flex flex-col h-full">
                 <mat-tab label="Event Log" bodyClass="p-2 h-full flex flex-col">
-                    <div class="tab-content flex-grow overflow-y-auto">
+                    <div class="overflow-y-auto">
                         @if (selectionService.selectedDfg()) {
                             @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
                                 <div class="flex flex-wrap gap-2 mb-5">
@@ -124,7 +122,7 @@
 
                 <!-- Activity logs -->
                 <mat-tab label="Transformation Steps" bodyClass="p-2 h-full flex flex-col">
-                    <div class="tab-content flex-grow overflow-y-auto">
+                    <div class="overflow-y-auto" #activityLog>
                         @for (log of processGraphService.logSignal(); track $index) {
                             <div>
                                 <span class="font-bold">{{ $index + 1 }}.</span>

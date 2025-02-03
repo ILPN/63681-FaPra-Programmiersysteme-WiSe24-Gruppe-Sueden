@@ -59,10 +59,10 @@ export class DataInputComponent {
         for (let i = 0; i < traceNodes.length; i++) {
             const events: string[] = []
             const traceEventNodes = traceNodes[i].getElementsByTagName("event")
-            const forbiddenNodes = ['start','play','stop','end']
+            const forbiddenNodes = ['start', 'play', 'stop', 'end']
             for (let j = 0; j < traceEventNodes.length; j++) {
                 const eventValue = traceEventNodes[j].firstElementChild!.getAttribute("value") as string
-                if (forbiddenNodes.includes(eventValue.toLowerCase())){
+                if (forbiddenNodes.includes(eventValue.toLowerCase())) {
                     continue
                 }
                 events.push(traceEventNodes[j].firstElementChild!.getAttribute("value") as string)
@@ -75,11 +75,14 @@ export class DataInputComponent {
 
     /***************************************************************** Manual Input *****************************************************************/
     protected eventLogValidator: ValidatorFn = control => {
-        const val = control?.value as string
-        if (!!val && val.match(/^[a-zA-Z0-9\s\n+]+$/)) {
-            return null
+        const val = (control?.value as string)?.trim()
+        if (!val ||
+            val.match(/\+\s*\+/) || // Prevent empty traces
+            !val.match(/^[a-zA-Z0-9\s\n+]+$/) ||
+            val.startsWith("+") || val.endsWith("+")) {
+            return {invalid: true}
         }
-        return {invalid: true}
+        return null
     }
 
     protected manualInputControl = new FormControl(
