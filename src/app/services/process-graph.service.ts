@@ -40,6 +40,23 @@ export class ProcessGraphService {
         const tempPlace2: Node = this.createPlace(this.generateUniqueId('place'));
         const lastPlace: Node = this.createPlace('place_stop');
         const stopTransition: Node = this.createTransition("stop");
+
+        playTransition.x = this.displayService.width() / 6
+        playTransition.y = this.displayService.height() / 2
+
+        tempPlace1.x = this.displayService.width() * 2 / 6
+        tempPlace1.y = this.displayService.height() / 2
+
+        eventlog.x = this.displayService.width() * 3 / 6
+        eventlog.y = this.displayService.height() / 2
+
+        tempPlace2.x = this.displayService.width() * 4 / 6
+        tempPlace2.y = this.displayService.height() / 2
+
+        stopTransition.x = this.displayService.width() * 5 / 6
+        stopTransition.y = this.displayService.height() / 2
+
+
         placeSet.add(firstPlace);
         placeSet.add(tempPlace1);
         placeSet.add(tempPlace2);
@@ -86,30 +103,7 @@ export class ProcessGraphService {
         // Die Ergebnisse an das ProcessGraphService weitergeben
 
         if (result[0] && result[2] !== undefined && result[3] !== undefined) {
-            /*
-            let firstOptional = false;
-            let secondOptional = false;
-            if (data.cutType === CutType.SEQUENCE || data.cutType === CutType.PARALLEL) {
-                //TODO: Optionale sollen zu Fallthrough-Logik werden?!
 
-                this.addLogEntry("checking if subgraphs optional")
-                firstOptional = this.isItOptional(result[2])
-                secondOptional = this.isItOptional(result[3]);
-                if (firstOptional && secondOptional) {
-                    this.addLogEntry('Sequence-Cut successful, both subgraphs optional');
-                    result[1] = 'Sequence-Cut successful, both subgraphs optional';
-                }
-                if (firstOptional) {
-                    this.addLogEntry('Sequence-Cut successful, first subgraph optional');
-                    result[1] = 'Sequence-Cut successful, first subgraph optional';
-                }
-                if (secondOptional) {
-                    this.addLogEntry('Sequence-Cut successful, second subgraph optional');
-                    result[1] = 'Sequence-Cut successful, second subgraph optional';
-                }
-                this.addLogEntry("no subgraph optional")
-            }
-            */
             if (result[2] && result[3]) {
                 this.addLogEntry("incorporating new DFGs into Petrinet")
                 this.incorporateNewDFGs(data.dfg, result[2], result[3], data.cutType);
@@ -127,9 +121,9 @@ export class ProcessGraphService {
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
-    incorporateNewDFGs(dfgNodeOriginal: DfgNode,                    // der dfg der ausgetauscht werden soll
-                       dfg1: DirectlyFollows, //isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
-                       dfg2: DirectlyFollows, //isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+    incorporateNewDFGs(dfgNodeOriginal: DfgNode,                     // der dfg der ausgetauscht werden soll
+                       dfg1: DirectlyFollows,                        // dfg1 mit dem ausgetauscht wird
+                       dfg2: DirectlyFollows,                        // dfg1 mit dem ausgetauscht wird
                        cutMethod: CutType) {                        // cutmethode
         const currentGraph = this.graphSignal();
         if (!currentGraph) {
@@ -168,6 +162,8 @@ export class ProcessGraphService {
                            dfg1: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            dfg2: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            workingGraph: ProcessGraph) {
+        //if (dfg1.dfg.eventLog.length===1 && dfg1.dfg.eventLog[0]===[])
+
         //flatMap durchläuft alle arcs und ersetzt sie nach gegebenen Kriterien
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //Kriterium = source = originalDFG
@@ -186,6 +182,10 @@ export class ProcessGraphService {
         });
         // lösche dfgOriginal aus dfgSet, füge dfg1 und dfg2 hinzu
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        dfg1.x = dfgOriginal.x
+        dfg1.y = dfgOriginal.y + dfgOriginal.height / 2
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
         this.graphSignal.set(workingGraph);
@@ -201,10 +201,21 @@ export class ProcessGraphService {
                                 workingGraph: ProcessGraph) {
         const middlePlace: Node = this.createPlace(this.generateUniqueId('place'));
         //middlePlace ist die stelle zwischen dfg1 und dfg2
+
+        let predPlace: Node;
+
         workingGraph.places.add(middlePlace);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // wenn target original DFG war, ersetze mit DFG 1, erstelle neuen arc dfg1 -> middlePlace
             if (arc.target === dfgOriginal) {
+
+                // find the pred-Place of Original-DFG
+                workingGraph.places.forEach((place) => {
+                    if (place === arc.source) {
+                        predPlace = place;
+                    }
+                })
+
                 const newArc1 = {source: arc.source, target: dfg1};
                 const newArc2 = {source: dfg1, target: middlePlace}
                 return [newArc1, newArc2];
@@ -217,18 +228,18 @@ export class ProcessGraphService {
             }
             return [arc];
         });
-        //macht dfgs optional (siehe skript)
-        //TODO: Rausnehmen da über Fallthrough behandlung
-        /*
-        this.addLogEntry('creating silent transitions')
-        if (isOptional1) {
-            this.makeOptional(dfg1, workingGraph)
-        }
-        if (isOptional2) {
-            this.makeOptional(dfg2, workingGraph)
-        }
-        */
+
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
+        middlePlace.x = dfgOriginal.x
+        middlePlace.y = dfgOriginal.y
+        dfg1.x = dfgOriginal.x - dfgOriginal.width / 2
+        dfg1.y = dfgOriginal.y
+        dfg2.x = dfgOriginal.x + dfgOriginal.width / 2
+        dfg2.y = dfgOriginal.y
+
+        //exchange positions if it's necessary
+        this.exchangePositionsOfNodesIfNeeded(dfg1, dfg2, predPlace!);
+
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
         this.graphSignal.set(workingGraph);
@@ -239,14 +250,39 @@ export class ProcessGraphService {
     //Parallel
 
     private incorporateParallel(dfgOriginal: DfgNode,                    // der dfg der ausgetauscht werden soll
-                                dfg1: DfgNode, //isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
-                                dfg2: DfgNode, //isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
+                                dfg1: DfgNode,    // dfg1 mit dem ausgetauscht wird,
+                                dfg2: DfgNode,     // dfg1 mit dem ausgetauscht wird,
                                 workingGraph: ProcessGraph) {
+        // set x/y of new dfgs
+        dfg1.x = dfgOriginal.x
+        dfg1.y = dfgOriginal.y + dfgOriginal.height / 2
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y - dfgOriginal.height / 2
+
+        //finde place vor dfgOriginal
+        let predPlace: Node;
+        workingGraph.arcs.forEach((arc) => {
+            if (arc.target === dfgOriginal) {
+                // find the pred-Place of Original-DFG
+                workingGraph.places.forEach((place) => {
+                    if (place === arc.source) {
+                        predPlace = place;
+                    }
+                })
+            }
+        })
+
+
         //Erstelle neue Places
-        const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
-        workingGraph.places.add(firstPlaceNew1);
-        const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
-        workingGraph.places.add(lastPlaceNew1);
+        const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        firstPlaceNew2.x = dfg2.x - dfgOriginal.width / 2;
+        firstPlaceNew2.y = dfg2.y;
+        workingGraph.places.add(firstPlaceNew2);
+        const lastPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        lastPlaceNew2.x = dfg2.x + dfgOriginal.width / 2;
+        lastPlaceNew2.y = dfg2.y;
+        workingGraph.places.add(lastPlaceNew2);
+        this.exchangePositionsOfNodesIfNeeded(firstPlaceNew2, lastPlaceNew2, predPlace!)
         // Erstelle boolen um zu checken ob Tau transitionen nötig
         let firstTauNeeded = true;
         let lastTauNeeded = true;
@@ -257,30 +293,48 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition davor benötigt
                 if (arc.target === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.source as Node, 2).underThreshold) {
                     firstTauNeeded = false;
+                    let x = arc.source as Node
+                    x.y=dfg1.y
+                    x.x = dfgOriginal.x - dfgOriginal.width / 2
                     //Finde transition VOR place
                     let transitionOrDFGbefore = this.findSingularSourceForTarget(workingGraph.arcs, arc.source);
                     // tausche dfg original mit dfg1
                     return [{source: arc.source, target: dfg1},
-                        {source: transitionOrDFGbefore, target: firstPlaceNew1},
-                        {source: firstPlaceNew1, target: dfg2}];
+                        {source: transitionOrDFGbefore, target: firstPlaceNew2},
+                        {source: firstPlaceNew2, target: dfg2}];
                 }
                 //geh alle arcs durch und suche die stelle nach dem dfgOriginal // checke ob stelle nur mit einer transition verbunden ist und nur 2 kanten hat
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
                 if (arc.source === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.target as Node, 2).underThreshold) {
                     lastTauNeeded = false;
+                   let x = arc.target as Node
+                    x.y = dfg1.y
+                    x.x = dfg1.x + dfgOriginal.width / 2
                     //Finde transition NACH place
                     let transitionOrDFGafter = this.findTargetForSource(workingGraph.arcs, arc.target);
                     return [{source: dfg1, target: arc.target},
-                        {source: dfg2, target: lastPlaceNew1},
-                        {source: lastPlaceNew1, target: transitionOrDFGafter}];
+                        {source: dfg2, target: lastPlaceNew2},
+                        {source: lastPlaceNew2, target: transitionOrDFGafter}];
                 }
                 return arc
             });
         }
         if (firstTauNeeded) {
-            const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
-            workingGraph.places.add(firstPlaceNew2);
+            const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+            firstPlaceNew1.y = dfg1.y;
+            let transitionNeedsChange = false;
+            if(!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)){
+                firstPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+                transitionNeedsChange = true;
+            }
+            workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
             const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
+            firstTauTransition.y= dfgOriginal.y
+            if(transitionNeedsChange){
+                firstTauTransition.x += 2*PhysicsHelper.placeDiameter
+            }
             workingGraph.transitions.add(firstTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //geh alle arcs durch und suche die stelle vor dem dfgOriginal
@@ -298,9 +352,21 @@ export class ProcessGraphService {
             workingGraph.arcs.push({source: firstPlaceNew2, target: dfg2});
         }
         if (lastTauNeeded) {
-            const lastPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
-            workingGraph.places.add(lastPlaceNew2);
+            const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+            lastPlaceNew1.y = dfg1.y;
+            let transitionNeedsChange = false;
+            if(this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)){
+                lastPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+                transitionNeedsChange = true;
+            }
+            workingGraph.places.add(lastPlaceNew1);
             const lastTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
+            lastTauTransition.y = dfgOriginal.y
+            if(transitionNeedsChange){
+                lastTauTransition.x -= 2*PhysicsHelper.placeDiameter
+            }
             workingGraph.transitions.add(lastTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                 //suche stelle nach dem dfgOriginal
@@ -318,16 +384,6 @@ export class ProcessGraphService {
             workingGraph.arcs.push({source: dfg1, target: lastPlaceNew1});
             workingGraph.arcs.push({source: dfg2, target: lastPlaceNew2});
         }
-        //TODO: Gehört  in fall-through behandlung
-        /*
-        if (isOptional1) {
-            this.makeOptional(dfg1, workingGraph)
-        }
-        if (isOptional2) {
-            this.makeOptional(dfg2, workingGraph)
-        }
-
-         */
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg1, workingGraph)
         this.checkAndTransformDFGtoBasecase(dfg2, workingGraph)
@@ -342,12 +398,29 @@ export class ProcessGraphService {
                             dfg1: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                             dfg2: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                             workingGraph: ProcessGraph) {
+        dfg1.x = dfgOriginal.x;
+        dfg1.y = dfgOriginal.y + dfgOriginal.height
+        dfg2.x = dfgOriginal.x
+        dfg2.y = dfgOriginal.y -  dfgOriginal.height;
 
+        //finde place vor dfgOriginal
+        let predPlace: Node;
+        workingGraph.arcs.forEach((arc) => {
+            if (arc.target === dfgOriginal) {
+                // find the pred-Place of Original-DFG
+                workingGraph.places.forEach((place) => {
+                    if (place === arc.source) {
+                        predPlace = place;
+                    }
+                })
+            }
+        })
         //check if original dfg has just one source-place and source place has just one outgoing edge
         if (this.occursInThisManyArcsAsTarget(workingGraph.arcs, dfgOriginal, 1).count === 1) {
             let sourcePlace = this.findSingularSourceForTarget(workingGraph.arcs, dfgOriginal)
             let sourceOccurs = this.occursInThisManyArcsAsSource(workingGraph.arcs, sourcePlace, 1)
             let placeHasJustOneFollower: boolean = sourceOccurs.count === 1 && sourceOccurs.underThreshold
+            // then there is no tau needed..
             if (placeHasJustOneFollower) {
                 workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
                     // stelle nach dfgOriginal gefunden
@@ -372,8 +445,20 @@ export class ProcessGraphService {
         }
         // Falls eine Tau transition benötigt wird...
         const newPlace: Node = this.createPlace(this.generateUniqueId('place'));
+        newPlace.x = dfg1.x-dfgOriginal.width/2-PhysicsHelper.placeDiameter;
+        newPlace.y = dfg1.y;
+        let transitionNeedsChange = false;
+        if(!this.checkIfNodeCloser(newPlace, dfgOriginal, predPlace!)){
+            newPlace.x = dfg1.x + dfgOriginal.width/2 + PhysicsHelper.placeDiameter;
+            transitionNeedsChange = true;
+        }
         workingGraph.places.add(newPlace);
         const newTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        newTransition.x = newPlace.x - PhysicsHelper.placeDiameter
+        newTransition.y = newPlace.y
+        if(transitionNeedsChange){
+            newTransition.x = newPlace.x + PhysicsHelper.placeDiameter
+        }
         workingGraph.transitions.add(newTransition);
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // stelle nach dfgOriginal gefunden
@@ -404,27 +489,6 @@ export class ProcessGraphService {
     /*==========================================================BaseCase============================================================*/
     /*==============================================================================================================================*/
 
-    //__Methode um mehrere DFG gleichzeitig zu wandeln
-    /*
-    private transformMultipleBaseCases(dfgSet: Set<DirectlyFollows>): [boolean, Set<DirectlyFollows>] {
-        let workingGraph = this.graphSignal()!;
-        let invalidDFGs = new Set<DirectlyFollows>()
-        for (let dfg of dfgSet) {
-            if (!this.isBaseCase(dfg)) {
-                invalidDFGs.add(dfg);
-            }
-        }
-        if (invalidDFGs.size > 0) {
-            return [false, invalidDFGs]
-        }
-        for (let dfg of dfgSet) {
-            this.transformBaseCaseToTransition(workingGraph, dfg)
-        }
-        this.graphSignal.set(workingGraph);
-        return [true, invalidDFGs]
-    }
-    */
-
     private checkAndTransformDFGtoBasecase(dfg: DfgNode, workingGraph: ProcessGraph): void {
         if (this.isBaseCase(dfg)) {
             this.transformBaseCaseToTransition(workingGraph, dfg)
@@ -441,7 +505,16 @@ export class ProcessGraphService {
     private transformBaseCaseToTransition(workingGraph: ProcessGraph, dfgNode: DfgNode) {
         let dfg = dfgNode.dfg;
         let node: string = dfg.getNodes().values().next().value
-        const newTransition = this.createTransition(node);
+        let newTransition: Node;
+        if (node === 'empty_trace') {
+            newTransition = this.createTransition(this.generateUniqueId('TAU'));
+            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to TAU-Transition`)
+        } else {
+            newTransition = this.createTransition(node);
+            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to Transition`)
+        }
+        newTransition.x = dfgNode.x
+        newTransition.y = dfgNode.y
         workingGraph.transitions.add(newTransition)
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             // eig. unnötig da davor schon check arc size..
@@ -456,8 +529,7 @@ export class ProcessGraphService {
             }
             return [arc]
         });
-        workingGraph.dfgSet.delete(dfgNode)
-
+        workingGraph.dfgSet.delete(dfgNode);
     }
 
     /*==============================================================================================================================*/
@@ -473,63 +545,71 @@ export class ProcessGraphService {
         switch (fallthroughType) {
             /*=====================================================SPT====================================================*/
             case FallthroughType.SPT: {
-                let doneSomething = false;
                 // Check for Empty trace
-                this.addLogEntry('Check for empty trace')
-                if (dfgNode.dfg.eventLog.some(trace => trace.length === 0)) {
-                    this.addLogEntry('empty trace found, creating TAU-Transition')
+                this.addLogEntry('Check for Repeating Pattern')
+                let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
+               //
+                let repeatingPattern : boolean
+                if (emptyTrace){
+                    dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => !trace.includes('empty_trace'));
+                    repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
+                } else {
+                    repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
+                }
+                if (!repeatingPattern) {
+                    return {success: false, comment: 'No repeating Pattern found'}
+                }
+                this.addLogEntry('found')
+                if (emptyTrace) {
+                    this.addLogEntry('empty trace found, solving per Tau-Transition')
                     this.makeOptional(dfgNode, workingGraph)
                     //lösche empty trace
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace.length > 0);
-                    doneSomething = true;
                 } else {
                     this.addLogEntry('No empty trace found')
                 }
-                // check for repeating pattern
-                this.addLogEntry('Check for repeating pattern')
-                if (dfgNode.dfg.isPatternExclusivelyRepeated()) {
-                    // Passe eventlog sowie Arcs an
-                    let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
-                    dfgNode.dfg.setEventLog([repeatedPattern])
-                    dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
-                        !(arc.target === repeatedPattern[0] && arc.source === repeatedPattern[repeatedPattern.length - 1])
-                    );
-                    this.addLogEntry('repeating pattern found, solving per TAU-Transition')
-                    if (doneSomething) { //DFG ist im REDO Part
-                        // Drehe Kanten um
-                        this.addLogEntry('DFG part of REDO-Part')
-                        workingGraph.arcs.forEach(arc => {
-                            if (arc.target === dfgNode || arc.source === dfgNode) {
-                                [arc.source, arc.target] = [arc.target, arc.source]
-                            }
-                        })
-                    } else { //DFG ist im DO Part
-                        // Füge Tau Transition als REDO ein
-                        this.addLogEntry('DFG part of DO-Part')
-                        const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
-                        workingGraph.transitions.add(tauTransition);
-                        workingGraph.arcs.forEach(arc => {
-                            if (arc.target === dfgNode) {
-                                workingGraph.arcs.push({source: tauTransition, target: arc.source})
-                            }
-                            if (arc.source === dfgNode) {
-                                workingGraph.arcs.push({source: arc.target, target: tauTransition})
-                            }
-                        })
-                    }
-                    doneSomething = true
-                } else {
-                    this.addLogEntry('No repeating pattern found')
-                }
-                if (doneSomething) {
-                    this.addLogEntry('Solved per TAU-Transition')
-                    this.graphSignal.set({
-                        ...workingGraph
+
+                // Passe eventlog sowie Arcs an
+                let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
+                let dfgNew= new DirectlyFollows();
+                dfgNew.setDFGfromStringArray([repeatedPattern]);
+                dfgNode.dfg = dfgNew;
+                dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
+                    !(arc.target === repeatedPattern[0] && arc.source === repeatedPattern[repeatedPattern.length - 1])
+                );
+                if (emptyTrace) { //DFG ist im REDO Part
+                    // Drehe Kanten um
+                    dfgNode.y = dfgNode.y - dfgNode.height
+                    this.addLogEntry('DFG part of REDO-Part')
+                    workingGraph.arcs.forEach(arc => {
+                        if (arc.target === dfgNode || arc.source === dfgNode) {
+                            [arc.source, arc.target] = [arc.target, arc.source]
+                        }
                     })
-                    return {success: true, comment: 'Solved per TAU-Transition'}
-                } else {
-                    return {success: false, comment: 'Not solvable by TAU-Transition'}
+                } else { //DFG ist im DO Part
+                    // Füge Tau Transition als REDO ein
+                    this.addLogEntry('DFG part of DO-Part')
+                    const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
+                    tauTransition.x = dfgNode.x
+                    tauTransition.y = dfgNode.y-dfgNode.height
+                    dfgNode.y = dfgNode.y + dfgNode.height
+                    workingGraph.transitions.add(tauTransition);
+                    workingGraph.arcs.forEach(arc => {
+                        if (arc.target === dfgNode) {
+                            workingGraph.arcs.push({source: tauTransition, target: arc.source})
+                        }
+                        if (arc.source === dfgNode) {
+                            workingGraph.arcs.push({source: arc.target, target: tauTransition})
+                        }
+                    })
                 }
+                this.addLogEntry('Solved per TAU-Transition')
+                this.checkAndTransformDFGtoBasecase(dfgNode, workingGraph)
+                this.graphSignal.set({
+                    ...workingGraph
+                })
+                return {success: true, comment: 'Solved per TAU-Transition'}
+
             }
             /*=====================================================AOPT====================================================*/
             case FallthroughType.AOPT: {
@@ -542,36 +622,27 @@ export class ProcessGraphService {
                         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
                         if (isFallthrough[0]) {
                             this.addLogEntry('Fallthrough detected!')
+                            this.addLogEntry(isFallthrough[1])
                             this.addLogEntry('Check for Activity Once Per Trace')
                             const node = nodeSet.values().next().value;
                             if (this.checkAOPTforOne(node, dfgNode.dfg.eventLog)) {
                                 this.addLogEntry('Activity Once Per Trace possible')
                                 //lösche node aus eventlog
-                                let eventlogWithoutAopt = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
-                                let eventlogWithoutAoptTemp: string[][] = [];
-                                let emptytraceExists = false;
-                                for (let trace of eventlogWithoutAopt) {
-                                    if (trace.length === 0) {
-                                        emptytraceExists = true; // Leeren Trace speichern
-                                    } else {
-                                        ValidationHelper.pushIfTraceNotInEventlog(eventlogWithoutAoptTemp, trace)
-                                        // Nicht-leeren Trace speichern falls noch nicht vorhanden
-                                    }
-                                }
+                                let eventlogWithoutAopt: string[][] = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
+                                eventlogWithoutAopt = eventlogWithoutAopt.map(trace =>
+                                    trace.length === 0 ? ['empty_trace'] : trace
+                                );
                                 // erstelle neue DFGs und inkorporiere sie ins petrinetz
                                 const dfg1 = new DirectlyFollows();
-                                dfg1.setDFGfromStringArray(eventlogWithoutAoptTemp)
-                                if (emptytraceExists) {
-                                    dfg1.eventLog.push([])
-                                }
+                                dfg1.setDFGfromStringArray(eventlogWithoutAopt)
                                 const newDfg1 = this.createEventlog(dfg1)
                                 const dfg2 = new DirectlyFollows();
                                 dfg2.setDFGfromStringArray([[node]])
                                 const newDfg2 = this.createEventlog(dfg2)
-                                this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph)
+                                this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph!)
                                 this.addLogEntry('Activity Once Per Trace executed')
                                 this.graphSignal.set({
-                                    ...workingGraph
+                                    ...workingGraph!
                                 })
                                 return {success: true, comment: 'Activity Once Per Trace executed'}
                             } else {
@@ -582,7 +653,7 @@ export class ProcessGraphService {
                             return {success: isFallthrough[0], comment: isFallthrough[1]};
                         }
                     } else {
-                        return sptResult
+                        return {success: false, comment: 'Repeating Pattern found'}
                     }
                 } else {
                     return {success: false, comment: 'You need to select exactly 1 node'}
@@ -606,10 +677,16 @@ export class ProcessGraphService {
                         } else {
                             this.addLogEntry('No AOPT possible')
                             this.addLogEntry('Executing Flower-Model...')
-                            let tempTransitionSet: Set<Node> = new Set()
+                            let tempTransitionArray:Node[] = [];
+                            let nodeAmount = dfgNode.dfg.getNodes().size
+                            let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter*2,nodeAmount)
                             for (let node of dfgNode.dfg.getNodes()) {
                                 let newTransition = this.createTransition(node);
-                                tempTransitionSet.add(newTransition)
+                                tempTransitionArray.push(newTransition)
+                            }
+                            for (let i=0; i<tempTransitionArray.length; i++) {
+                                tempTransitionArray[i].x=circularPositions[i].x
+                                tempTransitionArray[i].y=circularPositions[i].y
                             }
                             let counter = 0;
                             let placeBefore: Node | undefined;
@@ -638,6 +715,8 @@ export class ProcessGraphService {
                             }
                             //verschmelze Stelle davor und danach, falls counter auf 2 steht
                             if (counter === 2 && placeBefore && placeAfter) {
+                                placeBefore.x = dfgNode.x
+                                placeBefore.y = dfgNode.y
                                 workingGraph.arcs = workingGraph.arcs
                                     //lösche original DFG aus arcs
                                     .filter(arc => arc.source !== dfgNode && arc.target !== dfgNode)
@@ -652,7 +731,7 @@ export class ProcessGraphService {
                                     })
                                 workingGraph?.places.delete(placeAfter)
                                 workingGraph?.dfgSet.delete(dfgNode)
-                                for (let transition of tempTransitionSet) {
+                                for (let transition of tempTransitionArray) {
                                     workingGraph?.transitions.add(transition)
                                     workingGraph?.arcs.push({source: placeBefore, target: transition})
                                     workingGraph?.arcs.push({source: transition, target: placeBefore})
@@ -660,10 +739,16 @@ export class ProcessGraphService {
                             } else {
                                 //Löse via TAU
                                 let tauTransitionBefore: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                tauTransitionBefore.x = dfgNode.x-PhysicsHelper.nodeDiameter*3
+                                tauTransitionBefore.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionBefore)
                                 let middlePlace: Node = this.createPlace(this.generateUniqueId('place'))
+                                middlePlace.x = dfgNode.x
+                                middlePlace.y = dfgNode.y
                                 workingGraph?.places.add(middlePlace)
                                 let tauTransitionAfter: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                tauTransitionAfter.x = dfgNode.x+PhysicsHelper.nodeDiameter*3
+                                tauTransitionAfter.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionAfter)
                                 workingGraph?.dfgSet.delete(dfgNode)
                                 workingGraph.arcs = workingGraph.arcs
@@ -679,11 +764,23 @@ export class ProcessGraphService {
                                 workingGraph?.arcs.push({source: tauTransitionBefore, target: middlePlace})
                                 workingGraph?.arcs.push({source: middlePlace, target: tauTransitionAfter})
                                 workingGraph?.dfgSet.delete(dfgNode)
-                                for (let transition of tempTransitionSet) {
+                                for (let transition of tempTransitionArray) {
                                     workingGraph?.transitions.add(transition)
                                     workingGraph?.arcs.push({source: middlePlace, target: transition})
                                     workingGraph?.arcs.push({source: transition, target: middlePlace})
                                 }
+
+                                let predNode: Node;
+                                workingGraph.arcs.forEach(arc => {
+                                    // find the pred-Place
+                                    workingGraph.places.forEach((place) => {
+                                        if (tauTransitionBefore === arc.target && place === arc.source) {
+                                            predNode = place;
+                                        }
+                                    })
+                                })
+                                // exchange positions if it's necessary
+                                this.exchangePositionsOfNodesIfNeeded(tauTransitionBefore, tauTransitionAfter, predNode!);
                             }
                             this.graphSignal.set({
                                 ...workingGraph
@@ -694,7 +791,7 @@ export class ProcessGraphService {
                         return {success: isFallthrough[0], comment: isFallthrough[1]};
                     }
                 } else {
-                    return sptResult
+                    return {success: false, comment: sptResult.comment}
                 }
             }
             default:
@@ -704,19 +801,9 @@ export class ProcessGraphService {
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
-        this.addLogEntry('Check for empty trace')
-        if (dfg.eventLog.some(trace => trace.length === 0)) {
-            this.addLogEntry('empty trace found, AOPT not possible')
-            return {success: false, comment: 'AOPT not possible'}
-        }
-        this.addLogEntry('ok')
-        // check for repeating pattern
-        this.addLogEntry('Check for exclusively repeating pattern')
-        if (dfg.isPatternExclusivelyRepeated()) {
-            this.addLogEntry('exclusively repeating pattern found, AOPT not possible')
-            return {success: false, comment: 'AOPT not possible'}
-        }
-        return {success: true, comment: 'ok'}
+        this.addLogEntry('Check for empty trace in combination with repeating pattern')
+        let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
+        return {success: result[0], comment: result[1]}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt
@@ -762,6 +849,8 @@ export class ProcessGraphService {
     // macht einen DFG durch hinzufügen einer TAU-Transition optional
     private makeOptional(dfg: DfgNode, workingGraph: ProcessGraph) {
         const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        tauTransition.x=dfg.x
+        tauTransition.y=dfg.y +dfg.height
         workingGraph.transitions.add(tauTransition);
         workingGraph.arcs.forEach(arc => {
             if (arc.source === dfg) {
@@ -771,16 +860,6 @@ export class ProcessGraphService {
                 workingGraph.arcs.push({source: arc.source, target: tauTransition});
             }
         });
-    }
-
-    // checks via eventlog empty trace if dfg is optional
-    // if yes return true and delete empty traces from eventlog
-    private isItOptional(dfg: DirectlyFollows): boolean {
-        if (dfg.eventLog.some(trace => trace.length === 0)) {
-            dfg.eventLog = dfg.eventLog.filter(trace => trace.length > 0);
-            return true
-        }
-        return false;
     }
 
     //schaut wie oft ein node in arcs vorkommt und somit, wie viele kanten mit einem node verbunden sind.
@@ -941,6 +1020,48 @@ export class ProcessGraphService {
             width: PhysicsHelper.eventLogWidth,
         };
     }
+    private generateCircularPositions(x: number, y: number, distance: number, n: number): { x: number; y: number }[] {
+        const positions: { x: number; y: number }[] = [];
+        const angleStep = (2 * Math.PI) / n;
 
+        for (let i = 0; i < n; i++) {
+            const angle = i * angleStep;
+            const newX = x + distance * Math.cos(angle);
+            const newY = y + distance * Math.sin(angle);
+            positions.push({ x: newX, y: newY });
+        }
+
+        return positions;
+    }
+
+    // helps to locate the transitions or dfgs after sequence-cut in better positions
+    private exchangePositionsOfNodesIfNeeded(node1: Node, node2: Node, predPlace: Node) {
+        // check, if the node2 (which comes after node1, middlePlace) is closer to predPlace than node1
+        const dist1 = this.calculateSquaredEuclideanDistance(node1.x, node1.y, predPlace.x, predPlace.y);
+        const dist2 = this.calculateSquaredEuclideanDistance(node2.x, node2.y, predPlace.x, predPlace.y);
+        if (dist2 <= dist1) {
+            // switch positions of two nodes
+            const tempX = node1.x
+            const tempY = node1.y
+            node1.x = node2.x
+            node1.y = node2.y
+            node2.x = tempX;
+            node2.y = tempY;
+        }
+    }
+
+    // help function to calculate squared euclidean distance
+    private calculateSquaredEuclideanDistance(x1: number, y1: number, x2: number, y2: number): number {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        return dx * dx + dy * dy;
+    }
+
+    private checkIfNodeCloser(nodeCloser: Node, nodeFurther: Node, predPlace:Node){
+        const dist1 = this.calculateSquaredEuclideanDistance(nodeCloser.x, nodeCloser.y, predPlace.x, predPlace.y);
+        const dist2 = this.calculateSquaredEuclideanDistance(nodeFurther.x, nodeFurther.y, predPlace.x, predPlace.y);
+        return dist1 <= dist2;
+
+    }
 
 }

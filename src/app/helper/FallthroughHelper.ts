@@ -1,4 +1,6 @@
 import {DirectlyFollows} from "../classes/directly-follows";
+import {main} from "@angular/compiler-cli/src/main";
+import {ValidationHelper} from "./ValidationHelper";
 
 export class FallthroughHelper {
 
@@ -16,6 +18,12 @@ export class FallthroughHelper {
             } else if (dfg.getArcs().length > 2) {
                 return [false, 'Loop Cut of length 1 possible'];
             }
+        }
+        //TODO: passe alles für empty trace an
+        // Teste auf empty_string
+        let isRepWithTau = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
+        if (!isRepWithTau[0]) {
+            return isRepWithTau
         }
 
         const nodesAsArray = Array.from(dfg.getNodes()).sort();
@@ -125,26 +133,33 @@ export class FallthroughHelper {
 
         let allWCCsValid = true;
         for (const wcc of wccs) {
-            const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node));
-            const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node));
-
-            if (!containsPlayNode || !containsStopNode) {
-                allWCCsValid = false;
-                break; // Exit the loop early if a WCC is invalid
+            /* const containsPlayNode = wcc.some(node => dfg.getPlayNodes()?.has(node))
+             const containsStopNode = wcc.some(node => dfg.getStopNodes()?.has(node))
+             if (!containsPlayNode || !containsStopNode){
+                 allWCCsValid = false
+                 break; // Exit the loop early if WCC is invalid
+             }
+             */
+            for (let node of wcc) {
+                if (!dfg.existsFullPathOverNode(node, new Set(wcc))) {
+                    allWCCsValid = false;
+                    break;
+                }
             }
+
         }
         return allWCCsValid;
     }
 
-    // TODO: Loop-Cut detection logic
     public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);
         const stopNodes = Array.from(dfg.getStopNodes() ?? []);
-        let workingMatrix: string[][] = []
+        // erstelle eine kopie von gootprintmatrix, in der die play/stopnodes keine incoming or outgoing edges haben
+        let workingMatrix: string[][]
         workingMatrix = this.removeIncomingEdges(mapping, footprintMatrix, playNodes)
         workingMatrix = this.removeOutgoingEdges(mapping, workingMatrix, stopNodes)
-
         let wCCs = this.computeWCCsFromFootprintMatrix(nodesAsArray, workingMatrix);
         let mainWCC: string[] = []
 
@@ -158,8 +173,10 @@ export class FallthroughHelper {
                 i--;
             }
         }
+
         const amountOfWCCs = wCCs.length;
         // nun sollten alle WCCs mit play/stopNodes in der mainWCC sein, in WCCs sollten sämtliche eventuelle redo-parts sein
+
         if (amountOfWCCs === 0) {
             return false;
         }
@@ -171,12 +188,14 @@ export class FallthroughHelper {
             startNodes: [] as string[], // Array für die Startknoten
             stopNodes: [] as string[],  // Array für die Stopknoten
         };
-        mainComponent.FPM = this.removeIrrelevantEdges(workingMatrix, mainWCC, mapping);
+        mainComponent.FPM = this.removeIrrelevantEdges(footprintMatrix, mainWCC, mapping);
         mainComponent.nodes = mainWCC;
-        const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(mainComponent.FPM, mainWCC, mapping, nodesAsArray)
+        const startAndStopNodesOfmainFPM = this.findStartAndStopNodes(dfg, mainWCC)
 
         mainComponent.startNodes = startAndStopNodesOfmainFPM.startNodes;
+
         mainComponent.stopNodes = startAndStopNodesOfmainFPM.stopNodes;
+
 
         const wccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
         for (let i = 0; i < wCCs.length; i++) {
@@ -186,11 +205,12 @@ export class FallthroughHelper {
                 startNodes: [] as string[],
                 stopNodes: [] as string[],
             };
-            const startStopNodes = this.findStartAndStopNodes(wCC.FPM, wCC.nodes, mapping, nodesAsArray)
+            const startStopNodes = this.findStartAndStopNodes(dfg, wCCs[i])
             wCC.startNodes = startStopNodes.startNodes;
             wCC.stopNodes = startStopNodes.stopNodes;
             wccArray.push(wCC);
         }
+
         // nun haben wir Footprint Matrizen für die main-component sowie alle redo-components und die start / stopknoten der components...
         // nun müssen wir mittels arcs überprüfen ob die ausgehenden und eingehenden kanten richtig verlaufen..
 
@@ -204,7 +224,6 @@ export class FallthroughHelper {
         for (let wcc of wccArray) {
             connectingArcs = connectingArcs.filter(arc => {
                 // Kantenverbindungen innerhalb werden rausgefiltert
-
                 return !(wcc.nodes.includes(arc.source as string) && wcc.nodes.includes(arc.target as string))
             })
         }
@@ -301,6 +320,7 @@ export class FallthroughHelper {
                     footprintMatrix[i][j] = '#';
                 }
             });
+
         });
         return footprintMatrix;
     }
@@ -324,7 +344,7 @@ export class FallthroughHelper {
                     case '#':
                         inverseFootprintMatrix[i][j] = '||';
                         break;
-                    default: // TODO: Muss noch schauen, ob es nötig ist
+                    default:
                         inverseFootprintMatrix[i][j] = footprintMatrix[i][j]; // Copy any other values unchanged
                 }
             }
@@ -397,15 +417,15 @@ export class FallthroughHelper {
         // Erstelle eine Kopie der Matrix
         const updatedMatrix = footprintMatrix.map(row => [...row]);
         // Durchlaufe alle PlayNodes
-        playNodes.forEach(node => {
+        const length = footprintMatrix.length;
+        for (let node of playNodes) {
             // Hole den Index aus dem Mapping
             const index = nodesIndexMap[node];
             if (index === undefined) {
                 console.log(`Node ${node} not found in nodesIndexMap`);
-                return;
             }
             // gehe Spalte von playNode durch
-            for (let rowIndex = 0; rowIndex < updatedMatrix.length; rowIndex++) {
+            for (let rowIndex = 0; rowIndex < length; rowIndex++) {
                 //ändere nicht die Diagonale
                 if (rowIndex !== index) {
                     if (updatedMatrix[rowIndex][index] === '→') {
@@ -416,7 +436,7 @@ export class FallthroughHelper {
                 }
             }
             // gehe Zeile von playNode durch
-            for (let colIndex = 0; colIndex < updatedMatrix[index].length; colIndex++) {
+            for (let colIndex = 0; colIndex < length; colIndex++) {
                 // wieder nicht Diagonale ändern
                 if (colIndex !== index) {
                     if (updatedMatrix[index][colIndex] === '←') {
@@ -426,7 +446,7 @@ export class FallthroughHelper {
                     }
                 }
             }
-        });
+        }
         return updatedMatrix;
     }
 
@@ -485,6 +505,7 @@ export class FallthroughHelper {
                 invalidNodesIndexes.push(nodesIndexMap[node]);
             }
         });
+
         // ersetze alles in den unnötigen Zeilen durch #
         for (let i of invalidNodesIndexes) {
             for (let j = 0; j < updatedMatrix[i].length; j++) {
@@ -497,51 +518,50 @@ export class FallthroughHelper {
         return updatedMatrix;
     }
 
+    //For debugging..
+    public static print2DArray(arr: string[][], nodesIndexMap: Record<string, number>): void {
+        // Erstelle ein Mapping von Index zu Name (für Zeilen und Spalten)
+        const indexToNode = Object.keys(nodesIndexMap).reduce<Record<number, string>>((acc, node) => {
+            acc[nodesIndexMap[node]] = node;
+            return acc;
+        }, {});
+
+        // Ausgabe der Spaltennamen als Kopfzeile
+        const header = [''] // Leeres Feld oben links (für den Fall, dass Zeilen- und Spaltennamen die gleiche Indexstruktur haben)
+            .concat(Object.values(nodesIndexMap).map(index => indexToNode[index]));
+        console.log(header.join(' | '));
+
+        // Ausgabe jeder Zeile mit Zeilenname
+        for (let rowIndex = 0; rowIndex < arr.length; rowIndex++) {
+            const row = arr[rowIndex];
+            // Ausgabe des Zeilennamens und der jeweiligen Zeilenwerte
+            const rowOutput = [indexToNode[rowIndex]].concat(row); // Füge Zeilenname hinzu
+            console.log(rowOutput.join(' | '));
+        }
+    }
+
     public static findStartAndStopNodes(
-        footprintMatrix: string[][],
+        dfg: DirectlyFollows,
         validNodes: string[],
-        nodesIndexMap: Record<string, number>,
-        nodesAsArray: string[]
     ): { startNodes: string[], stopNodes: string[] } {
         const startNodes: string[] = [];
         const stopNodes: string[] = [];
-        // erstelle Array der validen Nodes
-        const nodesIndexes: number[] = [];
-        Object.keys(nodesIndexMap).forEach(node => {
-            if (validNodes.includes(node)) {
-                nodesIndexes.push(nodesIndexMap[node]);
-            }
-        });
-        for (let i of nodesIndexes) {
-            let isStartNode = true;
-            let isStopNode = true;
-            for (let j of nodesIndexes) {
-                if (j !== i) {
-                    //gehe zeile entlang
-                    if (footprintMatrix[j][i] === '→' || footprintMatrix[j][i] === '||') {
-                        isStartNode = false;
-                    }
-                    if (footprintMatrix[j][i] === '←' || footprintMatrix[j][i] === '||') {
-                        isStopNode = false;
-                    }
-                }
-            }
-            if (isStartNode) {
-                startNodes.push(nodesAsArray[i])
-            }
-            if (isStopNode) {
-                stopNodes.push(nodesAsArray[i])
+        let arcs = dfg.getArcs();
+        let stopArcs = arcs.filter(arc => validNodes.includes(arc.source as string) && !validNodes.includes(arc.target as string));
+        let startArcs = arcs.filter(arc => validNodes.includes(arc.target as string) && !validNodes.includes(arc.source as string));
+        for (let arc of startArcs) {
+            if (!startNodes.includes(arc.target as string)){
+                startNodes.push(arc.target as string);
             }
         }
-        return {startNodes, stopNodes};
-    }
-
-
-    //For debugging..
-    public static print2DArray(arr: string[][]): void {
-        for (let row of arr) {
-            console.log(row.join(' | ')); // Verbinde die Elemente der Zeile mit einem Trennzeichen (z.B. '|')
+        for (let arc of stopArcs) {
+            if (!stopNodes.includes(arc.source as string)) {
+                stopNodes.push(arc.source as string);
+            }
         }
+
+
+        return {startNodes: startNodes, stopNodes: stopNodes}
     }
 }
 

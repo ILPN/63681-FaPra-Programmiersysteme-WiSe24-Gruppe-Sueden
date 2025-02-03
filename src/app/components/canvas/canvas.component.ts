@@ -261,13 +261,16 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
             if (!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
             this.edges.push({source: sourceNode, target: targetNode, bidirectional: false})
         }
-
+        //TODO: Im frontend bei der anzeige tau anzeigen lassen
+/*
         //Replace Tau Node Names
         for (let node of this.nodes) {
             if (node.name.startsWith("TAU_")) {
                 node.name = "τ"
             }
         }
+
+ */
 
     }
 
@@ -284,5 +287,12 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.edges = []
         this.nodes = []
         this.transitions = []
+    }
+    get hasUndefinedSelected(): boolean {
+        return this.selectionService.selectedNodes().some(node => node.name === undefined);
+    }
+
+    get undefinedNodes(): Node[] {
+        return this.selectionService.selectedNodes().filter(node => node.name === undefined);
     }
 }

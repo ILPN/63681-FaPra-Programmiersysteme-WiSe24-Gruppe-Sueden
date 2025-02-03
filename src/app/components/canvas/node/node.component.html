@@ -24,6 +24,10 @@
         fill="black"
         class="select-none"
     >
-        {{ _node.name }}
+        @if(_node.name.startsWith('TAU_')){
+            {{ 'τ' }}
+        } @else {
+            {{ _node.name  }}
+        }
     </svg:text>
 </svg:g>

@@ -10,7 +10,6 @@ export class DirectlyFollows {
     nodes: Set<string>
     arcs: Arc[]
 
-
     //TODO: Arcs und Nodes aktualisieren
     constructor() {
         this.id = 0;
