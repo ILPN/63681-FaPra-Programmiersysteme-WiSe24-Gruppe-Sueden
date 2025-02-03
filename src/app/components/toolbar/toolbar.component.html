@@ -23,7 +23,9 @@
                         <span class="toolbox-section-label">Cut</span>
                         @for (type of CutType | keyvalue: originalOrder; track type.value) {
                             <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
-                                {{ type.value | titlecase }}
+                                @if (type.value === 'xor'){
+                                    XOR
+                                }@else{{{ type.value | titlecase }}}
                             </span>
                         }
                     </div>
@@ -34,10 +36,10 @@
 
                         <span mat-ripple
                               class="toolbox-section-value"
-                              matTooltip="Solve Per Tau"
+                              matTooltip="Repeating Pattern per Tau Do/Redo"
                               [class.selected]="toolbarService.fallthroughType() === Fallthrough.SPT"
                               (click)="toolbarService.fallthroughType.set(Fallthrough.SPT)">
-                            SPT
+                            Tau-Loop
                         </span>
 
                         <span mat-ripple
@@ -50,7 +52,7 @@
 
                         <span mat-ripple
                               class="toolbox-section-value"
-                              matTooltip="Converion to Flower-Model"
+                              matTooltip="Conversion to Flower-Model"
                               [class.selected]="toolbarService.fallthroughType() === Fallthrough.FLOWER"
                               (click)="toolbarService.fallthroughType.set(Fallthrough.FLOWER)">
                             Flower
