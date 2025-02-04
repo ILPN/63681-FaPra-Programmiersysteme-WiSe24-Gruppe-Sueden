@@ -90,8 +90,9 @@
     </div>
 
     <!-- Logs -->
-    <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
+
         <div class="transition-all overflow-hidden flex flex-col h-full" [style.max-width]="showLogs() ? '24rem' : 0">
+            <div style="width: 24rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
             <mat-tab-group class="flex flex-col h-full">
                 <mat-tab label="Event Log" bodyClass="p-2 h-full flex flex-col">
                     <div class="overflow-y-auto">

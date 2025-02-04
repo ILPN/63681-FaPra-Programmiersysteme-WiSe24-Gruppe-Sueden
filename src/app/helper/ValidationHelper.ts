@@ -2,7 +2,6 @@ import {DirectlyFollows} from '../classes/directly-follows'
 import {ValidationData} from '../classes/validation-data'
 import {CutType} from "../classes/cut-type.enum";
 import {LoopState} from '../classes/loop-state.enum'
-import {Dir} from "@angular/cdk/bidi";
 
 
 export class ValidationHelper {
@@ -56,36 +55,6 @@ export class ValidationHelper {
         this.LogFunc(message);  // Aufrufen der Log-Funktion
     }
 
-    private static createNewDFG(dfg: DirectlyFollows, nodeSet: Set<string>): DirectlyFollows {
-        let resultDFG: DirectlyFollows = new DirectlyFollows()
-        let tempNodeSet: Set<string> = new Set()
-        for (const [origin, successorSet] of dfg.successorMap) {
-            if (nodeSet.has(origin)) {
-                for (let successor of successorSet) {
-                    if (nodeSet.has(successor)) {
-                        resultDFG.addSuccessor(origin, successor)
-                    } else {
-                        resultDFG.addSuccessor(origin, "stop")
-                    }
-                }
-            } else {
-                for (let successor of successorSet) {
-                    if (nodeSet.has(successor)) {
-                        tempNodeSet.add(successor)
-                    }
-                }
-            }
-        }
-        for (const node of tempNodeSet) {
-            resultDFG.addSuccessor("play", node)
-        }
-        resultDFG.createPredecessorMap();
-        resultDFG.setNodes();
-        resultDFG.generateArcs();
-        return resultDFG
-    }
-
-
     //Nimmt als eingabe einen DFG, 2 Knotenmengen sowie die Cutmethode als string, prüft den cut und gibt true, bzw false mit einem String als Begründung aus
     private static validator(dfg: DirectlyFollows,
                              firstNodeSet: Set<string>,
@@ -97,7 +66,6 @@ export class ValidationHelper {
             return [false, "A passed NodeSet is empty"];
         }
         this.log("ok");
-        //TODO: evtl rausnehmen da per def. eigentlich nicht möglich ?!
         this.log("checking if all nodes are present and node sets are exclusive");
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
             this.log("not all node sets are present and / or exclusive")
@@ -237,7 +205,6 @@ export class ValidationHelper {
         return [true, 'Parallel-Cut successful']
     }
 
-//TODO: logs einleuchtender..
     private static loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         //erstelle die verschiedenen play/stop mengen
         this.log('Creating DOplay, DOstop, REDOplay, REDOstop')
@@ -489,9 +456,6 @@ export class ValidationHelper {
         return [firstNodeSet, secondNodeSet]
     }
 
-    private static hasUndefined(mySet: Set<any>): boolean {
-        return mySet.has(undefined);
-    }
     public static testForTauAndRepeatingPattern(eventLog:string[][]): [boolean, string] {
         if (eventLog.some(trace => trace.includes('empty_trace'))) {
             let tempLog = eventLog.filter(trace => !trace.includes('empty_trace'));

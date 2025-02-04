@@ -912,20 +912,6 @@ export class ProcessGraphService {
         return {count, underThreshold: true};
     }
 
-
-//TODO: evtl andere methoden mit Hilfe dieser umschreiben, jedoch nicht so laufzeit effizient...
-    private findSources<T>(arcs: Arc[], target: Node): (Node | string)[] {
-        return arcs
-            .filter(arc => arc.target === target)
-            .map(arc => arc.source);
-    }
-
-    private findTargets<T>(arcs: Arc[], source: Node): (Node | string)[] {
-        return arcs
-            .filter(arc => arc.source === source)
-            .map(arc => arc.target);
-    }
-
     private findSingularSourceForTarget<T>(arcs: Arc[], target: T): Node | string {
         for (const arc of arcs) {
             if (arc.target === target) {
@@ -958,14 +944,6 @@ export class ProcessGraphService {
 
     addLogEntry(entry: string): void {
         this.logSignal.update(currentLog => [...currentLog, entry]);
-    }
-
-    clearLog(): void {
-        this.logSignal.set([]);
-    }
-
-    getLog(): WritableSignal<string[]> {
-        return this.logSignal;
     }
 
     /*==============================================================================================================================*/

@@ -96,19 +96,6 @@ export class DirectlyFollows {
         return this.arcs.filter(arc => arc.source === source)
     }
 
-    existsArcWithReason(source: string, wantedTargets: Set<string>): boolean {
-        let arcsOfSource = this.getArcsOfSourceNode(source);
-        let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
-        for (const target of wantedTargets) {
-            if (!targetsOfSource.has(target)) {
-                return false;
-            }
-        }
-        return true
-    }
-
-
-    //TODO: Error-Handling und Null-Prüfung
     public setDFGfromStringArray(inputStringArray: string[][]): void {
         for (const trace of inputStringArray) {
             let tempElement = trace[0];
@@ -188,10 +175,6 @@ export class DirectlyFollows {
                 this.addPredecessor(successor, origin)
             }
         }
-    }
-
-    setID(newID: number): void {
-        this.id = newID
     }
 
     hasArc(source: string, target: string): boolean {
