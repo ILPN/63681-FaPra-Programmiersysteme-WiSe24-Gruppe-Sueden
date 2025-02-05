@@ -85,9 +85,12 @@ export class ProcessGraphService {
             transitions: transSet,
             arcs: firstArcs,
         })
-        this.addLogEntry(' ')
-        this.addLogEntry('Initial Graph generated')
-        this.addLogEntry(' ')
+        this.addLogEntry('=======================')
+        this.addLogEntry('initial graph generated')
+        this.addLogEntry('=======================')
+        if (this.isBaseCase(eventlog)){
+            this.transformBaseCaseToTransition(this.graphSignal()!,eventlog)
+        }
     }
 
     /*==============================================================================================================================*/
@@ -110,10 +113,16 @@ export class ProcessGraphService {
         if (result[0] && result[2] !== undefined && result[3] !== undefined) {
 
             if (result[2] && result[3]) {
-                this.addLogEntry("incorporating new DFGs into Petrinet")
                 this.incorporateNewDFGs(data.dfg, result[2], result[3], data.cutType);
             }
             const currentGraph = this.graphSignal();
+            if (currentGraph?.dfgSet.size===0){
+                this.addLogEntry('=======================')
+                this.addLogEntry('Inductive Miner to completion executed')
+                this.addLogEntry('=======================')
+            } else {
+                this.addLogEntry("-----------------------")
+            }
             if (currentGraph) {
                 this.graphSignal.set({
                     ...currentGraph,
@@ -121,7 +130,6 @@ export class ProcessGraphService {
                 });
             }
         }
-        this.addLogEntry(" ")
         return {success: result[0], comment: result[1]};
     }
 
@@ -147,12 +155,12 @@ export class ProcessGraphService {
                 break
             case CutType.PARALLEL:
                 this.incorporateParallel(dfgNodeOriginal, dfgNode1, dfgNode2, currentGraph);
-                this.addLogEntry("Parallel-Cut  successfully executed")
+                this.addLogEntry("Parallel-Cut successfully executed")
 
                 break
             case CutType.LOOP:
                 this.incorporateLoop(dfgNodeOriginal, dfgNode1, dfgNode2, currentGraph);
-                this.addLogEntry("Loop-Cut  successfully executed")
+                this.addLogEntry("Loop-Cut successfully executed")
                 break
             default:
                 throw new Error("No Cut-Type provided")
@@ -167,8 +175,6 @@ export class ProcessGraphService {
                            dfg1: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            dfg2: DfgNode,                            // dfg1 mit dem ausgetauscht wird
                            workingGraph: ProcessGraph) {
-        //if (dfg1.dfg.eventLog.length===1 && dfg1.dfg.eventLog[0]===[])
-
         //flatMap durchläuft alle arcs und ersetzt sie nach gegebenen Kriterien
         workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
             //Kriterium = source = originalDFG
@@ -513,10 +519,10 @@ export class ProcessGraphService {
         let newTransition: Node;
         if (node === 'empty_trace') {
             newTransition = this.createTransition();
-            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to TAU-Transition`)
+            this.addLogEntry(`Base Case detected - \"${node}\"`)
         } else {
             newTransition = this.createTransition(node);
-            this.addLogEntry(`Base Case detected - Transforming \"${node}\" to Transition`)
+            this.addLogEntry(`Base Case detected - \"${node}\"`)
         }
         newTransition.x = dfgNode.x
         newTransition.y = dfgNode.y
@@ -551,7 +557,6 @@ export class ProcessGraphService {
             /*=====================================================SPT====================================================*/
             case FallthroughType.SPT: {
                 // Check for Empty trace
-                this.addLogEntry('Check for Repeating Pattern')
                 let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
                //
                 let repeatingPattern : boolean
@@ -564,16 +569,12 @@ export class ProcessGraphService {
                 if (!repeatingPattern) {
                     return {success: false, comment: 'No repeating Pattern found'}
                 }
-                this.addLogEntry('found')
+                this.addLogEntry('Repeating Pattern found')
                 if (emptyTrace) {
-                    this.addLogEntry('empty trace found, solving per Tau-Transition')
                     this.makeOptional(dfgNode, workingGraph)
                     //lösche empty trace
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace.length > 0);
-                } else {
-                    this.addLogEntry('No empty trace found')
                 }
-
                 // Passe eventlog sowie Arcs an
                 let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
                 let dfgNew= new DirectlyFollows();
@@ -585,7 +586,7 @@ export class ProcessGraphService {
                 if (emptyTrace) { //DFG ist im REDO Part
                     // Drehe Kanten um
                     dfgNode.y = dfgNode.y - dfgNode.height
-                    this.addLogEntry('DFG part of REDO-Part')
+                    this.addLogEntry('Resulting Eventlog in REDO-Part')
                     workingGraph.arcs.forEach(arc => {
                         if (arc.target === dfgNode || arc.source === dfgNode) {
                             [arc.source, arc.target] = [arc.target, arc.source]
@@ -593,7 +594,7 @@ export class ProcessGraphService {
                     })
                 } else { //DFG ist im DO Part
                     // Füge Tau Transition als REDO ein
-                    this.addLogEntry('DFG part of DO-Part')
+                    this.addLogEntry('Resulting Eventlog in DO-Part')
                     const tauTransition: Node = this.createTransition()
                     tauTransition.x = dfgNode.x
                     tauTransition.y = dfgNode.y-dfgNode.height
@@ -608,12 +609,12 @@ export class ProcessGraphService {
                         }
                     })
                 }
-                this.addLogEntry('Solved per TAU-Transition')
+                this.addLogEntry('TAU-Loop executed')
                 this.checkAndTransformDFGtoBasecase(dfgNode, workingGraph)
                 this.graphSignal.set({
                     ...workingGraph
                 })
-                return {success: true, comment: 'Solved per TAU-Transition'}
+                return {success: true, comment: 'TAU-Loop executed'}
 
             }
             /*=====================================================AOPT====================================================*/
@@ -622,13 +623,9 @@ export class ProcessGraphService {
                     // check for empty trace and repeating pattern
                     let sptResult = this.checkNotSPT(dfgNode.dfg)
                     if (sptResult.success) {
-                        this.addLogEntry('ok')
-                        this.addLogEntry('Checking if Fallthrough...')
                         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
                         if (isFallthrough[0]) {
                             this.addLogEntry('Fallthrough detected!')
-                            this.addLogEntry(isFallthrough[1])
-                            this.addLogEntry('Check for Activity Once Per Trace')
                             const node = nodeSet.values().next().value;
                             if (this.checkAOPTforOne(node, dfgNode.dfg.eventLog)) {
                                 this.addLogEntry('Activity Once Per Trace possible')
@@ -651,8 +648,8 @@ export class ProcessGraphService {
                                 })
                                 return {success: true, comment: 'Activity Once Per Trace executed'}
                             } else {
-                                this.addLogEntry('Activity Once Per Trace not possible with Node')
-                                return {success: false, comment: 'Activity Once Per Trace not possible with Node'}
+                                this.addLogEntry('AOPT not possible with selected Node')
+                                return {success: false, comment: 'AOPT not possible with selected Node'}
                             }
                         } else {
                             return {success: isFallthrough[0], comment: isFallthrough[1]};
@@ -669,19 +666,15 @@ export class ProcessGraphService {
             case FallthroughType.FLOWER: {
                 let sptResult = this.checkNotSPT(dfgNode.dfg)
                 if (sptResult.success) {
-                    this.addLogEntry('ok')
-                    this.addLogEntry('Checking if Fallthrough...')
                     let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
                     if (isFallthrough[0]) {
-                        this.addLogEntry('Check for Activity Once Per Trace')
                         let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
                         if (aoptpossible[0]) {
                             this.addLogEntry(aoptpossible[1])
-                            this.addLogEntry('Aborting Flower-Model...')
+                            this.addLogEntry('Aborting Flower-Model')
+                            this.addLogEntry("-----------------------")
                             return {success: false, comment: aoptpossible[1]};
                         } else {
-                            this.addLogEntry('No AOPT possible')
-                            this.addLogEntry('Executing Flower-Model...')
                             let tempTransitionArray:Node[] = [];
                             let nodeAmount = dfgNode.dfg.getNodes().size
                             let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter*2,nodeAmount)
@@ -790,6 +783,7 @@ export class ProcessGraphService {
                             this.graphSignal.set({
                                 ...workingGraph
                             })
+                            this.addLogEntry("Flower Model Executed")
                             return {success: true, comment: 'Flower Model Executed'};
                         }
                     } else {
@@ -806,7 +800,6 @@ export class ProcessGraphService {
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
-        this.addLogEntry('Check for empty trace in combination with repeating pattern')
         let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
         return {success: result[0], comment: result[1]}
     }
