@@ -61,6 +61,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     draggingNode: Node | null = null
 
     private wasDragging: boolean = false;
+    private isResizing: boolean = false;
 
     places: Array<Node> = []
     dfgs: Array<DfgNode> = []
@@ -143,13 +144,15 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
     onMouseMove(event: MouseEvent) {
+        //don't drag if resizing
+        if(this.isResizing){
+            return
+        }
         // Always drag in petrinet view
         if (this.selectionService.selectedDfg() === null) {
             this.onDragMove(event)
         }
         if (this.draggingNode) {
-            this.draggingNode.x = event.offsetX;
-            this.draggingNode.y = event.offsetY;
             this.wasDragging = true;
         }
         switch (this.toolbarService.selectionType()) {
@@ -253,12 +256,13 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (node.type !== NodeType.node || node.name === 'play' || node.name === 'stop') return //only allow adding nodes (not dfg or places)
         this.selectionService.toggleNodeSelected(node)
     }
-
+//dfg auswählen
     dfgClicked(dfg: DfgNode) {
         if(!this.wasDragging){
             this.selectionService.selectDfg(dfg)
         }
     }
+    // dfg draggen
     dfgMouseDown(dfg: DfgNode, event: MouseEvent) {
         this.draggingNode = dfg;
         dfg.isDragged = true;
@@ -324,4 +328,9 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     get undefinedNodes(): Node[] {
         return this.selectionService.selectedNodes().filter(node => node.name === undefined);
     }
+
+    onResizingStatusChanged(isResizing: boolean): void {
+        this.isResizing = isResizing;
+    }
+
 }

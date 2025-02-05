@@ -15,6 +15,7 @@ export class EventLogComponent {
 
     dfgNode = input.required<DfgNode>()
     @Output() dfgClicked = new EventEmitter<DfgNode>()
+    @Output() resizingStatus = new EventEmitter<boolean>();
 
     eventLogWidth: WritableSignal<number> = signal(PhysicsHelper.eventLogWidth)
     isResizing = false
@@ -27,6 +28,7 @@ export class EventLogComponent {
         this.isResizing = true
         this.startX = event.clientX
         event.preventDefault()
+        this.resizingStatus.emit(true)
     }
 
     // Called when user is dragging
@@ -51,6 +53,7 @@ export class EventLogComponent {
         if (this.isResizing) {
             this.isResizing = false
         }
+        this.resizingStatus.emit(false)
     }
 
 }
