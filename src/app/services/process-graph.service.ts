@@ -22,6 +22,10 @@ export class ProcessGraphService {
 
     graphSignal = signal<ProcessGraph | null>(null)
 
+    private placeCounter = 1;
+    private tauCounter = 1;
+    private dfgCounter =1;
+
     constructor(private displayService: DisplayService) {
     }
 
@@ -34,11 +38,12 @@ export class ProcessGraphService {
         // Erstelle Anfangs Transitionen und Places für das Petrinetz
         const placeSet = new Set<Node>;
         const transSet = new Set<Node>;
-        const firstPlace: Node = this.createPlace('place_play');
+        const firstPlace: Node = this.createPlace('Place_play');
+        console.log(firstPlace.name)
         const playTransition: Node = this.createTransition("play");
-        const tempPlace1: Node = this.createPlace(this.generateUniqueId('place'));
-        const tempPlace2: Node = this.createPlace(this.generateUniqueId('place'));
-        const lastPlace: Node = this.createPlace('place_stop');
+        const tempPlace1: Node = this.createPlace();
+        const tempPlace2: Node = this.createPlace();
+        const lastPlace: Node = this.createPlace('Place_stop');
         const stopTransition: Node = this.createTransition("stop");
 
         playTransition.x = this.displayService.width() / 6
@@ -199,7 +204,7 @@ export class ProcessGraphService {
                                 dfg1: DfgNode, //isOptional1: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
                                 dfg2: DfgNode, //isOptional2: boolean,     // dfg1 mit dem ausgetauscht wird, bool ob optional
                                 workingGraph: ProcessGraph) {
-        const middlePlace: Node = this.createPlace(this.generateUniqueId('place'));
+        const middlePlace: Node = this.createPlace();
         //middlePlace ist die stelle zwischen dfg1 und dfg2
 
         let predPlace: Node;
@@ -274,11 +279,11 @@ export class ProcessGraphService {
 
 
         //Erstelle neue Places
-        const firstPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        const firstPlaceNew2: Node = this.createPlace();
         firstPlaceNew2.x = dfg2.x - dfgOriginal.width / 2;
         firstPlaceNew2.y = dfg2.y;
         workingGraph.places.add(firstPlaceNew2);
-        const lastPlaceNew2: Node = this.createPlace(this.generateUniqueId('place'));
+        const lastPlaceNew2: Node = this.createPlace();
         lastPlaceNew2.x = dfg2.x + dfgOriginal.width / 2;
         lastPlaceNew2.y = dfg2.y;
         workingGraph.places.add(lastPlaceNew2);
@@ -320,7 +325,7 @@ export class ProcessGraphService {
             });
         }
         if (firstTauNeeded) {
-            const firstPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            const firstPlaceNew1: Node = this.createPlace();
             firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
             firstPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
@@ -329,7 +334,7 @@ export class ProcessGraphService {
                 transitionNeedsChange = true;
             }
             workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
-            const firstTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            const firstTauTransition: Node = this.createTransition();
             firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
             firstTauTransition.y= dfgOriginal.y
             if(transitionNeedsChange){
@@ -352,7 +357,7 @@ export class ProcessGraphService {
             workingGraph.arcs.push({source: firstPlaceNew2, target: dfg2});
         }
         if (lastTauNeeded) {
-            const lastPlaceNew1: Node = this.createPlace(this.generateUniqueId('place'));
+            const lastPlaceNew1: Node = this.createPlace();
             lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
             lastPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
@@ -361,7 +366,7 @@ export class ProcessGraphService {
                 transitionNeedsChange = true;
             }
             workingGraph.places.add(lastPlaceNew1);
-            const lastTauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+            const lastTauTransition: Node = this.createTransition();
             lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
             lastTauTransition.y = dfgOriginal.y
             if(transitionNeedsChange){
@@ -444,7 +449,7 @@ export class ProcessGraphService {
             }
         }
         // Falls eine Tau transition benötigt wird...
-        const newPlace: Node = this.createPlace(this.generateUniqueId('place'));
+        const newPlace: Node = this.createPlace();
         newPlace.x = dfg1.x-dfgOriginal.width/2-PhysicsHelper.placeDiameter;
         newPlace.y = dfg1.y;
         let transitionNeedsChange = false;
@@ -453,7 +458,7 @@ export class ProcessGraphService {
             transitionNeedsChange = true;
         }
         workingGraph.places.add(newPlace);
-        const newTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        const newTransition: Node = this.createTransition();
         newTransition.x = newPlace.x - PhysicsHelper.placeDiameter
         newTransition.y = newPlace.y
         if(transitionNeedsChange){
@@ -507,7 +512,7 @@ export class ProcessGraphService {
         let node: string = dfg.getNodes().values().next().value
         let newTransition: Node;
         if (node === 'empty_trace') {
-            newTransition = this.createTransition(this.generateUniqueId('TAU'));
+            newTransition = this.createTransition();
             this.addLogEntry(`Base Case detected - Transforming \"${node}\" to TAU-Transition`)
         } else {
             newTransition = this.createTransition(node);
@@ -589,7 +594,7 @@ export class ProcessGraphService {
                 } else { //DFG ist im DO Part
                     // Füge Tau Transition als REDO ein
                     this.addLogEntry('DFG part of DO-Part')
-                    const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'))
+                    const tauTransition: Node = this.createTransition()
                     tauTransition.x = dfgNode.x
                     tauTransition.y = dfgNode.y-dfgNode.height
                     dfgNode.y = dfgNode.y + dfgNode.height
@@ -738,15 +743,15 @@ export class ProcessGraphService {
                                 }
                             } else {
                                 //Löse via TAU
-                                let tauTransitionBefore: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                let tauTransitionBefore: Node = this.createTransition()
                                 tauTransitionBefore.x = dfgNode.x-PhysicsHelper.nodeDiameter*3
                                 tauTransitionBefore.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionBefore)
-                                let middlePlace: Node = this.createPlace(this.generateUniqueId('place'))
+                                let middlePlace: Node = this.createPlace()
                                 middlePlace.x = dfgNode.x
                                 middlePlace.y = dfgNode.y
                                 workingGraph?.places.add(middlePlace)
-                                let tauTransitionAfter: Node = this.createTransition(this.generateUniqueId('TAU'))
+                                let tauTransitionAfter: Node = this.createTransition()
                                 tauTransitionAfter.x = dfgNode.x+PhysicsHelper.nodeDiameter*3
                                 tauTransitionAfter.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionAfter)
@@ -848,7 +853,7 @@ export class ProcessGraphService {
 
     // macht einen DFG durch hinzufügen einer TAU-Transition optional
     private makeOptional(dfg: DfgNode, workingGraph: ProcessGraph) {
-        const tauTransition: Node = this.createTransition(this.generateUniqueId('TAU'));
+        const tauTransition: Node = this.createTransition();
         tauTransition.x=dfg.x
         tauTransition.y=dfg.y +dfg.height
         workingGraph.transitions.add(tauTransition);
@@ -931,11 +936,6 @@ export class ProcessGraphService {
     }
 
 
-    /*======================================Unique IDs===========================================*/
-    generateUniqueId(prefix: string): string {
-        return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
-    }
-
 
     /*======================================Process-Graph-Signal - UPDATE-METHODEN===========================================*/
 
@@ -951,39 +951,79 @@ export class ProcessGraphService {
     /*===========================Methoden zur Erstellung von Places / Transitions / DFG/Eventlogs====================================*
     /*==============================================================================================================================*/
 
-    private createPlace(name: string): Node {
-        return {
-            name: name,
-            x: this.displayService.halfWidth(),
-            y: this.displayService.halfHeight(),
-            vx: 0,
-            vy: 0,
-            isDragged: false,
-            isSelected: false,
-            type: NodeType.place,
-            height: PhysicsHelper.placeDiameter,
-            width: PhysicsHelper.placeDiameter,
-        };
+    private createPlace(name?: string): Node {
+        if (name) {
+            return {
+                name: name,
+                x: this.displayService.halfWidth(),
+                y: this.displayService.halfHeight(),
+                vx: 0,
+                vy: 0,
+                isDragged: false,
+                isSelected: false,
+                type: NodeType.place,
+                height: PhysicsHelper.placeDiameter,
+                width: PhysicsHelper.placeDiameter,
+            };
+        } else {
+            let counter = this.placeCounter
+            this.placeCounter ++;
+            let countedPlaceName= "Place_"+counter
+            return {
+                name: countedPlaceName,
+                x: this.displayService.halfWidth(),
+                y: this.displayService.halfHeight(),
+                vx: 0,
+                vy: 0,
+                isDragged: false,
+                isSelected: false,
+                type: NodeType.place,
+                height: PhysicsHelper.placeDiameter,
+                width: PhysicsHelper.placeDiameter,
+            };
+        }
+
+
     }
 
-    private createTransition(name: string): Node {
-        return {
-            name: name,
-            x: this.displayService.halfWidth(),
-            y: this.displayService.halfHeight(),
-            vx: 0,
-            vy: 0,
-            isDragged: false,
-            isSelected: false,
-            type: NodeType.transition,
-            height: PhysicsHelper.placeDiameter,
-            width: PhysicsHelper.placeDiameter,
-        };
+    private createTransition(name?: string): Node {
+        if (name){
+            return {
+                name: name,
+                x: this.displayService.halfWidth(),
+                y: this.displayService.halfHeight(),
+                vx: 0,
+                vy: 0,
+                isDragged: false,
+                isSelected: false,
+                type: NodeType.transition,
+                height: PhysicsHelper.placeDiameter,
+                width: PhysicsHelper.placeDiameter,
+            }
+        } else{
+            let counter = this.tauCounter
+            this.tauCounter ++;
+            let countedTauName= "TAU_"+counter
+            return {
+                name: countedTauName,
+                x: this.displayService.halfWidth(),
+                y: this.displayService.halfHeight(),
+                vx: 0,
+                vy: 0,
+                isDragged: false,
+                isSelected: false,
+                type: NodeType.transition,
+                height: PhysicsHelper.placeDiameter,
+                width: PhysicsHelper.placeDiameter,
+            }
+        }
+
     }
 
     private createEventlog(dfg: DirectlyFollows): DfgNode {
-        const name = this.generateUniqueId('DFG')
-
+        let counter = this.dfgCounter
+        this.dfgCounter ++;
+        let name= "DFG_"+counter
         return {
             name: name,
             dfg: dfg,
