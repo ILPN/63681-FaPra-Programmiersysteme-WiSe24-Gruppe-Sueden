@@ -30,6 +30,7 @@ export class ValidationHelper {
         const eventlog1 = splitEventlogs[1].map(innerArray =>
             innerArray.length === 0 ? ['empty_trace'] : innerArray
         );
+        this.log('Creating new DFGs based on Eventlogs')
         dfg1.setDFGfromStringArray(eventlog0)
         let dfg2: DirectlyFollows = new DirectlyFollows();
         dfg2.setDFGfromStringArray(eventlog1)
