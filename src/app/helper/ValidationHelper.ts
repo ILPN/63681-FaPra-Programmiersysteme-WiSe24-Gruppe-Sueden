@@ -12,19 +12,16 @@ export class ValidationHelper {
                                     cutType: CutType,
                                     updateLog: (log: string) => void): [boolean, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
-        this.log('----------------------------------')
-
         let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
             return isRepWithTau
         }
-
         this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
         if (!validationResult[0]) {
             return validationResult
         }
-        this.log('creating new DFG from NodeSets')
+        this.log('Splitting Eventlogs')
         let splitEventlogs = this.splitEventlogs(dfg, firstNodeSet, secondNodeSet, cutType);
         let dfg1: DirectlyFollows = new DirectlyFollows();
         const eventlog0 = splitEventlogs[0].map(innerArray =>
@@ -33,6 +30,7 @@ export class ValidationHelper {
         const eventlog1 = splitEventlogs[1].map(innerArray =>
             innerArray.length === 0 ? ['empty_trace'] : innerArray
         );
+        this.log('Creating new DFGs based on Eventlogs')
         dfg1.setDFGfromStringArray(eventlog0)
         let dfg2: DirectlyFollows = new DirectlyFollows();
         dfg2.setDFGfromStringArray(eventlog1)
@@ -60,18 +58,19 @@ export class ValidationHelper {
                              firstNodeSet: Set<string>,
                              secondNodeSet: Set<string>,
                              cutType: string): [boolean, string] {
-        this.log("checking if NodeSets are empty");
         if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
             this.log("A passed NodeSet is empty");
+            if (this.testForTauOrRepeatingPattern(dfg.eventLog)) {
+                this.log("Repeating Pattern detected");
+                return [false, "Repeating Pattern detected, please solve per Tau-Loop"]
+            }
             return [false, "A passed NodeSet is empty"];
         }
-        this.log("ok");
-        this.log("checking if all nodes are present and node sets are exclusive");
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
             this.log("not all node sets are present and / or exclusive")
             return [false, "All nodes must be present, and the sets must be exclusive"]
         }
-        this.log("ok");
+        this.log("All nodes are present and mutually exclusive");
         switch (cutType) {
             case CutType.XOR: {
                 return this.xorValidation(dfg, firstNodeSet, secondNodeSet);
@@ -112,20 +111,18 @@ export class ValidationHelper {
     //Prüft auf XOR-Cut
     private static xorValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
         //Prüfe, ob keine Kanten von Knotenmenge 1 nach Knotenmenge 2
-        this.log("checking if there are no arcs from NodeSet 1 to NodeSet 2");
         for (let nodeFirst of firstNodeSet) {
             let nodeFirstSuccessors = dfg.getSuccessors(nodeFirst)
             if (nodeFirstSuccessors) {
                 for (let nodeFirstSuccessor of nodeFirstSuccessors) {
                     if (secondNodeSet.has(nodeFirstSuccessor)) {
                         this.log(`arc from ${nodeFirst} to ${nodeFirstSuccessor} found`);
-                        return [false, `arc from ${nodeFirst} to ${nodeFirstSuccessor} found`]
+                        return [false, `XOR Cut not possible`]
                     }
                 }
             }
         }
-        this.log("ok");
-        this.log("checking if there are no arcs from NodeSet 2 to NodeSet 1");
+        this.log("There are no arcs from NodeSet 1 to NodeSet 2 - ok");
         //Prüfe, ob keine Kanten von Knotenmenge 2 nach Knotenmenge 1
         for (let nodeSecond of secondNodeSet) {
             let nodeSecondSuccessors = dfg.getSuccessors(nodeSecond)
@@ -133,74 +130,72 @@ export class ValidationHelper {
                 for (let nodeSecondSuccessor of nodeSecondSuccessors) {
                     if (firstNodeSet.has(nodeSecondSuccessor)) {
                         this.log(`arc from ${nodeSecond} to ${nodeSecondSuccessor} found`);
-                        return [false, `arc from ${nodeSecond} to ${nodeSecondSuccessor} found`]
+                        return [false, `XOR Cut not possible`]
                     }
                 }
             }
         }
-        this.log('ok')
+        this.log("there are no arcs from NodeSet 2 to NodeSet 1 - ok");
         this.log("XOR-Cut successfully validated");
         return [true, 'XOR-Cut successful']
     }
 
     //Prüft auf Sequence-Cut
     private static sequenceValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
-        this.log("checking for paths for all Nodes of NodeSet 1 to all Nodes of NodeSet 2");
         //Prüfe, ob von allen Knoten der ersten Knotenmenge auch ein Weg zu allen Knoten der zweiten Knotenmenge führt
         for (let nodeFirst of firstNodeSet) {
             for (let nodeSecond of secondNodeSet) {
                 if (!dfg.existsPath(new Set([nodeFirst]), new Set([nodeSecond]))) {
                     this.log(`No path from ${nodeFirst} to ${nodeSecond} found`)
-                    return [false, `No path from ${nodeFirst} to ${nodeSecond} found`]
+                    return [false, `Sequence Cut not possible`]
                 }
             }
         }
-        this.log("ok");
-        this.log("checking that there are no paths for all Nodes of NodeSet 2 to NodeSet 1");
+        this.log("All Nodes of NodeSet 1 have paths to all Nodes of NodeSet 2 - ok");
         // Prüfe, dass kein Weg von Knotenmenge 2 in Knotenmenge 1 führt
         for (let nodeSecond of secondNodeSet) {
             if (dfg.existsPath(new Set([nodeSecond]), firstNodeSet)) {
                 this.log(`Path from ${nodeSecond} to first NodeSet found`)
-                return [false, `Path from ${nodeSecond} to first NodeSet found`]
+                return [false, `Sequence Cut not possible`]
             }
         }
-        this.log("ok")
+        this.log("There are no paths from NodeSet 2 to NodeSet 1 - ok");
         this.log("Sequence-Cut successfully validated");
         return [true, 'Sequence-Cut successful']
     }
 
     private static parallelValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string] {
-        this.log('verifying if there are arcs from every Node of one Set to every Node of the other \n ' +
-            'and verifying a path from play to stop for each node within its own set')
         for (let nodeFirst of firstNodeSet) {
             let arcsOfSource = dfg.getArcsOfSourceNode(nodeFirst);
             let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
             for (const nodeSecond of secondNodeSet) {
                 if (!targetsOfSource.has(nodeSecond)) {
                     this.log(`No arc between ${nodeFirst} and ${nodeSecond} found`);
-                    return [false, `No arc between ${nodeFirst} and ${nodeSecond} found`];
+                    return [false, `Parallel Cut not possible`]
                 }
             }
             if (!dfg.existsFullPathOverNode(nodeFirst, firstNodeSet)) {
                 this.log(`No path found from play to ${nodeFirst} to stop that includes only nodes from the own set`)
-                return [false, `No path found from play to ${nodeFirst} to stop that includes only nodes from the own set`];
+                return [false, `Parallel Cut not possible`]
             }
         }
+
         for (let nodeSecond of secondNodeSet) {
             let arcsOfSource = dfg.getArcsOfSourceNode(nodeSecond);
             let targetsOfSource = new Set(arcsOfSource.map(arc => arc.target as string));
             for (const nodeFirst of firstNodeSet) {
                 if (!targetsOfSource.has(nodeFirst)) {
                     this.log(`No arc between ${nodeSecond} and ${nodeFirst} found`)
-                    return [false, `No arc between ${nodeSecond} and ${nodeFirst} found`];
+                    return [false, `Parallel Cut not possible`]
                 }
             }
             if (!dfg.existsFullPathOverNode(nodeSecond, secondNodeSet)) {
                 this.log(`No path found from play to ${nodeSecond} to stop that includes only nodes from the own set`)
-                return [false, `No path found from play to ${nodeSecond} to stop that includes only nodes from the own set`];
+                return [false, `Parallel Cut not possible`]
             }
         }
-        this.log('ok')
+        this.log("there are arcs from every Node of one Set to every Node of the other - ok");
+        this.log("there is a path from play to stop for each node within its own set - ok");
         this.log('Parallel-Cut successfully validated')
         return [true, 'Parallel-Cut successful']
     }
@@ -214,30 +209,27 @@ export class ValidationHelper {
         let secondNodeSetStop = this.createStopSet(dfg, secondNodeSet);
 
         //Validiere ob alle Kanten von play nach firstNodeSetPlay gehen
-        this.log('validate that all arcs from play go to DOplay')
         let playNodes = dfg.getPlayNodes();
         if (playNodes) {
             for (const node of playNodes) {
                 if (!firstNodeSetPlay.has(node)) {
                     this.log(`There exists a arc from play to ${node}`)
-                    return [false, `There exists a arc from play to ${node}`];
+                    return [false, `Loop Cut not possible`]
                 }
             }
         }
-        this.log('ok');
-        this.log('validate that all arcs from stop come from DOstop')
+        this.log('All arcs from play go to DOplay - ok')
         //Validiere ob alle Kanten nach stop von firstNodeSetStop ausgehen
         let stopNodes = dfg.getStopNodes();
         if (stopNodes) {
             for (const node of stopNodes) {
                 if (!firstNodeSetStop.has(node)) {
                     this.log(`There exists an arc from ${node} to stop`)
-                    return [false, `There exists an arc from ${node} to stop`]
+                    return [false, `Loop Cut not possible`]
                 }
             }
         }
-        this.log('ok');
-        this.log('validate if every node in REDOstop union play has an arc to every node in DOplay')
+        this.log('All arcs to stop come from DOstop - ok')
         //Validiere ob es für alle Knoten von secondNodeSetStop vereinigt mit play eine Kante zu jedem Knoten aus firstNodeSetPlay gibt
         let playWithSecondNodeSetStop: Set<string> = new Set(secondNodeSetStop);
         playWithSecondNodeSetStop.add('play');
@@ -248,12 +240,11 @@ export class ValidationHelper {
                 // falls eine Kante nicht gefunden return false
                 if (!node1Successors?.has(node2)) {
                     this.log(`No arc was found between ${node1} and ${node2}`)
-                    return [false, `No arc was found between ${node1} and ${node2}`];
+                    return [false, `Loop Cut not possible`]
                 }
             }
         }
-        this.log('ok')
-        this.log('validate if all nodes in Dostop have an edge to stop union RedoPlay')
+        this.log('All nodes in REDOstop ∪ play has an arc to every node in DOplay - ok')
         //Validiere ob es für alle Knoten von firstNodeSetStop eine Kante nach stop vereinigt secondNodeSetPlay gibt
         let stopWithSecondNodeSetPlay: Set<string> = new Set(secondNodeSetPlay);
         stopWithSecondNodeSetPlay.add('stop');
@@ -263,11 +254,11 @@ export class ValidationHelper {
             for (let node2 of stopWithSecondNodeSetPlay) {
                 // falls eine Kante nicht gefunden return false
                 if (!node1Successors?.has(node2)) {
-                    return [false, `No arc between ${node1} and ${node2} found`]
+                    return [false, `Loop Cut not possible`]
                 }
             }
         }
-        this.log('ok')
+        this.log('All nodes in Dostop have an edge to stop ∪ RedoPlay')
         this.log('Loop-Cut successfully validated')
         return [true, 'Loop-Cut successful']
     }
@@ -463,7 +454,7 @@ export class ValidationHelper {
             tempDfg.setDFGfromStringArray(tempLog)
             if (tempDfg.isPatternExclusivelyRepeated()) {
                 return [false, 'Combination of empty trace and repeating pattern found.' +
-                '\nPlease Solve Per Tau!']
+                '\nPlease solve per Tau-Loop!']
             }
             return [true, '']
         }

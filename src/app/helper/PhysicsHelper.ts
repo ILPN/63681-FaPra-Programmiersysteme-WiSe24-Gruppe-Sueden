@@ -131,12 +131,12 @@ export class PhysicsHelper {
             }
 
             // Fixed position for start/stop in Petrinet-View
-            if (node.name === "place_play") {
+            if (node.name === "Place_play") {
                 node.x = 26
                 node.y = canvasHeight / 2
                 continue
             }
-            if (node.name === "place_stop") {
+            if (node.name === "Place_stop") {
                 node.x = canvasWidth - 26
                 node.y = canvasHeight / 2
                 continue
