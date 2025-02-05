@@ -28,10 +28,10 @@ export class PetrinetExporterHelper {
 
         // Add coordinates for transitions
         processGraph.transitions.forEach(transition => {
-            if (!transition.name.startsWith('TAU_')) {
+            if (!transition.name.startsWith('TAU_') && (transition.name !== 'play') && (transition.name !== 'stop')) {
                 jsonPetriNet.actions!.push(transition.name);
             }
-            jsonPetriNet.layout![transition.name] = { x: Math.round(transition.x), y: Math.round(transition.y) }
+            jsonPetriNet.layout![transition.name] =  { x: Math.round(transition.x), y: Math.round(transition.y) };
         });
 
         // Populate arcs and set positions
@@ -50,12 +50,13 @@ export class PetrinetExporterHelper {
 
                 // Ensure that both source and target are valid objects
                 if (source && target) {
-                    // Calculate the midpoint between the source and target coordinates
+
+                    /*
                     const arcPos = {
                         x: Math.round(target.x),
                         y: Math.round(target.y)
                     };
-                    /*
+
                     const arcPos = {
                         x: (source.x + target.x) / 2,
                         y: (source.y + target.y) / 2
@@ -66,7 +67,8 @@ export class PetrinetExporterHelper {
                     jsonPetriNet.arcs![`${sourceName}, ${targetName}`] = 1;
 
                     // Add arc position to layout (using midpoint)
-                    jsonPetriNet.layout![`${sourceName}, ${targetName}`] = arcPos;
+                    jsonPetriNet.layout![`${sourceName}, ${targetName}`] = [{ x: Math.round(source.x), y: Math.round(source.y) }, { x: Math.round(target.x), y: Math.round(target.y) }];
+                    //jsonPetriNet.layout![`${sourceName}, ${targetName}`] = arcPos;
                 } else {
                     console.error(`Invalid source or target for arc: ${sourceName} -> ${targetName}`);
                 }
