@@ -86,7 +86,7 @@ export class ProcessGraphService {
             arcs: firstArcs,
         })
         this.addLogEntry('=======================')
-        this.addLogEntry('initial graph generated')
+        this.addLogEntry('Initial Graph generated')
         this.addLogEntry('=======================')
         if (this.isBaseCase(eventlog)){
             this.transformBaseCaseToTransition(this.graphSignal()!,eventlog)
@@ -129,6 +129,8 @@ export class ProcessGraphService {
                     /* Entferne validationSuccessful oder passe an */
                 });
             }
+        } else {
+            this.addLogEntry("-----------------------")
         }
         return {success: result[0], comment: result[1]};
     }
@@ -556,6 +558,7 @@ export class ProcessGraphService {
         switch (fallthroughType) {
             /*=====================================================SPT====================================================*/
             case FallthroughType.SPT: {
+                this.addLogEntry('Trying to execute Tau-Loop')
                 // Check for Empty trace
                 let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
                //
@@ -567,10 +570,13 @@ export class ProcessGraphService {
                     repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
                 }
                 if (!repeatingPattern) {
-                    return {success: false, comment: 'No repeating Pattern found'}
+                    this.addLogEntry('no repeating Pattern found')
+                    this.addLogEntry("-----------------------")
+                    return {success: false, comment: 'Tau-Loop not possible'}
                 }
-                this.addLogEntry('Repeating Pattern found')
+                this.addLogEntry('Repeating Pattern found - ok')
                 if (emptyTrace) {
+                    this.addLogEntry("Empty Trace found - ok")
                     this.makeOptional(dfgNode, workingGraph)
                     //lösche empty trace
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => trace.length > 0);
@@ -611,6 +617,13 @@ export class ProcessGraphService {
                 }
                 this.addLogEntry('TAU-Loop executed')
                 this.checkAndTransformDFGtoBasecase(dfgNode, workingGraph)
+                if (workingGraph?.dfgSet.size===0){
+                    this.addLogEntry('=======================')
+                    this.addLogEntry('Inductive Miner to completion executed')
+                    this.addLogEntry('=======================')
+                } else {
+                    this.addLogEntry("-----------------------")
+                }
                 this.graphSignal.set({
                     ...workingGraph
                 })
@@ -619,6 +632,7 @@ export class ProcessGraphService {
             }
             /*=====================================================AOPT====================================================*/
             case FallthroughType.AOPT: {
+                this.addLogEntry('Trying to execute AOPT')
                 if (nodeSet && nodeSet.size === 1) {
                     // check for empty trace and repeating pattern
                     let sptResult = this.checkNotSPT(dfgNode.dfg)
@@ -628,7 +642,6 @@ export class ProcessGraphService {
                             this.addLogEntry('Fallthrough detected!')
                             const node = nodeSet.values().next().value;
                             if (this.checkAOPTforOne(node, dfgNode.dfg.eventLog)) {
-                                this.addLogEntry('Activity Once Per Trace possible')
                                 //lösche node aus eventlog
                                 let eventlogWithoutAopt: string[][] = dfgNode.dfg.eventLog.map(trace => trace.filter(activity => activity !== node));
                                 eventlogWithoutAopt = eventlogWithoutAopt.map(trace =>
@@ -643,27 +656,41 @@ export class ProcessGraphService {
                                 const newDfg2 = this.createEventlog(dfg2)
                                 this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph!)
                                 this.addLogEntry('Activity Once Per Trace executed')
+                                if (workingGraph?.dfgSet.size===0){
+                                    this.addLogEntry('=======================')
+                                    this.addLogEntry('Inductive Miner to completion executed')
+                                    this.addLogEntry('=======================')
+                                } else {
+                                    this.addLogEntry("-----------------------")
+                                }
                                 this.graphSignal.set({
                                     ...workingGraph!
                                 })
                                 return {success: true, comment: 'Activity Once Per Trace executed'}
                             } else {
                                 this.addLogEntry('AOPT not possible with selected Node')
-                                return {success: false, comment: 'AOPT not possible with selected Node'}
+                                return {success: false, comment: 'Activity Once Per Trace not possible with selected Node'}
                             }
                         } else {
+                            console.log(isFallthrough[1])
+                            this.addLogEntry("-----------------------")
                             return {success: isFallthrough[0], comment: isFallthrough[1]};
                         }
                     } else {
-                        return {success: false, comment: 'Repeating Pattern found'}
+                        this.addLogEntry('Tau-Loop found')
+                        this.addLogEntry("-----------------------")
+                        return {success: false, comment: 'Activity Once Per Trace not possible'}
                     }
                 } else {
-                    return {success: false, comment: 'You need to select exactly 1 node'}
+                    this.addLogEntry('More than one node was selected')
+                    this.addLogEntry("-----------------------")
+                    return {success: false, comment: 'Activity Once Per Trace not possible'}
                 }
 
             }
             /*=====================================================Flower====================================================*/
             case FallthroughType.FLOWER: {
+                this.addLogEntry('Trying to execute Flower-Model')
                 let sptResult = this.checkNotSPT(dfgNode.dfg)
                 if (sptResult.success) {
                     let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
@@ -671,7 +698,6 @@ export class ProcessGraphService {
                         let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
                         if (aoptpossible[0]) {
                             this.addLogEntry(aoptpossible[1])
-                            this.addLogEntry('Aborting Flower-Model')
                             this.addLogEntry("-----------------------")
                             return {success: false, comment: aoptpossible[1]};
                         } else {
@@ -780,16 +806,26 @@ export class ProcessGraphService {
                                 // exchange positions if it's necessary
                                 this.exchangePositionsOfNodesIfNeeded(tauTransitionBefore, tauTransitionAfter, predNode!);
                             }
+                            this.addLogEntry("Flower Model Executed")
+                            if (workingGraph?.dfgSet.size===0){
+                                this.addLogEntry('=======================')
+                                this.addLogEntry('Inductive Miner to completion executed')
+                                this.addLogEntry('=======================')
+                            } else {
+                                this.addLogEntry("-----------------------")                            }
                             this.graphSignal.set({
                                 ...workingGraph
                             })
-                            this.addLogEntry("Flower Model Executed")
                             return {success: true, comment: 'Flower Model Executed'};
                         }
                     } else {
+                        this.addLogEntry(isFallthrough[1])
+                        this.addLogEntry("-----------------------")
                         return {success: isFallthrough[0], comment: isFallthrough[1]};
                     }
                 } else {
+                    this.addLogEntry(sptResult.comment)
+                    this.addLogEntry("-----------------------")
                     return {success: false, comment: sptResult.comment}
                 }
             }
