@@ -43,12 +43,10 @@ export class EventLogComponent {
         if (this.isResizing) {
             const deltaX = event.clientX - this.startX
             let newWidth = this.eventLogWidth() + deltaX;
-
             // Ensure a minimum width before updating
             if (newWidth < PhysicsHelper.eventLogWidth) {
                 newWidth = PhysicsHelper.eventLogWidth;
             }
-
             this.eventLogWidth.set(newWidth);
             this.dfgNode().width = newWidth
             this.startX = event.clientX
