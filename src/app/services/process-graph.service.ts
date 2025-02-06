@@ -245,9 +245,9 @@ export class ProcessGraphService {
         this.exchangeDFGs(dfgOriginal, dfg1, dfg2, workingGraph)
         middlePlace.x = dfgOriginal.x
         middlePlace.y = dfgOriginal.y
-        dfg1.x = dfgOriginal.x - dfgOriginal.width / 2
+        dfg1.x = dfgOriginal.x - PhysicsHelper.eventLogWidth / 2
         dfg1.y = dfgOriginal.y
-        dfg2.x = dfgOriginal.x + dfgOriginal.width / 2
+        dfg2.x = dfgOriginal.x + PhysicsHelper.eventLogWidth / 2
         dfg2.y = dfgOriginal.y
 
         //exchange positions if it's necessary
@@ -288,11 +288,11 @@ export class ProcessGraphService {
 
         //Erstelle neue Places
         const firstPlaceNew2: Node = this.createPlace();
-        firstPlaceNew2.x = dfg2.x - dfgOriginal.width / 2;
+        firstPlaceNew2.x = dfg2.x - PhysicsHelper.eventLogWidth / 2;
         firstPlaceNew2.y = dfg2.y;
         workingGraph.places.add(firstPlaceNew2);
         const lastPlaceNew2: Node = this.createPlace();
-        lastPlaceNew2.x = dfg2.x + dfgOriginal.width / 2;
+        lastPlaceNew2.x = dfg2.x + PhysicsHelper.eventLogWidth / 2;
         lastPlaceNew2.y = dfg2.y;
         workingGraph.places.add(lastPlaceNew2);
         this.exchangePositionsOfNodesIfNeeded(firstPlaceNew2, lastPlaceNew2, predPlace!)
@@ -308,7 +308,7 @@ export class ProcessGraphService {
                     firstTauNeeded = false;
                     let x = arc.source as Node
                     x.y=dfg1.y
-                    x.x = dfgOriginal.x - dfgOriginal.width / 2
+                    x.x = dfgOriginal.x - PhysicsHelper.eventLogWidth / 2
                     //Finde transition VOR place
                     let transitionOrDFGbefore = this.findSingularSourceForTarget(workingGraph.arcs, arc.source);
                     // tausche dfg original mit dfg1
@@ -322,7 +322,7 @@ export class ProcessGraphService {
                     lastTauNeeded = false;
                    let x = arc.target as Node
                     x.y = dfg1.y
-                    x.x = dfg1.x + dfgOriginal.width / 2
+                    x.x = dfg1.x + PhysicsHelper.eventLogWidth / 2
                     //Finde transition NACH place
                     let transitionOrDFGafter = this.findTargetForSource(workingGraph.arcs, arc.target);
                     return [{source: dfg1, target: arc.target},
@@ -334,11 +334,11 @@ export class ProcessGraphService {
         }
         if (firstTauNeeded) {
             const firstPlaceNew1: Node = this.createPlace();
-            firstPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+            firstPlaceNew1.x = dfg1.x - PhysicsHelper.eventLogWidth / 2;
             firstPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
             if(!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)){
-                firstPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+                firstPlaceNew1.x = dfg1.x + PhysicsHelper.eventLogWidth / 2;
                 transitionNeedsChange = true;
             }
             workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
@@ -366,11 +366,11 @@ export class ProcessGraphService {
         }
         if (lastTauNeeded) {
             const lastPlaceNew1: Node = this.createPlace();
-            lastPlaceNew1.x = dfg1.x + dfgOriginal.width / 2;
+            lastPlaceNew1.x = dfg1.x + PhysicsHelper.eventLogWidth / 2;
             lastPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
             if(this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)){
-                lastPlaceNew1.x = dfg1.x - dfgOriginal.width / 2;
+                lastPlaceNew1.x = dfg1.x - PhysicsHelper.eventLogWidth / 2;
                 transitionNeedsChange = true;
             }
             workingGraph.places.add(lastPlaceNew1);
@@ -458,11 +458,11 @@ export class ProcessGraphService {
         }
         // Falls eine Tau transition benötigt wird...
         const newPlace: Node = this.createPlace();
-        newPlace.x = dfg1.x-dfgOriginal.width/2-PhysicsHelper.placeDiameter;
+        newPlace.x = dfg1.x-PhysicsHelper.eventLogWidth/2-PhysicsHelper.placeDiameter;
         newPlace.y = dfg1.y;
         let transitionNeedsChange = false;
         if(!this.checkIfNodeCloser(newPlace, dfgOriginal, predPlace!)){
-            newPlace.x = dfg1.x + dfgOriginal.width/2 + PhysicsHelper.placeDiameter;
+            newPlace.x = dfg1.x + PhysicsHelper.eventLogWidth/2 + PhysicsHelper.placeDiameter;
             transitionNeedsChange = true;
         }
         workingGraph.places.add(newPlace);
