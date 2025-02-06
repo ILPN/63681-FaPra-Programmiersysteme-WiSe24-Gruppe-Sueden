@@ -264,11 +264,17 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
     // dfg draggen
     dfgMouseDown(dfg: DfgNode, event: MouseEvent) {
+        if(this.isResizing){
+            return
+        }
         this.draggingNode = dfg;
         dfg.isDragged = true;
         this.wasDragging = false;
     }
     dfgMouseUp() {
+        if(this.isResizing){
+            return
+        }
         if (this.draggingNode) {
             this.draggingNode.isDragged = false;
             this.draggingNode = null
@@ -332,5 +338,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     onResizingStatusChanged(isResizing: boolean): void {
         this.isResizing = isResizing;
     }
+
 
 }

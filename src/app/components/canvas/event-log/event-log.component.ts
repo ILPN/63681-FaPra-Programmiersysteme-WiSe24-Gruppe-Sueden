@@ -1,4 +1,4 @@
-import {Component, EventEmitter, HostListener, input, Output, signal, WritableSignal} from "@angular/core";
+import {Component, EventEmitter, HostListener, input, Output, signal, WritableSignal, OnChanges, SimpleChanges} from "@angular/core";
 import {PhysicsHelper} from "../../../helper/PhysicsHelper";
 import {DfgNode} from "../../../classes/graph/dfg-node";
 import {TruncateEventLogPipe} from "./truncate-event-log.pipe";
@@ -23,6 +23,12 @@ export class EventLogComponent {
 
     protected readonly PhysicsHelper = PhysicsHelper
 
+    ngOnChanges(changes: SimpleChanges) {
+        if (changes['dfgNode'] && this.dfgNode) {
+            this.eventLogWidth = signal(this.dfgNode().width || PhysicsHelper.eventLogWidth);
+        }
+    }
+
     // Called when user starts dragging the resizer
     onResizeStart(event: MouseEvent): void {
         this.isResizing = true
@@ -36,14 +42,16 @@ export class EventLogComponent {
     onResizing(event: MouseEvent): void {
         if (this.isResizing) {
             const deltaX = event.clientX - this.startX
-            this.eventLogWidth.update(old => old += deltaX)
-            this.dfgNode().width += deltaX
-            this.startX = event.clientX
+            let newWidth = this.eventLogWidth() + deltaX;
 
-            // Ensure a minimum width
-            if (this.eventLogWidth() < PhysicsHelper.eventLogWidth) {
-                this.eventLogWidth.set(PhysicsHelper.eventLogWidth)
+            // Ensure a minimum width before updating
+            if (newWidth < PhysicsHelper.eventLogWidth) {
+                newWidth = PhysicsHelper.eventLogWidth;
             }
+
+            this.eventLogWidth.set(newWidth);
+            this.dfgNode().width = newWidth
+            this.startX = event.clientX
         }
     }
 
