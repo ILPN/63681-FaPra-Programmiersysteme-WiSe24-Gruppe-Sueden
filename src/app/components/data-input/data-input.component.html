@@ -34,7 +34,7 @@
         <textarea rows="6" matInput [formControl]="manualInputControl"></textarea>
         @if (manualInputControl.hasError("invalid")) {
             <mat-error>
-                Bitte Format beachten: event1 event2 event3 + event2 event5 event3 + event2 event0
+                Please check format: event1 event2 event3 + event2 event5 event3 + event2 event0
             </mat-error>
         }
     </mat-form-field>
