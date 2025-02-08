@@ -23,9 +23,7 @@
                         <span class="toolbox-section-label">Cut</span>
                         @for (type of CutType | keyvalue: originalOrder; track type.value) {
                             <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.cutType() == type.value" (click)="toolbarService.cutType.set(type.value)">
-                                @if (type.value === 'xor'){
-                                    XOR
-                                }@else{{{ type.value | titlecase }}}
+                                {{type.value}}
                             </span>
                         }
                     </div>

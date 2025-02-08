@@ -10,20 +10,18 @@ export class FallthroughHelper {
      * @param dfg - Directly Follows Graph object.
      * @returns True if fallthrough is inevitable.
      */
-    public static isFallthrough(dfg: DirectlyFollows): [boolean, string] {
+    public static isFallthrough(dfg: DirectlyFollows): [boolean, string, string] {
         // Base case
         if (dfg.getNodes().size === 1) {
             if (dfg.getArcs().length === 2) {
-                return [false, 'Base Case'];
+                return [false, 'Base Case', ''];
             } else if (dfg.getArcs().length > 2) {
-                return [false, 'Loop Cut of length 1 possible'];
+                return [false, 'Loop Cut of length 1 possible', ''];
             }
         }
-        //TODO: passe alles für empty trace an
-        // Teste auf empty_string
         let isRepWithTau = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
-            return isRepWithTau
+            return [...isRepWithTau, ""]
         }
 
         const nodesAsArray = Array.from(dfg.getNodes()).sort();
@@ -31,36 +29,52 @@ export class FallthroughHelper {
         const footprintMatrix = this.computeFootprintMatrix(nodesAsArray, dfg);
 
         // XOR-Cut detection
-        if (this.isXORCutPossible(nodesAsArray, footprintMatrix)) {
-            return [false, 'XOR Cut possible'];
+        let isXorPossible = this.isXORCutPossible(nodesAsArray, footprintMatrix)
+        if (isXorPossible[0]) {
+            return [false, 'XOR Cut possible', isXorPossible[1]];
         }
 
         // Sequence-Cut detection
-        if (this.isSequenceCutPossible(nodesAsArray, reachabilityMatrix)) {
-            return [false, 'Sequence Cut possible'];
+        let isSequencePossible = this.isSequenceCutPossible(nodesAsArray, reachabilityMatrix)
+        if (isSequencePossible[0]) {
+            return [false, 'Sequence Cut possible', isSequencePossible[1]];
         }
 
         const inverseFootprintMatrix = this.invertFootprintMatrix(footprintMatrix);
 
         // Parallel-Cut detection
-        if (this.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix)) {
-            return [false, 'Parallel Cut possible'];
+        let isParallelPossible = this.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix)
+        if (isParallelPossible[0]) {
+            return [false, 'Parallel Cut possible', isParallelPossible[1]];
         }
 
         // Loop-Cut detection
-        if (this.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix)) {
-            return [false, 'Loop Cut possible'];
+        let isLoopPossible = this.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix)
+        if (isLoopPossible[0]) {
+            return [false, 'Loop Cut possible', isLoopPossible[1]];
         }
 
-        return [true, 'Fall Through'];
+        return [true, 'Fall Through', ''];
     }
 
-    public static isXORCutPossible(nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+    /*========================================================================XOR=========================================================================*/
+    public static isXORCutPossible(nodesAsArray: string[], footprintMatrix: string[][]): [boolean, string] {
         const wccs = this.computeWCCsFromFootprintMatrix(nodesAsArray, footprintMatrix);
-        return wccs.length > 1;
+        let returnBool = wccs.length > 1;
+        if (returnBool) {
+            let numberOfWccs = wccs.length;
+            let returnString: string = '';
+            returnString += 'Cut possible between:\n'
+            for (let i = 0; i < numberOfWccs; i++) {
+                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
+            }
+            return [returnBool, returnString];
+        }
+        return [returnBool, '']
     }
 
-    public static isSequenceCutPossible(nodesAsArray: string[], reachabilityMatrix: boolean[][]): boolean {
+    /*===================================================================Sequence=====================================================================*/
+    public static isSequenceCutPossible(nodesAsArray: string[], reachabilityMatrix: boolean[][]): [boolean, string] {
         // Index-Mapping for nodes
         const mapping = this.mapArrayIndex(nodesAsArray)
 
@@ -120,15 +134,28 @@ export class FallthroughHelper {
             }
         }
         // If there is more than one component after merging, return true indicating sequence cut is possible
-        return components.length > 1;
+        let returnBool = components.length > 1;
+        if (returnBool) {
+            let numberOfComponents = components.length;
+            let returnString: string = '';
+            returnString += 'Cut possible between:\n'
+            for (let i = 0; i < numberOfComponents; i++) {
+                returnString += 'Node Set ' + (i + 1) + ': ' + components[i].join(' , ') + '\n';
+            }
+            return [returnBool, returnString];
+        }
+
+        return [returnBool, ''];
+
 
     }
 
-    public static isParallelCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], inverseFootprintMatrix: string[][]): boolean {
+    /*===============================================================Parallel====================================================================*/
+    public static isParallelCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], inverseFootprintMatrix: string[][]): [boolean, string] {
         // building wccs from inverted footprint-matrix
         const wccs = this.computeWCCsFromFootprintMatrix(nodesAsArray, inverseFootprintMatrix);
         if (wccs.length < 2) {
-            return false;
+            return [false, ''];
         }
 
         let allWCCsValid = true;
@@ -148,10 +175,20 @@ export class FallthroughHelper {
             }
 
         }
-        return allWCCsValid;
+        if (allWCCsValid) {
+            let numberOfComponents = wccs.length;
+            let returnString: string = '';
+            returnString += 'Cut possible between:\n'
+            for (let i = 0; i < numberOfComponents; i++) {
+                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
+            }
+            return [allWCCsValid, returnString];
+        }
+        return [allWCCsValid, ''];
     }
 
-    public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): boolean {
+    /*========================================================================LOOP=========================================================================*/
+    public static isLoopCutPossible(dfg: DirectlyFollows, nodesAsArray: string[], footprintMatrix: string[][]): [boolean, string] {
 
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);
@@ -178,7 +215,7 @@ export class FallthroughHelper {
         // nun sollten alle WCCs mit play/stopNodes in der mainWCC sein, in WCCs sollten sämtliche eventuelle redo-parts sein
 
         if (amountOfWCCs === 0) {
-            return false;
+            return [false, ''];
         }
 
         // Erstelle Objekte für WCCs und die Main Component
@@ -219,7 +256,7 @@ export class FallthroughHelper {
         let connectingArcs = [...dfg.getArcs()];
         connectingArcs = connectingArcs.filter(arc => {
             return !(mainComponent.nodes.includes(arc.source as string) && mainComponent.nodes.includes(arc.target as string)) &&
-                !(arc.source === "play") && !(arc.target === "stop");
+                !(arc.source === 'play') && !(arc.target === 'stop');
         })
         for (let wcc of wccArray) {
             connectingArcs = connectingArcs.filter(arc => {
@@ -242,7 +279,7 @@ export class FallthroughHelper {
 
         // nun sollte unser tempArcs array leer sein
         if (tempArcs.length !== 0) {
-            return false;
+            return [false, ""];
         }
         // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
         for (let wcc of wccArray) {
@@ -254,7 +291,7 @@ export class FallthroughHelper {
                     })
                 }
                 if (!isConnectedToAllStartNodes) {
-                    return false;
+                    return [false, ""];
                 }
             }
         }
@@ -268,11 +305,18 @@ export class FallthroughHelper {
                     })
                 }
                 if (!isConnectedFromAllStopNodes) {
-                    return false;
+                    return [false, ""];
                 }
             }
         }
-        return true;
+        let numberOfWccs = wccArray.length;
+        let returnString: string = '';
+        returnString += 'Cut possible between:\n'
+        returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n'
+        for (let i = 0; i < numberOfWccs; i++) {
+            returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n';
+        }
+        return [true, returnString];
     }
 
 
@@ -518,28 +562,29 @@ export class FallthroughHelper {
         return updatedMatrix;
     }
 
-    //For debugging..
-    public static print2DArray(arr: string[][], nodesIndexMap: Record<string, number>): void {
-        // Erstelle ein Mapping von Index zu Name (für Zeilen und Spalten)
-        const indexToNode = Object.keys(nodesIndexMap).reduce<Record<number, string>>((acc, node) => {
-            acc[nodesIndexMap[node]] = node;
-            return acc;
-        }, {});
+    /*
+        //For debugging..
+        public static print2DArray(arr: string[][], nodesIndexMap: Record<string, number>): void {
+            // Erstelle ein Mapping von Index zu Name (für Zeilen und Spalten)
+            const indexToNode = Object.keys(nodesIndexMap).reduce<Record<number, string>>((acc, node) => {
+                acc[nodesIndexMap[node]] = node;
+                return acc;
+            }, {});
 
-        // Ausgabe der Spaltennamen als Kopfzeile
-        const header = [''] // Leeres Feld oben links (für den Fall, dass Zeilen- und Spaltennamen die gleiche Indexstruktur haben)
-            .concat(Object.values(nodesIndexMap).map(index => indexToNode[index]));
-        console.log(header.join(' | '));
+            // Ausgabe der Spaltennamen als Kopfzeile
+            const header = [''] // Leeres Feld oben links (für den Fall, dass Zeilen- und Spaltennamen die gleiche Indexstruktur haben)
+                .concat(Object.values(nodesIndexMap).map(index => indexToNode[index]));
+            console.log(header.join(' | '));
 
-        // Ausgabe jeder Zeile mit Zeilenname
-        for (let rowIndex = 0; rowIndex < arr.length; rowIndex++) {
-            const row = arr[rowIndex];
-            // Ausgabe des Zeilennamens und der jeweiligen Zeilenwerte
-            const rowOutput = [indexToNode[rowIndex]].concat(row); // Füge Zeilenname hinzu
-            console.log(rowOutput.join(' | '));
+            // Ausgabe jeder Zeile mit Zeilenname
+            for (let rowIndex = 0; rowIndex < arr.length; rowIndex++) {
+                const row = arr[rowIndex];
+                // Ausgabe des Zeilennamens und der jeweiligen Zeilenwerte
+                const rowOutput = [indexToNode[rowIndex]].concat(row); // Füge Zeilenname hinzu
+                console.log(rowOutput.join(' | '));
+            }
         }
-    }
-
+        */
     public static findStartAndStopNodes(
         dfg: DirectlyFollows,
         validNodes: string[],
@@ -550,7 +595,7 @@ export class FallthroughHelper {
         let stopArcs = arcs.filter(arc => validNodes.includes(arc.source as string) && !validNodes.includes(arc.target as string));
         let startArcs = arcs.filter(arc => validNodes.includes(arc.target as string) && !validNodes.includes(arc.source as string));
         for (let arc of startArcs) {
-            if (!startNodes.includes(arc.target as string)){
+            if (!startNodes.includes(arc.target as string)) {
                 startNodes.push(arc.target as string);
             }
         }

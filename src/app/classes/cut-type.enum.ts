@@ -1,6 +1,6 @@
 export enum CutType {
-    XOR = "xor",
-    SEQUENCE = "sequence",
-    PARALLEL = "parallel",
-    LOOP = "loop"
+    XOR = "XOR",
+    SEQUENCE = "Sequence",
+    PARALLEL = "Parallel",
+    LOOP = "Loop"
 }
