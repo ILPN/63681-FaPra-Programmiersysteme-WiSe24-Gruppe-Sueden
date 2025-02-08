@@ -129,7 +129,7 @@
                 <mat-tab label="Transformation Steps" bodyClass="p-2 h-full flex flex-col">
                     <div class="overflow-y-auto" #activityLog>
                         @for (log of processGraphService.logSignal(); track $index) {
-                            <div>
+                            <div class="flex gap-1">
                                 <span class="font-bold">{{ $index + 1 }}.</span>
                                 <span>{{ log }}</span>
                             </div>
