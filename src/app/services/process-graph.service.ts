@@ -109,10 +109,10 @@ export class ProcessGraphService {
 
         // Die Ergebnisse an das ProcessGraphService weitergeben
 
-        if (result[0] && result[2] !== undefined && result[3] !== undefined) {
+        if (result[0] && result[3] !== undefined && result[4] !== undefined) {
 
-            if (result[2] && result[3]) {
-                this.incorporateNewDFGs(data.dfg, result[2], result[3], data.cutType);
+            if (result[3] && result[4]) {
+                this.incorporateNewDFGs(data.dfg, result[3], result[4], data.cutType);
             }
             const currentGraph = this.graphSignal();
             if (currentGraph?.dfgSet.size===0){
@@ -131,7 +131,7 @@ export class ProcessGraphService {
         } else {
             this.addLogEntry("-----------------------")
         }
-        return {success: result[0], comment: result[1]};
+        return {success: result[0], comment: result[1], reason: result[2]};
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
@@ -571,7 +571,7 @@ export class ProcessGraphService {
                 if (!repeatingPattern) {
                     this.addLogEntry('no repeating Pattern found')
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Tau-Loop not possible'}
+                    return {success: false, comment: 'Tau-Loop not possible', reason: 'no repeating Pattern found'}
                 }
                 this.addLogEntry('Repeating Pattern found - ok')
                 if (emptyTrace) {
@@ -626,7 +626,7 @@ export class ProcessGraphService {
                 this.graphSignal.set({
                     ...workingGraph
                 })
-                return {success: true, comment: 'TAU-Loop executed'}
+                return {success: true, comment: 'TAU-Loop executed', reason: ''}
 
             }
             /*=====================================================AOPT====================================================*/
@@ -665,24 +665,24 @@ export class ProcessGraphService {
                                 this.graphSignal.set({
                                     ...workingGraph!
                                 })
-                                return {success: true, comment: 'Activity Once Per Trace executed'}
+                                return {success: true, comment: 'Activity Once Per Trace executed',reason:''}
                             } else {
                                 this.addLogEntry('AOPT not possible with selected Node')
-                                return {success: false, comment: 'Activity Once Per Trace not possible with selected Node'}
+                                return {success: false, comment: 'Activity Once Per Trace not possible', reason:'Selected Node not exactly once in every Trace'}
                             }
                         } else {
                             this.addLogEntry("-----------------------")
-                            return {success: isFallthrough[0], comment: isFallthrough[1]};
+                            return {success: isFallthrough[0], comment:'No Fallthrough detected' , reason: 'A cut is possible'};
                         }
                     } else {
                         this.addLogEntry('Tau-Loop found')
                         this.addLogEntry("-----------------------")
-                        return {success: false, comment: 'Activity Once Per Trace not possible'}
+                        return {success: false, comment: 'Activity Once Per Trace not possible', reason: 'Repeating Pattern found'}
                     }
                 } else {
                     this.addLogEntry('More than one node was selected')
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Activity Once Per Trace not possible'}
+                    return {success: false, comment: 'Activity Once Per Trace not possible', reason: 'More than one Node was selected'}
                 }
 
             }
@@ -697,7 +697,7 @@ export class ProcessGraphService {
                         if (aoptpossible[0]) {
                             this.addLogEntry(aoptpossible[1])
                             this.addLogEntry("-----------------------")
-                            return {success: false, comment: aoptpossible[1]};
+                            return {success: false, comment: 'Flower Model not allowed', reason:'Activity Once Per Trace is possible'};
                         } else {
                             let tempTransitionArray:Node[] = [];
                             let nodeAmount = dfgNode.dfg.getNodes().size
@@ -814,28 +814,27 @@ export class ProcessGraphService {
                             this.graphSignal.set({
                                 ...workingGraph
                             })
-                            return {success: true, comment: 'Flower Model Executed'};
+                            return {success: true, comment: 'Flower Model Executed', reason:''};
                         }
                     } else {
                         this.addLogEntry(isFallthrough[1])
                         this.addLogEntry("-----------------------")
-                        return {success: isFallthrough[0], comment: isFallthrough[1]};
+                        return {success: isFallthrough[0], comment:'No Fallthrough detected' , reason: 'A cut is possible'};
                     }
                 } else {
                     this.addLogEntry(sptResult.comment)
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: sptResult.comment}
+                    return {success: false, comment: 'Flower Model not allowed', reason: 'Repeating Pattern found'}
                 }
             }
             default:
-                break;
+                return {success: false, comment: 'No Fallthrough-Type selected', reason: ''}
         }
-        return {success: false, comment: 'No Fallthrough'};
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
         let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
-        return {success: result[0], comment: result[1]}
+        return {success: result[0], comment: result[1], reason:''}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt
