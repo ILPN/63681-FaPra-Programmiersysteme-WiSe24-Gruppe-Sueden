@@ -10,6 +10,7 @@ import {ToolbarService} from "../../services/toolbar.service";
 import {FallthroughType} from "../../classes/fallthrough.enum";
 import {ValidationResult} from "../../classes/validation-result";
 import {PetrinetExporterHelper} from "../../helper/PetriNetExporterHelper";
+import {HintDialog} from "../hint-dialog/hint.dialog";
 
 @Component({
     selector: "toolbar",
@@ -46,10 +47,22 @@ export class ToolbarComponent {
             this.dialog.open(FailedValidationDialog, {
                 width: '500px',
                 data: {
-                    message: result.comment
+                    title: result.comment,
+                    message: result.reason
                 }
             })
         }
+    }
+
+    protected showHint() {
+        const [title, message] = this.graphService.giveTip(this.selectionService.selectedDfg()!)
+        this.dialog.open(HintDialog, {
+            width: '500px',
+            data: {
+                title,
+                message
+            }
+        })
     }
 
     protected export(type: ExportType) {

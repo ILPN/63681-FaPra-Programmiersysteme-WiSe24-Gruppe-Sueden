@@ -67,6 +67,10 @@
                         Validate
                     </button>
 
+                    <button mat-fab matTooltip="I need a hint!" (click)="showHint()">
+                        <mat-icon>tips_and_updates</mat-icon>
+                    </button>
+
                 </div>
             </div>
 
@@ -97,7 +101,7 @@
 
     <!-- Export -->
     <div matTooltip="Petrinet can only be exported after the inductive miner has terminated" [matTooltipDisabled]="false">
-        <button mat-fab matTooltip="Export Petrinet" [disabled]="(graphService.graphSignal()?.dfgSet?.size || 0) > 0"  [matMenuTriggerFor]="exportMenu">
+        <button mat-fab matTooltip="Export Petrinet" [disabled]="(graphService.graphSignal()?.dfgSet?.size || 0) > 0" [matMenuTriggerFor]="exportMenu">
             <mat-icon>file_download</mat-icon>
         </button>
     </div>

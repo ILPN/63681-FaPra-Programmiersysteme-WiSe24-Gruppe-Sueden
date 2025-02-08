@@ -83,7 +83,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         // Scroll activity log to bottom
         effect(() => {
             this.processGraphService.logSignal()
-            setTimeout(() => this.activityLog()!.nativeElement.parentElement!.scrollTo({top: 999999999, behavior: "smooth"}))
+            setTimeout(() => this.activityLog()?.nativeElement.parentElement?.scrollTo({top: 999999999, behavior: "smooth"}))
         });
     }
 

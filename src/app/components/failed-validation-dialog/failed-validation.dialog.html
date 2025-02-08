@@ -1,9 +1,11 @@
 <div mat-dialog-title>
-    <mat-icon class="text-red-600 !h-[40px] !w-[40px] text-[40px] mb-[-12px]">close</mat-icon>
-    Validation failed
+    <mat-icon class="text-red-600 !h-[40px] !w-[40px] text-[40px] mb-[-12px] mr-1">close</mat-icon> {{data.title}}
 </div>
 <div mat-dialog-content>
-    {{data.message}}
+    <div>Explaination:</div>
+    <div class="reason" [class.masked]="masked()" (click)="masked.set(false)" [matTooltipDisabled]="!masked()" matTooltip="Click to reveal">
+        {{data.message}}
+    </div>
 </div>
 <div mat-dialog-actions align="end">
     <button tabindex="-1" mat-button mat-dialog-close>

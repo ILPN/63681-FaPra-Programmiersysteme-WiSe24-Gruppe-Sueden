@@ -6,7 +6,7 @@ import {MatTooltip} from "@angular/material/tooltip";
 
 @Component({
     standalone: true,
-    templateUrl: "failed-validation.dialog.html",
+    templateUrl: "hint.dialog.html",
     imports: [
         MatDialogTitle,
         MatDialogContent,
@@ -16,9 +16,9 @@ import {MatTooltip} from "@angular/material/tooltip";
         MatDialogClose,
         MatTooltip
     ],
-    styleUrls: ["failed-validation.dialog.scss"]
+    styleUrls: ["hint.dialog.scss"]
 })
-export class FailedValidationDialog {
+export class HintDialog {
 
     protected masked = signal(true)
 

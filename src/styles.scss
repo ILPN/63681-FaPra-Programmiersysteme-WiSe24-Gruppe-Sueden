@@ -52,3 +52,11 @@ body {
     --mat-tab-header-active-focus-indicator-color: gray !important;
     --mat-tab-header-active-hover-indicator-color: gray !important;
 }
+
+.mat-mdc-dialog-content {
+    padding-bottom: 10px !important;
+}
+
+.mat-mdc-dialog-actions {
+    padding-top: 0 !important;
+}
