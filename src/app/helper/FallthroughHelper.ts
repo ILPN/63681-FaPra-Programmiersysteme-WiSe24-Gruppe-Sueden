@@ -68,7 +68,6 @@ export class FallthroughHelper {
             for (let i = 0; i < numberOfWccs; i++) {
                 returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
             }
-            console.log(returnString)
             return [returnBool, returnString];
         }
         return [returnBool, '']
@@ -143,7 +142,6 @@ export class FallthroughHelper {
             for (let i = 0; i < numberOfComponents; i++) {
                 returnString += 'Node Set ' + (i + 1) + ': ' + components[i].join(' , ') + '\n';
             }
-            console.log(returnString)
             return [returnBool, returnString];
         }
 
@@ -184,7 +182,6 @@ export class FallthroughHelper {
             for (let i = 0; i < numberOfComponents; i++) {
                 returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
             }
-            console.log(returnString)
             return [allWCCsValid, returnString];
         }
         return [allWCCsValid, ''];
@@ -319,7 +316,6 @@ export class FallthroughHelper {
         for (let i = 0; i < numberOfWccs; i++) {
             returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n';
         }
-        console.log(returnString)
         return [true, returnString];
     }
 

@@ -39,7 +39,6 @@ export class ProcessGraphService {
         const placeSet = new Set<Node>;
         const transSet = new Set<Node>;
         const firstPlace: Node = this.createPlace('Place_play');
-        console.log(firstPlace.name)
         const playTransition: Node = this.createTransition("play");
         const tempPlace1: Node = this.createPlace();
         const tempPlace2: Node = this.createPlace();
@@ -672,7 +671,6 @@ export class ProcessGraphService {
                                 return {success: false, comment: 'Activity Once Per Trace not possible with selected Node'}
                             }
                         } else {
-                            console.log(isFallthrough[1])
                             this.addLogEntry("-----------------------")
                             return {success: isFallthrough[0], comment: isFallthrough[1]};
                         }
@@ -869,6 +867,29 @@ export class ProcessGraphService {
         return [false, ''];
     }
 
+    /*==============================================================================================================================*/
+    /*=======================================================Give TIP===============================================================*/
+    /*==============================================================================================================================*/
+    public giveTip(dfgNode: DfgNode): [string, string] {
+        let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
+        // Returns Possible cut as first string and between which Nodes the Cut is as second string
+        if (!isFallthrough[0]) {
+            console.log(isFallthrough[2])
+            return [isFallthrough[1],isFallthrough[2]]
+        }
+        let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
+        let resultString = '';
+        // if TauLoop is Possible give Tip
+        if (!this.checkNotSPT(dfgNode.dfg).success){
+            resultString += 'There is a Repeating Pattern ==> Tau-Loop'
+        } else if(aoptpossible[0]) {
+            resultString += aoptpossible[1]
+        } else {
+            resultString += 'neither APOT nor Tau-Loop possible.\nUse Flower Model'
+        }
+        console.log(resultString)
+        return ['Fallthrough detected', resultString]
+    }
     /*==============================================================================================================================*/
     /*=================================================METHODEN zur Petrinetz Bearbeitung===========================================*/
     /*==============================================================================================================================*/
