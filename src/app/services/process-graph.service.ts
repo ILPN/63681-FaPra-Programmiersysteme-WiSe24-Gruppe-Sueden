@@ -571,7 +571,7 @@ export class ProcessGraphService {
                 if (!repeatingPattern) {
                     this.addLogEntry('no repeating Pattern found')
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Tau-Loop not possible', reason: 'no repeating Pattern found'}
+                    return {success: false, comment: 'Tau-Loop not possible', reason: 'No repeating Pattern found'}
                 }
                 this.addLogEntry('Repeating Pattern found - ok')
                 if (emptyTrace) {
@@ -873,7 +873,6 @@ export class ProcessGraphService {
         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
         // Returns Possible cut as first string and between which Nodes the Cut is as second string
         if (!isFallthrough[0]) {
-            console.log(isFallthrough[2])
             return [isFallthrough[1],isFallthrough[2]]
         }
         let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
@@ -884,9 +883,8 @@ export class ProcessGraphService {
         } else if(aoptpossible[0]) {
             resultString += aoptpossible[1]
         } else {
-            resultString += 'neither APOT nor Tau-Loop possible.\nUse Flower Model'
+            resultString += 'Neither APOT nor Tau-Loop possible.\nUse Flower Model'
         }
-        console.log(resultString)
         return ['Fallthrough detected', resultString]
     }
     /*==============================================================================================================================*/

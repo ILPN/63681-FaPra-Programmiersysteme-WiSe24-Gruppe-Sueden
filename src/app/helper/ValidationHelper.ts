@@ -14,6 +14,7 @@ export class ValidationHelper {
         this.setLogFunction(updateLog);
         let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
+            //TODO
             return [...isRepWithTau,'']
         }
         this.log(`Start validation for cutType: ${cutType}`);
@@ -116,7 +117,7 @@ export class ValidationHelper {
                 for (let nodeFirstSuccessor of nodeFirstSuccessors) {
                     if (secondNodeSet.has(nodeFirstSuccessor)) {
                         this.log(`arc from ${nodeFirst} to ${nodeFirstSuccessor} found`);
-                        return [false, `XOR Cut not possible`, `arc from ${nodeFirst} to ${nodeFirstSuccessor} found`]
+                        return [false, `XOR Cut not possible`, `Arc from ${nodeFirst} to ${nodeFirstSuccessor} found`]
                     }
                 }
             }
@@ -129,7 +130,7 @@ export class ValidationHelper {
                 for (let nodeSecondSuccessor of nodeSecondSuccessors) {
                     if (firstNodeSet.has(nodeSecondSuccessor)) {
                         this.log(`arc from ${nodeSecond} to ${nodeSecondSuccessor} found`);
-                        return [false, `XOR-Cut not possible`, `arc from ${nodeSecond} to ${nodeSecondSuccessor} found`]
+                        return [false, `XOR-Cut not possible`, `Arc from ${nodeSecond} to ${nodeSecondSuccessor} found`]
                     }
                 }
             }

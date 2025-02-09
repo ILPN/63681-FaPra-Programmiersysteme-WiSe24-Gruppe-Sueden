@@ -64,9 +64,9 @@ export class FallthroughHelper {
         if (returnBool) {
             let numberOfWccs = wccs.length;
             let returnString: string = '';
-            returnString += 'Cut possible between:\n'
+            returnString += 'Cut possible between:\n\n'
             for (let i = 0; i < numberOfWccs; i++) {
-                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
+                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n\n';
             }
             return [returnBool, returnString];
         }
@@ -138,9 +138,9 @@ export class FallthroughHelper {
         if (returnBool) {
             let numberOfComponents = components.length;
             let returnString: string = '';
-            returnString += 'Cut possible between:\n'
+            returnString += 'Cut possible between:\n\n'
             for (let i = 0; i < numberOfComponents; i++) {
-                returnString += 'Node Set ' + (i + 1) + ': ' + components[i].join(' , ') + '\n';
+                returnString += 'Node Set ' + (i + 1) + ': ' + components[i].join(' , ') + '\n\n';
             }
             return [returnBool, returnString];
         }
@@ -178,9 +178,9 @@ export class FallthroughHelper {
         if (allWCCsValid) {
             let numberOfComponents = wccs.length;
             let returnString: string = '';
-            returnString += 'Cut possible between:\n'
+            returnString += 'Cut possible between:\n\n'
             for (let i = 0; i < numberOfComponents; i++) {
-                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n';
+                returnString += 'Node Set ' + (i + 1) + ': ' + wccs[i].join(' , ') + '\n\n';
             }
             return [allWCCsValid, returnString];
         }
@@ -311,10 +311,10 @@ export class FallthroughHelper {
         }
         let numberOfWccs = wccArray.length;
         let returnString: string = '';
-        returnString += 'Cut possible between:\n'
-        returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n'
+        returnString += 'Cut possible between:\n\n'
+        returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n\n'
         for (let i = 0; i < numberOfWccs; i++) {
-            returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n';
+            returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n\n';
         }
         return [true, returnString];
     }
