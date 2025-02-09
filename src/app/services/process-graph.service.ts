@@ -24,7 +24,7 @@ export class ProcessGraphService {
 
     private placeCounter = 1;
     private tauCounter = 1;
-    private dfgCounter =1;
+    private dfgCounter = 1;
 
     constructor(private displayService: DisplayService) {
     }
@@ -87,8 +87,8 @@ export class ProcessGraphService {
         this.addLogEntry('=======================')
         this.addLogEntry('Initial Graph generated')
         this.addLogEntry('=======================')
-        if (this.isBaseCase(eventlog)){
-            this.transformBaseCaseToTransition(this.graphSignal()!,eventlog)
+        if (this.isBaseCase(eventlog)) {
+            this.transformBaseCaseToTransition(this.graphSignal()!, eventlog)
         }
     }
 
@@ -115,7 +115,7 @@ export class ProcessGraphService {
                 this.incorporateNewDFGs(data.dfg, result[3], result[4], data.cutType);
             }
             const currentGraph = this.graphSignal();
-            if (currentGraph?.dfgSet.size===0){
+            if (currentGraph?.dfgSet.size === 0) {
                 this.addLogEntry('=======================')
                 this.addLogEntry('Inductive Miner to completion executed')
                 this.addLogEntry('=======================')
@@ -306,7 +306,7 @@ export class ProcessGraphService {
                 if (arc.target === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.source as Node, 2).underThreshold) {
                     firstTauNeeded = false;
                     let x = arc.source as Node
-                    x.y=dfg1.y
+                    x.y = dfg1.y
                     x.x = dfgOriginal.x - PhysicsHelper.eventLogWidth / 2
                     //Finde transition VOR place
                     let transitionOrDFGbefore = this.findSingularSourceForTarget(workingGraph.arcs, arc.source);
@@ -319,7 +319,7 @@ export class ProcessGraphService {
                 //falls das der Fall ist, ist keine Tau transition danach benötigt
                 if (arc.source === dfgOriginal && this.occursInThisManyArcs(workingGraph.arcs, arc.target as Node, 2).underThreshold) {
                     lastTauNeeded = false;
-                   let x = arc.target as Node
+                    let x = arc.target as Node
                     x.y = dfg1.y
                     x.x = dfg1.x + PhysicsHelper.eventLogWidth / 2
                     //Finde transition NACH place
@@ -336,16 +336,16 @@ export class ProcessGraphService {
             firstPlaceNew1.x = dfg1.x - PhysicsHelper.eventLogWidth / 2;
             firstPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
-            if(!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)){
+            if (!this.checkIfNodeCloser(firstPlaceNew1, dfgOriginal, predPlace!)) {
                 firstPlaceNew1.x = dfg1.x + PhysicsHelper.eventLogWidth / 2;
                 transitionNeedsChange = true;
             }
             workingGraph.places.add(firstPlaceNew1); // gefixt (firstPlaceNew2 -> firstPlaceNew1)
             const firstTauTransition: Node = this.createTransition();
-            firstTauTransition.x= firstPlaceNew1.x - PhysicsHelper.placeDiameter
-            firstTauTransition.y= dfgOriginal.y
-            if(transitionNeedsChange){
-                firstTauTransition.x += 2*PhysicsHelper.placeDiameter
+            firstTauTransition.x = firstPlaceNew1.x - PhysicsHelper.placeDiameter
+            firstTauTransition.y = dfgOriginal.y
+            if (transitionNeedsChange) {
+                firstTauTransition.x += 2 * PhysicsHelper.placeDiameter
             }
             workingGraph.transitions.add(firstTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
@@ -368,7 +368,7 @@ export class ProcessGraphService {
             lastPlaceNew1.x = dfg1.x + PhysicsHelper.eventLogWidth / 2;
             lastPlaceNew1.y = dfg1.y;
             let transitionNeedsChange = false;
-            if(this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)){
+            if (this.checkIfNodeCloser(lastPlaceNew1, dfgOriginal, predPlace!)) {
                 lastPlaceNew1.x = dfg1.x - PhysicsHelper.eventLogWidth / 2;
                 transitionNeedsChange = true;
             }
@@ -376,8 +376,8 @@ export class ProcessGraphService {
             const lastTauTransition: Node = this.createTransition();
             lastTauTransition.x = lastPlaceNew1.x + PhysicsHelper.placeDiameter
             lastTauTransition.y = dfgOriginal.y
-            if(transitionNeedsChange){
-                lastTauTransition.x -= 2*PhysicsHelper.placeDiameter
+            if (transitionNeedsChange) {
+                lastTauTransition.x -= 2 * PhysicsHelper.placeDiameter
             }
             workingGraph.transitions.add(lastTauTransition);
             workingGraph.arcs = workingGraph.arcs.flatMap(arc => {
@@ -413,7 +413,7 @@ export class ProcessGraphService {
         dfg1.x = dfgOriginal.x;
         dfg1.y = dfgOriginal.y + dfgOriginal.height
         dfg2.x = dfgOriginal.x
-        dfg2.y = dfgOriginal.y -  dfgOriginal.height;
+        dfg2.y = dfgOriginal.y - dfgOriginal.height;
 
         //finde place vor dfgOriginal
         let predPlace: Node;
@@ -457,18 +457,18 @@ export class ProcessGraphService {
         }
         // Falls eine Tau transition benötigt wird...
         const newPlace: Node = this.createPlace();
-        newPlace.x = dfg1.x-PhysicsHelper.eventLogWidth/2-PhysicsHelper.placeDiameter;
+        newPlace.x = dfg1.x - PhysicsHelper.eventLogWidth / 2 - PhysicsHelper.placeDiameter;
         newPlace.y = dfg1.y;
         let transitionNeedsChange = false;
-        if(!this.checkIfNodeCloser(newPlace, dfgOriginal, predPlace!)){
-            newPlace.x = dfg1.x + PhysicsHelper.eventLogWidth/2 + PhysicsHelper.placeDiameter;
+        if (!this.checkIfNodeCloser(newPlace, dfgOriginal, predPlace!)) {
+            newPlace.x = dfg1.x + PhysicsHelper.eventLogWidth / 2 + PhysicsHelper.placeDiameter;
             transitionNeedsChange = true;
         }
         workingGraph.places.add(newPlace);
         const newTransition: Node = this.createTransition();
         newTransition.x = newPlace.x - PhysicsHelper.placeDiameter
         newTransition.y = newPlace.y
-        if(transitionNeedsChange){
+        if (transitionNeedsChange) {
             newTransition.x = newPlace.x + PhysicsHelper.placeDiameter
         }
         workingGraph.transitions.add(newTransition);
@@ -499,6 +499,7 @@ export class ProcessGraphService {
 
     /*==============================================================================================================================*/
     /*==========================================================BaseCase============================================================*/
+
     /*==============================================================================================================================*/
 
     private checkAndTransformDFGtoBasecase(dfg: DfgNode, workingGraph: ProcessGraph): void {
@@ -560,9 +561,9 @@ export class ProcessGraphService {
                 this.addLogEntry('Trying to execute Tau-Loop')
                 // Check for Empty trace
                 let emptyTrace = dfgNode.dfg.eventLog.some(trace => trace.includes('empty_trace'));
-               //
-                let repeatingPattern : boolean
-                if (emptyTrace){
+                //
+                let repeatingPattern: boolean
+                if (emptyTrace) {
                     dfgNode.dfg.eventLog = dfgNode.dfg.eventLog.filter(trace => !trace.includes('empty_trace'));
                     repeatingPattern = dfgNode.dfg.isPatternExclusivelyRepeated()
                 } else {
@@ -582,7 +583,7 @@ export class ProcessGraphService {
                 }
                 // Passe eventlog sowie Arcs an
                 let repeatedPattern = dfgNode.dfg.getRepeatedPattern();
-                let dfgNew= new DirectlyFollows();
+                let dfgNew = new DirectlyFollows();
                 dfgNew.setDFGfromStringArray([repeatedPattern]);
                 dfgNode.dfg = dfgNew;
                 dfgNode.dfg.arcs = dfgNode.dfg.arcs.filter(arc =>
@@ -602,7 +603,7 @@ export class ProcessGraphService {
                     this.addLogEntry('Resulting Eventlog in DO-Part')
                     const tauTransition: Node = this.createTransition()
                     tauTransition.x = dfgNode.x
-                    tauTransition.y = dfgNode.y-dfgNode.height
+                    tauTransition.y = dfgNode.y - dfgNode.height
                     dfgNode.y = dfgNode.y + dfgNode.height
                     workingGraph.transitions.add(tauTransition);
                     workingGraph.arcs.forEach(arc => {
@@ -616,7 +617,7 @@ export class ProcessGraphService {
                 }
                 this.addLogEntry('TAU-Loop executed')
                 this.checkAndTransformDFGtoBasecase(dfgNode, workingGraph)
-                if (workingGraph?.dfgSet.size===0){
+                if (workingGraph?.dfgSet.size === 0) {
                     this.addLogEntry('=======================')
                     this.addLogEntry('Inductive Miner to completion executed')
                     this.addLogEntry('=======================')
@@ -655,7 +656,7 @@ export class ProcessGraphService {
                                 const newDfg2 = this.createEventlog(dfg2)
                                 this.incorporateParallel(dfgNode, newDfg1, newDfg2, workingGraph!)
                                 this.addLogEntry('Activity Once Per Trace executed')
-                                if (workingGraph?.dfgSet.size===0){
+                                if (workingGraph?.dfgSet.size === 0) {
                                     this.addLogEntry('=======================')
                                     this.addLogEntry('Inductive Miner to completion executed')
                                     this.addLogEntry('=======================')
@@ -665,24 +666,40 @@ export class ProcessGraphService {
                                 this.graphSignal.set({
                                     ...workingGraph!
                                 })
-                                return {success: true, comment: 'Activity Once Per Trace executed',reason:''}
+                                return {success: true, comment: 'Activity Once Per Trace executed', reason: ''}
                             } else {
                                 this.addLogEntry('AOPT not possible with selected Node')
-                                return {success: false, comment: 'Activity Once Per Trace not possible', reason:'Selected Node not exactly once in every Trace'}
+                                return {
+                                    success: false,
+                                    comment: 'Activity Once Per Trace not possible',
+                                    reason: 'Selected Node not exactly once in every Trace'
+                                }
                             }
                         } else {
                             this.addLogEntry("-----------------------")
-                            return {success: isFallthrough[0], comment:'No Fallthrough detected' , reason: 'A cut is possible'};
+                            return {
+                                success: isFallthrough[0],
+                                comment: 'No Fallthrough detected',
+                                reason: 'A cut is possible'
+                            };
                         }
                     } else {
                         this.addLogEntry('Tau-Loop found')
                         this.addLogEntry("-----------------------")
-                        return {success: false, comment: 'Activity Once Per Trace not possible', reason: 'Repeating Pattern found'}
+                        return {
+                            success: false,
+                            comment: 'Activity Once Per Trace not possible',
+                            reason: 'Repeating Pattern found'
+                        }
                     }
                 } else {
                     this.addLogEntry('More than one node was selected')
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Activity Once Per Trace not possible', reason: 'More than one Node was selected'}
+                    return {
+                        success: false,
+                        comment: 'Activity Once Per Trace not possible',
+                        reason: 'More than one Node was selected'
+                    }
                 }
 
             }
@@ -697,18 +714,22 @@ export class ProcessGraphService {
                         if (aoptpossible[0]) {
                             this.addLogEntry(aoptpossible[1])
                             this.addLogEntry("-----------------------")
-                            return {success: false, comment: 'Flower Model not allowed', reason:'Activity Once Per Trace is possible'};
+                            return {
+                                success: false,
+                                comment: 'Flower Model not allowed',
+                                reason: 'Activity Once Per Trace is possible'
+                            };
                         } else {
-                            let tempTransitionArray:Node[] = [];
+                            let tempTransitionArray: Node[] = [];
                             let nodeAmount = dfgNode.dfg.getNodes().size
-                            let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter*2,nodeAmount)
+                            let circularPositions = this.generateCircularPositions(dfgNode.x, dfgNode.y, PhysicsHelper.nodeDiameter * 2, nodeAmount)
                             for (let node of dfgNode.dfg.getNodes()) {
                                 let newTransition = this.createTransition(node);
                                 tempTransitionArray.push(newTransition)
                             }
-                            for (let i=0; i<tempTransitionArray.length; i++) {
-                                tempTransitionArray[i].x=circularPositions[i].x
-                                tempTransitionArray[i].y=circularPositions[i].y
+                            for (let i = 0; i < tempTransitionArray.length; i++) {
+                                tempTransitionArray[i].x = circularPositions[i].x
+                                tempTransitionArray[i].y = circularPositions[i].y
                             }
                             let counter = 0;
                             let placeBefore: Node | undefined;
@@ -761,7 +782,7 @@ export class ProcessGraphService {
                             } else {
                                 //Löse via TAU
                                 let tauTransitionBefore: Node = this.createTransition()
-                                tauTransitionBefore.x = dfgNode.x-PhysicsHelper.nodeDiameter*3
+                                tauTransitionBefore.x = dfgNode.x - PhysicsHelper.nodeDiameter * 3
                                 tauTransitionBefore.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionBefore)
                                 let middlePlace: Node = this.createPlace()
@@ -769,7 +790,7 @@ export class ProcessGraphService {
                                 middlePlace.y = dfgNode.y
                                 workingGraph?.places.add(middlePlace)
                                 let tauTransitionAfter: Node = this.createTransition()
-                                tauTransitionAfter.x = dfgNode.x+PhysicsHelper.nodeDiameter*3
+                                tauTransitionAfter.x = dfgNode.x + PhysicsHelper.nodeDiameter * 3
                                 tauTransitionAfter.y = dfgNode.y
                                 workingGraph?.transitions.add(tauTransitionAfter)
                                 workingGraph?.dfgSet.delete(dfgNode)
@@ -805,21 +826,26 @@ export class ProcessGraphService {
                                 this.exchangePositionsOfNodesIfNeeded(tauTransitionBefore, tauTransitionAfter, predNode!);
                             }
                             this.addLogEntry("Flower Model Executed")
-                            if (workingGraph?.dfgSet.size===0){
+                            if (workingGraph?.dfgSet.size === 0) {
                                 this.addLogEntry('=======================')
                                 this.addLogEntry('Inductive Miner to completion executed')
                                 this.addLogEntry('=======================')
                             } else {
-                                this.addLogEntry("-----------------------")                            }
+                                this.addLogEntry("-----------------------")
+                            }
                             this.graphSignal.set({
                                 ...workingGraph
                             })
-                            return {success: true, comment: 'Flower Model Executed', reason:''};
+                            return {success: true, comment: 'Flower Model Executed', reason: ''};
                         }
                     } else {
                         this.addLogEntry(isFallthrough[1])
                         this.addLogEntry("-----------------------")
-                        return {success: isFallthrough[0], comment:'No Fallthrough detected' , reason: 'A cut is possible'};
+                        return {
+                            success: isFallthrough[0],
+                            comment: 'No Fallthrough detected',
+                            reason: 'A cut is possible'
+                        };
                     }
                 } else {
                     this.addLogEntry(sptResult.comment)
@@ -834,7 +860,7 @@ export class ProcessGraphService {
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
         let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
-        return {success: result[0], comment: result[1], reason:''}
+        return {success: result[0], comment: result[1], reason: ''}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt
@@ -868,25 +894,28 @@ export class ProcessGraphService {
 
     /*==============================================================================================================================*/
     /*=======================================================Give TIP===============================================================*/
+
     /*==============================================================================================================================*/
     public giveTip(dfgNode: DfgNode): [string, string] {
         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
         // Returns Possible cut as first string and between which Nodes the Cut is as second string
         if (!isFallthrough[0]) {
-            return [isFallthrough[1],isFallthrough[2]]
+            if (!this.checkNotSPT(dfgNode.dfg).success) {
+                return ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
+            }
+            return [isFallthrough[1], isFallthrough[2]]
         }
         let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
         let resultString = '';
         // if TauLoop is Possible give Tip
-        if (!this.checkNotSPT(dfgNode.dfg).success){
-            resultString += 'There is a Repeating Pattern ==> Tau-Loop'
-        } else if(aoptpossible[0]) {
+        if (aoptpossible[0]) {
             resultString += aoptpossible[1]
         } else {
             resultString += 'Neither APOT nor Tau-Loop possible.\nUse Flower Model'
         }
         return ['Fallthrough detected', resultString]
     }
+
     /*==============================================================================================================================*/
     /*=================================================METHODEN zur Petrinetz Bearbeitung===========================================*/
     /*==============================================================================================================================*/
@@ -901,8 +930,8 @@ export class ProcessGraphService {
     // macht einen DFG durch hinzufügen einer TAU-Transition optional
     private makeOptional(dfg: DfgNode, workingGraph: ProcessGraph) {
         const tauTransition: Node = this.createTransition();
-        tauTransition.x=dfg.x
-        tauTransition.y=dfg.y +dfg.height
+        tauTransition.x = dfg.x
+        tauTransition.y = dfg.y + dfg.height
         workingGraph.transitions.add(tauTransition);
         workingGraph.arcs.forEach(arc => {
             if (arc.source === dfg) {
@@ -983,7 +1012,6 @@ export class ProcessGraphService {
     }
 
 
-
     /*======================================Process-Graph-Signal - UPDATE-METHODEN===========================================*/
 
 
@@ -1014,8 +1042,8 @@ export class ProcessGraphService {
             };
         } else {
             let counter = this.placeCounter
-            this.placeCounter ++;
-            let countedPlaceName= "Place_"+counter
+            this.placeCounter++;
+            let countedPlaceName = "Place_" + counter
             return {
                 name: countedPlaceName,
                 x: this.displayService.halfWidth(),
@@ -1034,7 +1062,7 @@ export class ProcessGraphService {
     }
 
     private createTransition(name?: string): Node {
-        if (name){
+        if (name) {
             return {
                 name: name,
                 x: this.displayService.halfWidth(),
@@ -1047,10 +1075,10 @@ export class ProcessGraphService {
                 height: PhysicsHelper.placeDiameter,
                 width: PhysicsHelper.placeDiameter,
             }
-        } else{
+        } else {
             let counter = this.tauCounter
-            this.tauCounter ++;
-            let countedTauName= "TAU_"+counter
+            this.tauCounter++;
+            let countedTauName = "TAU_" + counter
             return {
                 name: countedTauName,
                 x: this.displayService.halfWidth(),
@@ -1069,8 +1097,8 @@ export class ProcessGraphService {
 
     private createEventlog(dfg: DirectlyFollows): DfgNode {
         let counter = this.dfgCounter
-        this.dfgCounter ++;
-        let name= "DFG_"+counter
+        this.dfgCounter++;
+        let name = "DFG_" + counter
         return {
             name: name,
             dfg: dfg,
@@ -1085,6 +1113,7 @@ export class ProcessGraphService {
             width: PhysicsHelper.eventLogWidth,
         };
     }
+
     private generateCircularPositions(x: number, y: number, distance: number, n: number): { x: number; y: number }[] {
         const positions: { x: number; y: number }[] = [];
         const angleStep = (2 * Math.PI) / n;
@@ -1093,7 +1122,7 @@ export class ProcessGraphService {
             const angle = i * angleStep;
             const newX = x + distance * Math.cos(angle);
             const newY = y + distance * Math.sin(angle);
-            positions.push({ x: newX, y: newY });
+            positions.push({x: newX, y: newY});
         }
 
         return positions;
@@ -1122,7 +1151,7 @@ export class ProcessGraphService {
         return dx * dx + dy * dy;
     }
 
-    private checkIfNodeCloser(nodeCloser: Node, nodeFurther: Node, predPlace:Node){
+    private checkIfNodeCloser(nodeCloser: Node, nodeFurther: Node, predPlace: Node) {
         const dist1 = this.calculateSquaredEuclideanDistance(nodeCloser.x, nodeCloser.y, predPlace.x, predPlace.y);
         const dist2 = this.calculateSquaredEuclideanDistance(nodeFurther.x, nodeFurther.y, predPlace.x, predPlace.y);
         return dist1 <= dist2;

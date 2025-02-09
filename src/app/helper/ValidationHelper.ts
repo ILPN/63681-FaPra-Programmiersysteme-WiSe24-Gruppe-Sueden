@@ -14,8 +14,7 @@ export class ValidationHelper {
         this.setLogFunction(updateLog);
         let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
-            //TODO
-            return [...isRepWithTau,'']
+            return [isRepWithTau[0],cutType+'-Cut not allowed',isRepWithTau[1]]
         }
         this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
