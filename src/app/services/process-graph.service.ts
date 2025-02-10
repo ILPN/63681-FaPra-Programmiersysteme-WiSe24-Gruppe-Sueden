@@ -900,6 +900,31 @@ export class ProcessGraphService {
         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
         // Returns Possible cut as first string and between which Nodes the Cut is as second string
         if (!isFallthrough[0]) {
+            if (!this.checkNotSPT(dfgNode.dfg).success) { // zuständig für Fälle von Tau-Loop mit leerer Trace
+                return ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
+            }
+            return [isFallthrough[1], isFallthrough[2]]
+        } else {
+            if (!this.checkNotSPT(dfgNode.dfg).success) { // zuständig für Fälle von Tau-Loop ohne leere Trace
+                return ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
+            }
+            let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
+            let resultString = '';
+            // if aopt is possible give Tip
+            if (aoptpossible[0]) {
+                resultString += aoptpossible[1]
+            } else {
+                resultString += 'Neither AOPT nor Tau-Loop possible.\nUse Flower Model.'
+            }
+            return ['Fallthrough detected', resultString]
+        }
+    }
+
+    /* Alte Version
+    public giveTip(dfgNode: DfgNode): [string, string] {
+        let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
+        // Returns Possible cut as first string and between which Nodes the Cut is as second string
+        if (!isFallthrough[0]) {
             if (!this.checkNotSPT(dfgNode.dfg).success) {
                 return ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
             }
@@ -915,6 +940,8 @@ export class ProcessGraphService {
         }
         return ['Fallthrough detected', resultString]
     }
+    */
+
 
     /*==============================================================================================================================*/
     /*=================================================METHODEN zur Petrinetz Bearbeitung===========================================*/
