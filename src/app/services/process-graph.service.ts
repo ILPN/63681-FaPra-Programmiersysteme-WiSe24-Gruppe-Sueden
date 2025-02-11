@@ -892,6 +892,17 @@ export class ProcessGraphService {
         return [false, ''];
     }
 
+    private getAllAOPTNodes(dfg:DirectlyFollows): string[]{
+        let aoptNodes : string[] = [];
+        let allNodes = [...dfg.getNodes()];
+        for (let node of allNodes) {
+            if (this.checkAOPTforOne(node, dfg.eventLog)) {
+                aoptNodes.push(node);
+            }
+        }
+        return aoptNodes
+    }
+
     /*==============================================================================================================================*/
     /*=======================================================Give TIP===============================================================*/
 
@@ -912,7 +923,7 @@ export class ProcessGraphService {
             let resultString = '';
             // if aopt is possible give Tip
             if (aoptpossible[0]) {
-                resultString += aoptpossible[1]
+                resultString += 'AOPT possible for Activities: ' + this.getAllAOPTNodes(dfgNode.dfg).join(' , ')
             } else {
                 resultString += 'Neither AOPT nor Tau-Loop possible.\nUse Flower Model.'
             }

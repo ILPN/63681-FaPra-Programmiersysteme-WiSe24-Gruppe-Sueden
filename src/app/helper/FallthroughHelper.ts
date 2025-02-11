@@ -193,7 +193,7 @@ export class FallthroughHelper {
         const mapping = this.mapArrayIndex(nodesAsArray);
         const playNodes = Array.from(dfg.getPlayNodes() ?? []);
         const stopNodes = Array.from(dfg.getStopNodes() ?? []);
-        // erstelle eine kopie von gootprintmatrix, in der die play/stopnodes keine incoming or outgoing edges haben
+        // erstelle eine kopie von Footprintmatrix, in der die playnodes keine incoming und stopnodes keine outgoing edges haben
         let workingMatrix: string[][]
         workingMatrix = this.removeIncomingEdges(mapping, footprintMatrix, playNodes)
         workingMatrix = this.removeOutgoingEdges(mapping, workingMatrix, stopNodes)
@@ -265,8 +265,9 @@ export class FallthroughHelper {
             })
         }
         //connectingArcs enthält jetzt alle Kanten, die zwischen Komponenten verbinden
-        let tempArcs = [...connectingArcs];
 
+        //verwende ein tempArcs Array um zu testen ob dieses Array nur Kanten enthält die von RedoStop nach DoPlay oder DoStop nach RedoPlay gehen
+        let tempArcs = [...connectingArcs];
         for (let wcc of wccArray) {
             tempArcs = tempArcs.filter(arc => {
                 // Kantenverbindungen von stopnodes des wcc nach start von Main werden rausgefiltert
@@ -276,11 +277,11 @@ export class FallthroughHelper {
                     !(mainComponent.stopNodes.includes(arc.source as string) && wcc.startNodes.includes(arc.target as string));
             })
         }
-
         // nun sollte unser tempArcs array leer sein
         if (tempArcs.length !== 0) {
             return [false, ""];
         }
+
         // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
         for (let wcc of wccArray) {
             for (let sourceNode of wcc.stopNodes) {
@@ -289,9 +290,9 @@ export class FallthroughHelper {
                     isConnectedToAllStartNodes = connectingArcs.some(arc => {
                         return arc.source === sourceNode && arc.target === targetNode
                     })
-                }
-                if (!isConnectedToAllStartNodes) {
-                    return [false, ""];
+                    if (!isConnectedToAllStartNodes) {
+                        return [false, ""];
+                    }
                 }
             }
         }
