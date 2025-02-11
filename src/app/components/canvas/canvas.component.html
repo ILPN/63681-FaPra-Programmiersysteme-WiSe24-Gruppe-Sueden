@@ -39,6 +39,14 @@
                 >
                     <polygon points="0 0, 10 3.5, 0 7" fill="black"/>
                 </marker>
+                <svg:filter id="whiteOutlineEffect" color-interpolation-filters="sRGB">
+                    <svg:feMorphology in="SourceAlpha" result="MORPH" operator="dilate" radius="1.4"/>
+                    <svg:feColorMatrix in="MORPH" result="WHITENED" type="matrix" values="-1 0 0 0 1, 0 -1 0 0 1, 0 0 -1 0 1, 0 0 0 1 0"/>
+                    <svg:feMerge>
+                        <svg:feMergeNode in="WHITENED"/>
+                        <svg:feMergeNode in="SourceGraphic"/>
+                    </svg:feMerge>
+                </svg:filter>
             </svg:defs>
 
             @if (selectionService.selectedDfg(); as activeDfg) {
