@@ -1,15 +1,22 @@
 <div class="flex gap-3 h-[80vh]">
     <!-- Display -->
     <div class="relative grow p-3 bg-gray-300 border border-solid border-black rounded-xl">
-        <!-- Back button -->
-        @if (selectionService.selectedDfg()) {
-            <button mat-icon-button matTooltip="Back" class="!absolute top-1 left-1" (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
-                <mat-icon>arrow_back</mat-icon>
-            </button>
-        }
+        <div class="!absolute top-1 left-1 flex items-center gap-2">
+            @if (selectionService.selectedDfg()) {
+                <!-- Back button -->
+                <button mat-icon-button matTooltip="Back to petri net"
+                        (click)="selectionService.selectedDfg.set(null) ; selectionService.selectedNodes.set([])">
+                    <mat-icon>arrow_back</mat-icon>
+                </button>
+                <span class="text-xl font-bold">Directly-Follows Graph</span>
+            } @else {
+                <span class="text-xl font-bold p-[10px]">Petri net</span>
+            }
+        </div>
 
         <!-- Logs button -->
-        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1" (click)="showLogs.set(!showLogs())">
+        <button mat-icon-button [matTooltip]="showLogs() ? 'Hide logs' : 'Show logs'" class="!absolute top-1 right-1"
+                (click)="showLogs.set(!showLogs())">
             <mat-icon>list</mat-icon>
         </button>
 
@@ -92,8 +99,8 @@
 
     <!-- Logs -->
 
-        <div class="transition-all overflow-hidden flex flex-col h-full" [style.max-width]="showLogs() ? '25rem' : 0">
-            <div style="width: 25rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
+    <div class="transition-all overflow-hidden flex flex-col h-full" [style.max-width]="showLogs() ? '25rem' : 0">
+        <div style="width: 25rem" class="h-full flex flex-col gap-4 border border-solid border-black rounded-xl">
             <mat-tab-group class="flex flex-col h-full">
                 <mat-tab label="Event Log" bodyClass="p-2 h-full flex flex-col">
                     <div class="overflow-y-auto">
@@ -101,7 +108,7 @@
                             @for (trace of selectionService.selectedDfg()?.dfg?.eventLog; track $index) {
                                 <div class="flex flex-wrap gap-2 mb-5">
                                     @for (node of trace; track $index) {
-                                        @let isSelected = node | isSelected: selectionService.selectedNodes() ;
+                                        @let isSelected = node | isSelected: selectionService.selectedNodes();
                                         <span [style.color]="isSelected ? 'red' : null" [class.font-bold]="isSelected">
                                         {{ node }}
                                     </span>
