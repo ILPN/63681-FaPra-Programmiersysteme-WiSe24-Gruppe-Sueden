@@ -3,6 +3,7 @@ import {MAT_DIALOG_DATA, MatDialogActions, MatDialogClose, MatDialogContent, Mat
 import {MatButton} from "@angular/material/button";
 import {MatIcon} from "@angular/material/icon";
 import {MatTooltip} from "@angular/material/tooltip";
+import {CdkDrag} from "@angular/cdk/drag-drop";
 
 @Component({
     standalone: true,
@@ -14,7 +15,8 @@ import {MatTooltip} from "@angular/material/tooltip";
         MatButton,
         MatIcon,
         MatDialogClose,
-        MatTooltip
+        MatTooltip,
+        CdkDrag
     ],
     styleUrls: ["failed-validation.dialog.scss"]
 })

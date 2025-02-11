@@ -207,13 +207,16 @@ export class ValidationHelper {
         let secondNodeSetPlay = this.createPlaySet(dfg, secondNodeSet);
         let secondNodeSetStop = this.createStopSet(dfg, secondNodeSet);
 
+        // Validiere, dass alle play/stopnodes vom originalDFG in nur einem Nodeset sind, breche sonst ab
+
+
         //Validiere ob alle Kanten von play nach firstNodeSetPlay gehen
         let playNodes = dfg.getPlayNodes();
         if (playNodes) {
             for (const node of playNodes) {
                 if (!firstNodeSetPlay.has(node)) {
                     this.log(`There exists a arc from play to ${node}`)
-                    return [false, `Loop-Cut not possible`, `There exists a arc from play to ${node} (not Part of DoPlay)`]
+                    return [false, `Loop-Cut not possible`, `Do-Part must contain all Play-Nodes of original DFG.\n ${node} violates this requirement.`]
                 }
             }
         }
@@ -224,7 +227,7 @@ export class ValidationHelper {
             for (const node of stopNodes) {
                 if (!firstNodeSetStop.has(node)) {
                     this.log(`There exists an arc from ${node} to stop`)
-                    return [false, `Loop-Cut not possible`, `There exists an arc from ${node} (not Part of DoStop) to stop`]
+                    return [false, `Loop-Cut not possible`, `Do-Part must contain all Stop-Nodes of original DFG.\n ${node} violates this requirement. `]
                 }
             }
         }
