@@ -110,8 +110,8 @@
 
     <!-- Export -->
     @let preventExport = (graphService.graphSignal()?.dfgSet?.size || 0) > 0;
-    <div matTooltip="Petrinet can only be exported after the inductive miner has terminated" [matTooltipDisabled]="!preventExport">
-        <button mat-fab matTooltip="Export Petrinet" [disabled]="preventExport" [matMenuTriggerFor]="exportMenu">
+    <div matTooltip="Petri Net can only be exported after the inductive miner has terminated" [matTooltipDisabled]="!preventExport">
+        <button mat-fab matTooltip="Export Petri Net" [disabled]="preventExport" [matMenuTriggerFor]="exportMenu">
             <mat-icon>file_download</mat-icon>
         </button>
     </div>
