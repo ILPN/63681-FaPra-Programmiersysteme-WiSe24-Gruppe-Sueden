@@ -145,7 +145,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     onMouseMove(event: MouseEvent) {
         //don't drag if resizing
-        if(this.isResizing){
+        if (this.isResizing) {
             return
         }
         // Always drag in petrinet view
@@ -204,10 +204,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     //handling of SELECTIONTYPE.NONE (Dragging)
     onDragStart(node: Node) {
-        if (!["Place_play", "Place_stop", "play", "stop"].includes(node.name)) {
-            this.draggingNode = node
-            node.isDragged = true
-        }
+        if (node.name === "Place_play" || node.name === "Place_stop") return
+        if (this.selectionService.selectedDfg() && (node.name === "play" || node.name === "stop")) return
+        this.draggingNode = node
+        node.isDragged = true
     }
 
     onDragMove(event: MouseEvent) {
@@ -258,23 +258,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         if (node.type !== NodeType.node || node.name === 'play' || node.name === 'stop') return //only allow adding nodes (not dfg or places)
         this.selectionService.toggleNodeSelected(node)
     }
+
 //dfg auswählen
     dfgClicked(dfg: DfgNode) {
-        if(!this.wasDragging){
+        if (!this.wasDragging) {
             this.selectionService.selectDfg(dfg)
         }
     }
+
     // dfg draggen
     dfgMouseDown(dfg: DfgNode, event: MouseEvent) {
-        if(this.isResizing){
+        if (this.isResizing) {
             return
         }
         this.draggingNode = dfg;
         dfg.isDragged = true;
         this.wasDragging = false;
     }
+
     dfgMouseUp() {
-        if(this.isResizing){
+        if (this.isResizing) {
             return
         }
         if (this.draggingNode) {
@@ -284,7 +287,6 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
     }
 
 
-
     initGraph(graph: ProcessGraph | null) {
         if (!graph) return
 
@@ -292,26 +294,26 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.nodes.push(...this.dfgs)
         this.places = [...graph.places]
         this.nodes.push(...this.places)
-        this.transitions =[...graph.transitions]
+        this.transitions = [...graph.transitions]
         this.nodes.push(...this.transitions)
 
         for (const arc of graph.arcs) {
             //look up source & target
             const sourceNode = this.findNode((arc.source as Node).name)
-            const targetNode =  this.findNode((arc.target as Node).name)
+            const targetNode = this.findNode((arc.target as Node).name)
             if (!sourceNode || !targetNode) return console.log("Didnt find source or target for Arc: ", arc)
             this.edges.push({source: sourceNode, target: targetNode, bidirectional: false})
         }
         //TODO: Im frontend bei der anzeige tau anzeigen lassen
-/*
-        //Replace Tau Node Names
-        for (let node of this.nodes) {
-            if (node.name.startsWith("TAU_")) {
-                node.name = "τ"
-            }
-        }
+        /*
+                //Replace Tau Node Names
+                for (let node of this.nodes) {
+                    if (node.name.startsWith("TAU_")) {
+                        node.name = "τ"
+                    }
+                }
 
- */
+         */
 
     }
 
@@ -329,6 +331,7 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
         this.nodes = []
         this.transitions = []
     }
+
     get hasUndefinedSelected(): boolean {
         return this.selectionService.selectedNodes().some(node => node.name === undefined);
     }
