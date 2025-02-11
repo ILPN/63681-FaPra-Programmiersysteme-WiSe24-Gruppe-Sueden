@@ -9,7 +9,7 @@ export class PhysicsHelper {
     static boundaryForce: number = 0.2 // Force to keep nodes within boundaries
 
     // Node properties
-    static nodeDiameter: number = 50 // Radius of the node, used for padding
+    static nodeDiameter: number = 32 // Radius of the node, used for padding
     static nodeRadius: number = PhysicsHelper.nodeDiameter / 2
 
     // DFG EventLog Text
@@ -20,7 +20,7 @@ export class PhysicsHelper {
     static eventLogRadius: number = PhysicsHelper.eventLogWidth / 2
 
     // Place
-    static placeDiameter = 50
+    static placeDiameter = 32
     static placeRadius = PhysicsHelper.placeDiameter / 2
 
     // Calculate spring (attractive) force for edges
@@ -120,12 +120,12 @@ export class PhysicsHelper {
             if (isDFG) {
                 if (node.name === "play") {
                     node.x = canvasWidth / 2
-                    node.y = 26
+                    node.y = 20
                     continue
                 }
                 if (node.name === "stop") {
                     node.x = canvasWidth / 2
-                    node.y = canvasHeight - 27
+                    node.y = canvasHeight - 36
                     continue
                 }
             }
