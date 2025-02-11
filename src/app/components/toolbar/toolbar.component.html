@@ -7,11 +7,18 @@
             <!-- Selection Type -->
             <div class="toolbox-section">
                 <span class="toolbox-section-label">Selection</span>
-                @for (type of SelectionType | keyvalue: originalOrder; track type.value) {
-                    <span mat-ripple class="toolbox-section-value" [class.selected]="toolbarService.selectionType() === type.value" (click)="toolbarService.selectionType.set(type.value)">
-                        {{ type.value | titlecase }}
-                    </span>
-                }
+
+                <span mat-ripple class="toolbox-section-value" matTooltip="Move nodes by dragging" [class.selected]="toolbarService.selectionType() === SelectionType.NONE" (click)="toolbarService.selectionType.set(SelectionType.NONE)">
+                    None
+                </span>
+
+                <span mat-ripple class="toolbox-section-value" matTooltip="Select nodes by clicking" [class.selected]="toolbarService.selectionType() === SelectionType.CLICK" (click)="toolbarService.selectionType.set(SelectionType.CLICK)">
+                    Click
+                </span>
+
+                <span mat-ripple class="toolbox-section-value" matTooltip="Select nodes with a lasso" [class.selected]="toolbarService.selectionType() === SelectionType.LASSO" (click)="toolbarService.selectionType.set(SelectionType.LASSO)">
+                    Lasso
+                </span>
             </div>
 
             <!-- Animation wrapper-->
@@ -86,6 +93,7 @@
         <span class="toolbox-section-label">Graph</span>
         <span mat-ripple
               class="toolbox-section-value"
+              matTooltip="Arrange nodes automatic with a spring embedder"
               [class.selected]="toolbarService.useSpringEmbedder()"
               (click)="toolbarService.useSpringEmbedder.set(true)">
             Spring Embedder
@@ -93,6 +101,7 @@
 
         <span mat-ripple
               class="toolbox-section-value"
+              matTooltip="Arrange nodes by yourself"
               [class.selected]="!toolbarService.useSpringEmbedder()"
               (click)="toolbarService.useSpringEmbedder.set(false)">
             Free Layout
