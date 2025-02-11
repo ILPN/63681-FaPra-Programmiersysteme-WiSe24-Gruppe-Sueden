@@ -204,8 +204,10 @@ export class CanvasComponent implements AfterViewInit, OnDestroy {
 
     //handling of SELECTIONTYPE.NONE (Dragging)
     onDragStart(node: Node) {
-        this.draggingNode = node
-        node.isDragged = true
+        if (!["Place_play", "Place_stop", "play", "stop"].includes(node.name)) {
+            this.draggingNode = node
+            node.isDragged = true
+        }
     }
 
     onDragMove(event: MouseEvent) {
