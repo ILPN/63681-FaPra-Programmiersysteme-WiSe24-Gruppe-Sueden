@@ -14,7 +14,7 @@ export class ValidationHelper {
         this.setLogFunction(updateLog);
         let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
-            return [isRepWithTau[0],cutType+'-Cut not allowed',isRepWithTau[1]]
+            return [isRepWithTau[0], cutType + '-Cut not allowed', isRepWithTau[1]]
         }
         this.log(`Start validation for cutType: ${cutType}`);
         const validationResult: [boolean, string, string] = this.validator(dfg, firstNodeSet, secondNodeSet, cutType)
@@ -61,15 +61,17 @@ export class ValidationHelper {
                              cutType: string): [boolean, string, string] {
         if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
             this.log("A passed NodeSet is empty");
-            if (this.testForTauOrRepeatingPattern(dfg.eventLog)) {
-                this.log("Repeating Pattern detected");
-                return [false, cutType+'-Cut not possible',"Repeating Pattern detected, please solve per Tau-Loop"]
+            if (firstNodeSet.size === 0 || secondNodeSet.size === 0) {
+                if (!this.testForTauOrRepeatingPattern(dfg.eventLog)) {
+                    this.log("Repeating Pattern detected");
+                    return [false, cutType + '-Cut not possible', "Repeating Pattern detected, please solve per Tau-Loop"]
+                }
             }
-            return [false, cutType+'-Cut not possible',"A passed NodeSet is empty"];
+            return [false, cutType + '-Cut not possible', "A passed NodeSet is empty"];
         }
         if (!this.allNodesUsedValidation(dfg, firstNodeSet, secondNodeSet)) {
             this.log("not all node sets are present and / or exclusive")
-            return [false, cutType+'-Cut not possible', "All nodes must be present, and the sets must be exclusive"]
+            return [false, cutType + '-Cut not possible', "All nodes must be present, and the sets must be exclusive"]
         }
         this.log("All nodes are present and mutually exclusive");
         switch (cutType) {
@@ -86,7 +88,7 @@ export class ValidationHelper {
                 return this.loopValidation(dfg, firstNodeSet, secondNodeSet);
             }
             default: {
-                return [false, "Unknown Cut Type",""]
+                return [false, "Unknown Cut Type", ""]
             }
         }
     }
@@ -136,7 +138,7 @@ export class ValidationHelper {
         }
         this.log("there are no arcs from NodeSet 2 to NodeSet 1 - ok");
         this.log("XOR-Cut successfully validated");
-        return [true, 'XOR-Cut successful','']
+        return [true, 'XOR-Cut successful', '']
     }
 
     //Prüft auf Sequence-Cut
@@ -160,7 +162,7 @@ export class ValidationHelper {
         }
         this.log("There are no paths from NodeSet 2 to NodeSet 1 - ok");
         this.log("Sequence-Cut successfully validated");
-        return [true, 'Sequence-Cut successful' ,'']
+        return [true, 'Sequence-Cut successful', '']
     }
 
     private static parallelValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string, string] {
@@ -463,7 +465,7 @@ export class ValidationHelper {
         }
         return [true, '']
     }
-
+//return true if pattern found, else false
     public static testForTauOrRepeatingPattern(eventLog: string[][]): [boolean, string] {
         let tauAnd = this.testForTauAndRepeatingPattern(eventLog);
         if (!tauAnd[0]) {
