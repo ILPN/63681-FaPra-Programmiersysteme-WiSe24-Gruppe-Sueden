@@ -859,7 +859,7 @@ export class ProcessGraphService {
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
-        let result = ValidationHelper.testForTauOrRepeatingPattern(dfg.eventLog)
+        let result = ValidationHelper.testForNoTauOrRepeatingPattern(dfg.eventLog)
         return {success: result[0], comment: result[1], reason: ''}
     }
 

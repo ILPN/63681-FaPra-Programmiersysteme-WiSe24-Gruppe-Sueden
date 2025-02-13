@@ -12,7 +12,7 @@ export class ValidationHelper {
                                     cutType: CutType,
                                     updateLog: (log: string) => void): [boolean, string, string, DirectlyFollows?, DirectlyFollows?] {
         this.setLogFunction(updateLog);
-        let isRepWithTau = this.testForTauAndRepeatingPattern(dfg.eventLog)
+        let isRepWithTau = this.testForNoTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
             return [isRepWithTau[0], cutType + '-Cut not allowed', isRepWithTau[1]]
         }
@@ -60,12 +60,10 @@ export class ValidationHelper {
                              secondNodeSet: Set<string>,
                              cutType: string): [boolean, string, string] {
         if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
-            this.log("A passed NodeSet is empty");
-            if (firstNodeSet.size === 0 || secondNodeSet.size === 0) {
-                if (!this.testForTauOrRepeatingPattern(dfg.eventLog)) {
-                    this.log("Repeating Pattern detected");
-                    return [false, cutType + '-Cut not possible', "Repeating Pattern detected, please solve per Tau-Loop"]
-                }
+            console.log(this.testForNoTauOrRepeatingPattern(dfg.eventLog))
+            if (!this.testForNoTauOrRepeatingPattern(dfg.eventLog)[0]) {
+                this.log("Repeating Pattern detected");
+                return [false, cutType + '-Cut not possible', "Repeating Pattern detected, please solve per Tau-Loop"]
             }
             return [false, cutType + '-Cut not possible', "A passed NodeSet is empty"];
         }
@@ -452,7 +450,8 @@ export class ValidationHelper {
         return [firstNodeSet, secondNodeSet]
     }
 
-    public static testForTauAndRepeatingPattern(eventLog: string[][]): [boolean, string] {
+//return true if no pattern found, else true
+    public static testForNoTauAndRepeatingPattern(eventLog: string[][]): [boolean, string] {
         if (eventLog.some(trace => trace.includes('empty_trace'))) {
             let tempLog = eventLog.filter(trace => !trace.includes('empty_trace'));
             let tempDfg: DirectlyFollows = new DirectlyFollows();
@@ -465,9 +464,10 @@ export class ValidationHelper {
         }
         return [true, '']
     }
-//return true if pattern found, else false
-    public static testForTauOrRepeatingPattern(eventLog: string[][]): [boolean, string] {
-        let tauAnd = this.testForTauAndRepeatingPattern(eventLog);
+
+//return true if no pattern found, else true
+    public static testForNoTauOrRepeatingPattern(eventLog: string[][]): [boolean, string] {
+        let tauAnd = this.testForNoTauAndRepeatingPattern(eventLog);
         if (!tauAnd[0]) {
             return tauAnd
         }

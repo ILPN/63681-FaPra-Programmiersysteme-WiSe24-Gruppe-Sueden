@@ -19,7 +19,7 @@ export class FallthroughHelper {
                 return [false, 'Loop Cut of length 1 possible', ''];
             }
         }
-        let isRepWithTau = ValidationHelper.testForTauAndRepeatingPattern(dfg.eventLog)
+        let isRepWithTau = ValidationHelper.testForNoTauAndRepeatingPattern(dfg.eventLog)
         if (!isRepWithTau[0]) {
             return [...isRepWithTau, ""]
         }
