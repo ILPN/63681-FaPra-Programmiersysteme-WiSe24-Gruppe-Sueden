@@ -60,7 +60,7 @@ export class ValidationHelper {
                              secondNodeSet: Set<string>,
                              cutType: string): [boolean, string, string] {
         if (!firstNodeSet || !secondNodeSet || firstNodeSet.size === 0 || secondNodeSet.size === 0) {
-            console.log(this.testForNoTauOrRepeatingPattern(dfg.eventLog))
+            this.log("A passed NodeSet is empty");
             if (!this.testForNoTauOrRepeatingPattern(dfg.eventLog)[0]) {
                 this.log("Repeating Pattern detected");
                 return [false, cutType + '-Cut not possible', "Repeating Pattern detected, please solve per Tau-Loop"]
