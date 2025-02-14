@@ -1,5 +1,5 @@
 import {TestBed, fakeAsync, tick} from '@angular/core/testing';
-import {FallthroughHelper} from '../helper/FallthroughHelper';
+import {FallthroughHelper} from './FallthroughHelper';
 import {DirectlyFollows} from '../classes/directly-follows';
 
 describe('FallthroughHelper Test', () => {
@@ -108,7 +108,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when xor cut is possible 2', fakeAsync(() => {
@@ -124,7 +124,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when xor cut is possible 3', fakeAsync(() => {
@@ -140,7 +140,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when xor cut is possible 4', fakeAsync(() => {
@@ -155,7 +155,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return false when xor cut is not possible 1', fakeAsync(() => {
@@ -170,7 +170,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when xor cut is not possible 2', fakeAsync(() => {
@@ -185,7 +185,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when xor cut is not possible 3', fakeAsync(() => {
@@ -202,7 +202,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when xor cut is not possible 4', fakeAsync(() => {
@@ -216,7 +216,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isXORCutPossible(nodesAsArray, footprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
     });
@@ -232,7 +232,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
 
 
         }));
@@ -249,7 +249,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
 
         }));
 
@@ -267,7 +267,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
 
         }));
 
@@ -280,7 +280,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
 
         }));
 
@@ -296,7 +296,7 @@ describe('FallthroughHelper Test', () => {
             const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when sequence cut is possible 6', fakeAsync(() => {
@@ -311,7 +311,7 @@ describe('FallthroughHelper Test', () => {
             const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when sequence cut is possible 7', fakeAsync(() => {
@@ -326,7 +326,7 @@ describe('FallthroughHelper Test', () => {
             const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when sequence cut is possible 7', fakeAsync(() => {
@@ -341,7 +341,7 @@ describe('FallthroughHelper Test', () => {
             const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when sequence cut is possible 8', fakeAsync(() => {
@@ -356,7 +356,7 @@ describe('FallthroughHelper Test', () => {
             const reachabilityMatrix = FallthroughHelper.computeReachabilityMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isSequenceCutPossible(nodesAsArray, reachabilityMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return false when sequence cut is not possible 1', fakeAsync(() => {
@@ -369,7 +369,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(false); // No cut is possible as all nodes are connected
+            expect(result[0]).toBe(false); // No cut is possible as all nodes are connected
 
         }));
 
@@ -383,7 +383,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(false); // No cut is possible as all nodes are connected
+            expect(result[0]).toBe(false); // No cut is possible as all nodes are connected
 
         }));
 
@@ -397,7 +397,7 @@ describe('FallthroughHelper Test', () => {
             ];
 
             const result = FallthroughHelper.isSequenceCutPossible(nodes, reachabilityMatrix);
-            expect(result).toBe(false);
+            expect(result[0]).toBe(false);
 
         }));
 
@@ -418,7 +418,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when parallel cut is possible 2', fakeAsync(() => {
@@ -435,7 +435,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return true when parallel cut is possible 3', fakeAsync(() => {
@@ -455,7 +455,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(true);
+            expect(result[0]).toEqual(true);
         }));
 
         it('should return false when parallel cut is not possible 1', fakeAsync(() => {
@@ -471,7 +471,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when parallel cut is not possible 2', fakeAsync(() => {
@@ -487,7 +487,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when parallel cut is not possible 3', fakeAsync(() => {
@@ -504,7 +504,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
 
         it('should return false when parallel cut is not possible 4', fakeAsync(() => {
@@ -523,7 +523,7 @@ describe('FallthroughHelper Test', () => {
             const inverseFootprintMatrix = FallthroughHelper.invertFootprintMatrix(footprintMatrix);
 
             const result = FallthroughHelper.isParallelCutPossible(dfg, nodesAsArray, inverseFootprintMatrix);
-            expect(result).toEqual(false);
+            expect(result[0]).toEqual(false);
         }));
     });
 
@@ -542,7 +542,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
         }));
 
         it('should return true when loop cut is possible 2', fakeAsync(() => {
@@ -559,7 +559,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
-            expect(result).toBe(true);
+            expect(result[0]).toBe(true);
         }));
 
         it('should return false when loop cut is not possible 1', fakeAsync(() => {
@@ -576,7 +576,7 @@ describe('FallthroughHelper Test', () => {
             const footprintMatrix = FallthroughHelper.computeFootprintMatrix(nodesAsArray, dfg);
 
             const result = FallthroughHelper.isLoopCutPossible(dfg, nodesAsArray, footprintMatrix);
-            expect(result).toBe(false);
+            expect(result[0]).toBe(false);
         }));
     });
 

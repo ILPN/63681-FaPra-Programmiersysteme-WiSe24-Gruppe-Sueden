@@ -1,20 +1,22 @@
 import {ValidationHelper} from './ValidationHelper';
 import {ValidationData} from '../classes/validation-data';
 import {ProcessGraphService} from '../services/process-graph.service';
-import {ProcessGraph} from '../classes/process-graph';
 import {CutType} from '../classes/cut-type.enum';
 import {DirectlyFollows} from '../classes/directly-follows';
+import {DisplayService} from "../services/display.service";
 
 
 describe('ValidationHelper', () => {
     let dfg: DirectlyFollows;
     let processGraphService: ProcessGraphService;
+    let displayService: DisplayService;
     let log: string[];
     let logFunc: (logMessage: string) => void;
 
 
     beforeEach(() => {
-        processGraphService = new ProcessGraphService();
+        displayService = new DisplayService();
+        processGraphService = new ProcessGraphService(displayService);
         dfg = new DirectlyFollows();
         //erstelle log und logfunc fürs logging (da aufruf nicht aus processgraph.service..)
         log = [];
@@ -24,7 +26,7 @@ describe('ValidationHelper', () => {
     });
 
     describe('sequence with optional', () => {
-        let result: [boolean, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
+        let result: [boolean, string, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
         beforeEach((): void => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
@@ -49,7 +51,7 @@ describe('ValidationHelper', () => {
     })
 
     describe('validateAndReturn', () => {
-        let result: [boolean, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
+        let result: [boolean, string, string, (DirectlyFollows | undefined)?, (DirectlyFollows | undefined)?]
         beforeEach((): void => {
             const inputStringArray: string[][] = [
                 ['A', 'B', 'C'],
@@ -77,54 +79,54 @@ describe('ValidationHelper', () => {
             expect(result[1]).toBe('XOR-Cut successful'); // Sollte XOR-Cut bestätigen
 
             // Überprüfe die Knoten im ersten Teil-Digraph (DFG1)
-            expect(result[2]?.getNodes()).toContain('A');
-            expect(result[2]?.getNodes()).toContain('B');
-            expect(result[2]?.getNodes()).toContain('C');
-            expect(result[2]?.getNodes()).toContain('D');
-            expect(result[2]?.getNodes()).toContain('E');
-            expect(result[2]?.getNodes()).toContain('F');
+            expect(result[3]?.getNodes()).toContain('A');
+            expect(result[3]?.getNodes()).toContain('B');
+            expect(result[3]?.getNodes()).toContain('C');
+            expect(result[3]?.getNodes()).toContain('D');
+            expect(result[3]?.getNodes()).toContain('E');
+            expect(result[3]?.getNodes()).toContain('F');
 
             // Überprüfe die Knoten im zweiten Teil-Digraph (DFG2)
-            expect(result[3]?.getNodes()).toContain('G');
-            expect(result[3]?.getNodes()).toContain('H');
-            expect(result[3]?.getNodes()).toContain('I');
-            expect(result[3]?.getNodes()).toContain('J');
-            expect(result[3]?.getNodes()).toContain('K');
-            expect(result[3]?.getNodes()).toContain('L');
-            expect(result[3]?.getNodes()).toContain('M');
-            expect(result[3]?.getNodes()).toContain('N');
-            expect(result[3]?.getNodes()).toContain('O');
+            expect(result[4]?.getNodes()).toContain('G');
+            expect(result[4]?.getNodes()).toContain('H');
+            expect(result[4]?.getNodes()).toContain('I');
+            expect(result[4]?.getNodes()).toContain('J');
+            expect(result[4]?.getNodes()).toContain('K');
+            expect(result[4]?.getNodes()).toContain('L');
+            expect(result[4]?.getNodes()).toContain('M');
+            expect(result[4]?.getNodes()).toContain('N');
+            expect(result[4]?.getNodes()).toContain('O');
 
             // Überprüfe die Nachfolger im ersten Teil-Digraph
-            expect(result[2]?.getSuccessors('A')).toContain('B');
-            expect(result[2]?.getSuccessors('B')).toContain('C');
-            expect(result[2]?.getSuccessors('C')).toContain('D');
-            expect(result[2]?.getSuccessors('D')).toContain('B');
-            expect(result[2]?.getSuccessors('C')).toContain('stop');
-            expect(result[2]?.getSuccessors('E')).toContain('F');
-            expect(result[2]?.getSuccessors('F')).toContain('stop');
+            expect(result[3]?.getSuccessors('A')).toContain('B');
+            expect(result[3]?.getSuccessors('B')).toContain('C');
+            expect(result[3]?.getSuccessors('C')).toContain('D');
+            expect(result[3]?.getSuccessors('D')).toContain('B');
+            expect(result[3]?.getSuccessors('C')).toContain('stop');
+            expect(result[3]?.getSuccessors('E')).toContain('F');
+            expect(result[3]?.getSuccessors('F')).toContain('stop');
 
             // Überprüfe die Nachfolger im zweiten Teil-Digraph
-            expect(result[3]?.getSuccessors('G')).toContain('H');
-            expect(result[3]?.getSuccessors('H')).toContain('I');
-            expect(result[3]?.getSuccessors('I')).toContain('K');
-            expect(result[3]?.getSuccessors('H')).toContain('J');
-            expect(result[3]?.getSuccessors('J')).toContain('K');
-            expect(result[3]?.getSuccessors('K')).toContain('stop');
-            expect(result[3]?.getSuccessors('L')).toContain('M');
-            expect(result[3]?.getSuccessors('M')).toContain('N');
-            expect(result[3]?.getSuccessors('N')).toContain('stop');
-            expect(result[3]?.getSuccessors('M')).toContain('O');
-            expect(result[3]?.getSuccessors('O')).toContain('stop');
+            expect(result[4]?.getSuccessors('G')).toContain('H');
+            expect(result[4]?.getSuccessors('H')).toContain('I');
+            expect(result[4]?.getSuccessors('I')).toContain('K');
+            expect(result[4]?.getSuccessors('H')).toContain('J');
+            expect(result[4]?.getSuccessors('J')).toContain('K');
+            expect(result[4]?.getSuccessors('K')).toContain('stop');
+            expect(result[4]?.getSuccessors('L')).toContain('M');
+            expect(result[4]?.getSuccessors('M')).toContain('N');
+            expect(result[4]?.getSuccessors('N')).toContain('stop');
+            expect(result[4]?.getSuccessors('M')).toContain('O');
+            expect(result[4]?.getSuccessors('O')).toContain('stop');
         });
         //TODO: weitere log prüfungen...
         it('should correctly add to log', () => {
-            expect(log[1]).toBe(`Start validation for cutType: xor`)
+            expect(log[1]).toBe(`All nodes are present and mutually exclusive`)
         })
 
         it('should correctly split further with XOR-Cut', () => {
             // Teste eine weitere XOR-Aufteilung für den ersten Teil
-            const fsd = result[2]; // First Sub-DFG
+            const fsd = result[3]; // First Sub-DFG
             const fsdFirstNodeSet = new Set(['A', 'B', 'C', 'D']);
             const fsdSecondNodeSet = new Set(['E', 'F']);
 
@@ -135,7 +137,7 @@ describe('ValidationHelper', () => {
             expect(fsdResult[1]).toBe('XOR-Cut successful');
 
             // Teste eine XOR-Aufteilung für den zweiten Teil
-            const ssd = result[3]; // Second Sub-DFG
+            const ssd = result[4]; // Second Sub-DFG
             const ssdFirstNodeSet = new Set(['G', 'H', 'I', 'J', 'K']);
             const ssdSecondNodeSet = new Set(['L', 'M', 'N', 'O']);
 
@@ -177,20 +179,20 @@ describe('ValidationHelper', () => {
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('XOR-Cut successful');
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[3]?.getNodes()).toContain('D'); // Teil DFG2
-        expect(result[3]?.getNodes()).toContain('E');
-        expect(result[3]?.getNodes()).toContain('F');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[4]?.getNodes()).toContain('D'); // Teil DFG2
+        expect(result[4]?.getNodes()).toContain('E');
+        expect(result[4]?.getNodes()).toContain('F');
 
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[3]?.getSuccessors('D')).toContain('E');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[4]?.getSuccessors('D')).toContain('E');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
 
         // Teste ob weiter mit der Sequence-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A']);
         const fsdSecondNodeSet = new Set(['B', 'C']);
 
@@ -198,17 +200,17 @@ describe('ValidationHelper', () => {
 
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Sequence-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('B');
-        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('B');
+        expect(fsdResult[4]?.getSuccessors('B')).toContain('C');
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['D']);
         const ssdSecondNodeSet = new Set(['E', 'F']);
 
         const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.SEQUENCE, logFunc);
 
         expect(ssdResult[0]).toBeFalse(); // Schleife enthalten
-        expect(ssdResult[1]).toBe('Path from E to first NodeSet found');
+        expect(ssdResult[1]).toBe('Sequence-Cut not possible');
     });
 
     it('should validate and split DFG correctly with XOR-Cut and then further with Parallel-Cut', () => {
@@ -236,40 +238,40 @@ describe('ValidationHelper', () => {
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('XOR-Cut successful');
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[3]?.getNodes()).toContain('E'); // Teil DFG2
-        expect(result[3]?.getNodes()).toContain('F');
-        expect(result[3]?.getNodes()).toContain('G');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[4]?.getNodes()).toContain('E'); // Teil DFG2
+        expect(result[4]?.getNodes()).toContain('F');
+        expect(result[4]?.getNodes()).toContain('G');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('play')).toContain('C');
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('A')).toContain('C');
-        expect(result[2]?.getSuccessors('A')).toContain('D');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[2]?.getSuccessors('B')).toContain('D');
-        expect(result[2]?.getSuccessors('B')).toContain('stop');
-        expect(result[2]?.getSuccessors('C')).toContain('A');
-        expect(result[2]?.getSuccessors('C')).toContain('B');
-        expect(result[2]?.getSuccessors('C')).toContain('D');
-        expect(result[2]?.getSuccessors('D')).toContain('A');
-        expect(result[2]?.getSuccessors('D')).toContain('B');
-        expect(result[2]?.getSuccessors('D')).toContain('stop');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('C');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('A')).toContain('C');
+        expect(result[3]?.getSuccessors('A')).toContain('D');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('B')).toContain('D');
+        expect(result[3]?.getSuccessors('B')).toContain('stop');
+        expect(result[3]?.getSuccessors('C')).toContain('A');
+        expect(result[3]?.getSuccessors('C')).toContain('B');
+        expect(result[3]?.getSuccessors('C')).toContain('D');
+        expect(result[3]?.getSuccessors('D')).toContain('A');
+        expect(result[3]?.getSuccessors('D')).toContain('B');
+        expect(result[3]?.getSuccessors('D')).toContain('stop');
 
-        expect(result[3]?.getSuccessors('play')).toContain('E');
-        expect(result[3]?.getSuccessors('play')).toContain('G');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
-        expect(result[3]?.getSuccessors('E')).toContain('G');
-        expect(result[3]?.getSuccessors('F')).toContain('G');
-        expect(result[3]?.getSuccessors('F')).toContain('stop');
-        expect(result[3]?.getSuccessors('G')).toContain('E');
-        expect(result[3]?.getSuccessors('G')).toContain('stop');
+        expect(result[4]?.getSuccessors('play')).toContain('E');
+        expect(result[4]?.getSuccessors('play')).toContain('G');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
+        expect(result[4]?.getSuccessors('E')).toContain('G');
+        expect(result[4]?.getSuccessors('F')).toContain('G');
+        expect(result[4]?.getSuccessors('F')).toContain('stop');
+        expect(result[4]?.getSuccessors('G')).toContain('E');
+        expect(result[4]?.getSuccessors('G')).toContain('stop');
 
         // Teste ob weiter mit der Parallel-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A', 'B']);
         const fsdSecondNodeSet = new Set(['C', 'D']);
 
@@ -278,24 +280,24 @@ describe('ValidationHelper', () => {
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Parallel-Cut successful');
 
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('stop');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('C');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('D');
-        expect(fsdResult[2]?.getSuccessors('B')).not.toContain('C');
-        expect(fsdResult[2]?.getSuccessors('B')).not.toContain('D');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('B');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('C');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('D');
+        expect(fsdResult[3]?.getSuccessors('B')).not.toContain('C');
+        expect(fsdResult[3]?.getSuccessors('B')).not.toContain('D');
 
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('C');
-        expect(fsdResult[3]?.getSuccessors('C')).toContain('D');
-        expect(fsdResult[3]?.getSuccessors('D')).toContain('stop');
-        expect(fsdResult[2]?.getSuccessors('C')).not.toContain('A');
-        expect(fsdResult[2]?.getSuccessors('C')).not.toContain('B');
-        expect(fsdResult[2]?.getSuccessors('D')).not.toContain('A');
-        expect(fsdResult[2]?.getSuccessors('D')).not.toContain('B');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('C');
+        expect(fsdResult[4]?.getSuccessors('C')).toContain('D');
+        expect(fsdResult[4]?.getSuccessors('D')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('C')).not.toContain('A');
+        expect(fsdResult[3]?.getSuccessors('C')).not.toContain('B');
+        expect(fsdResult[3]?.getSuccessors('D')).not.toContain('A');
+        expect(fsdResult[3]?.getSuccessors('D')).not.toContain('B');
 
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['E', 'F']);
         const ssdSecondNodeSet = new Set(['G']);
 
@@ -324,32 +326,32 @@ describe('ValidationHelper', () => {
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('XOR-Cut successful');
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[3]?.getNodes()).toContain('E'); // Teil DFG2
-        expect(result[3]?.getNodes()).toContain('F');
-        expect(result[3]?.getNodes()).toContain('G');
-        expect(result[3]?.getNodes()).toContain('H');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[4]?.getNodes()).toContain('E'); // Teil DFG2
+        expect(result[4]?.getNodes()).toContain('F');
+        expect(result[4]?.getNodes()).toContain('G');
+        expect(result[4]?.getNodes()).toContain('H');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
 
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[2]?.getSuccessors('C')).toContain('D');
-        expect(result[2]?.getSuccessors('D')).toContain('A');
-        expect(result[2]?.getSuccessors('C')).toContain('stop');
-        expect(result[3]?.getSuccessors('play')).toContain('E');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
-        expect(result[3]?.getSuccessors('F')).toContain('G');
-        expect(result[3]?.getSuccessors('G')).toContain('H');
-        expect(result[3]?.getSuccessors('H')).toContain('E');
-        expect(result[3]?.getSuccessors('G')).toContain('stop');
-        expect(result[3]?.getSuccessors('H')).toContain('stop');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('C')).toContain('D');
+        expect(result[3]?.getSuccessors('D')).toContain('A');
+        expect(result[3]?.getSuccessors('C')).toContain('stop');
+        expect(result[4]?.getSuccessors('play')).toContain('E');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
+        expect(result[4]?.getSuccessors('F')).toContain('G');
+        expect(result[4]?.getSuccessors('G')).toContain('H');
+        expect(result[4]?.getSuccessors('H')).toContain('E');
+        expect(result[4]?.getSuccessors('G')).toContain('stop');
+        expect(result[4]?.getSuccessors('H')).toContain('stop');
 
         // Teste ob weiter mit der Loop-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D']);
 
@@ -358,22 +360,22 @@ describe('ValidationHelper', () => {
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Loop-Cut successful');
 
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
-        expect(fsdResult[2]?.getSuccessors('C')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('D')).not.toContain('A');
-        expect(fsdResult[3]?.getSuccessors('C')).not.toContain('D');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('B');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
+        expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('D')).not.toContain('A');
+        expect(fsdResult[4]?.getSuccessors('C')).not.toContain('D');
 
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['E', 'F', 'G']);
         const ssdSecondNodeSet = new Set(['H']);
 
         const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.LOOP, logFunc);
 
         expect(ssdResult[0]).toBeFalse(); // wegen der Kante von H nach stop
-        expect(ssdResult[1]).toBe('There exists an arc from H to stop');
+        expect(ssdResult[1]).toBe('Loop-Cut not possible');
 
     });
 
@@ -396,26 +398,26 @@ describe('ValidationHelper', () => {
         expect(result[1]).toBe('Sequence-Cut successful');
 
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[3]?.getNodes()).toContain('B'); // Teil DFG2
-        expect(result[3]?.getNodes()).toContain('C');
-        expect(result[3]?.getNodes()).toContain('E');
-        expect(result[3]?.getNodes()).toContain('F');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[4]?.getNodes()).toContain('B'); // Teil DFG2
+        expect(result[4]?.getNodes()).toContain('C');
+        expect(result[4]?.getNodes()).toContain('E');
+        expect(result[4]?.getNodes()).toContain('F');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('play')).toContain('D');
-        expect(result[2]?.getSuccessors('A')).not.toContain('B');
-        expect(result[2]?.getSuccessors('A')).not.toContain('E');
-        expect(result[2]?.getSuccessors('D')).not.toContain('B');
-        expect(result[2]?.getSuccessors('D')).not.toContain('E');
-        expect(result[3]?.getSuccessors('B')).toContain('C');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
-        expect(result[3]?.getSuccessors('C')).toContain('stop');
-        expect(result[3]?.getSuccessors('F')).toContain('stop');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('D');
+        expect(result[3]?.getSuccessors('A')).not.toContain('B');
+        expect(result[3]?.getSuccessors('A')).not.toContain('E');
+        expect(result[3]?.getSuccessors('D')).not.toContain('B');
+        expect(result[3]?.getSuccessors('D')).not.toContain('E');
+        expect(result[4]?.getSuccessors('B')).toContain('C');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
+        expect(result[4]?.getSuccessors('C')).toContain('stop');
+        expect(result[4]?.getSuccessors('F')).toContain('stop');
 
         // Teste ob weiter mit der XOR-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A']);
         const fsdSecondNodeSet = new Set(['D']);
 
@@ -423,12 +425,12 @@ describe('ValidationHelper', () => {
 
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('XOR-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
-        expect(fsdResult[3]?.getSuccessors('D')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('D');
+        expect(fsdResult[4]?.getSuccessors('D')).toContain('stop');
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['B', 'C']);
         const ssdSecondNodeSet = new Set(['E', 'F']);
 
@@ -436,12 +438,12 @@ describe('ValidationHelper', () => {
 
         expect(ssdResult[0]).toBeTrue();
         expect(ssdResult[1]).toBe('XOR-Cut successful');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('B');
-        expect(ssdResult[2]?.getSuccessors('B')).toContain('C');
-        expect(ssdResult[2]?.getSuccessors('C')).toContain('stop');
-        expect(ssdResult[3]?.getSuccessors('play')).toContain('E');
-        expect(ssdResult[3]?.getSuccessors('E')).toContain('F');
-        expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+        expect(ssdResult[3]?.getSuccessors('play')).toContain('B');
+        expect(ssdResult[3]?.getSuccessors('B')).toContain('C');
+        expect(ssdResult[3]?.getSuccessors('C')).toContain('stop');
+        expect(ssdResult[4]?.getSuccessors('play')).toContain('E');
+        expect(ssdResult[4]?.getSuccessors('E')).toContain('F');
+        expect(ssdResult[4]?.getSuccessors('F')).toContain('stop');
     });
 
     it('should validate and split DFG correctly with Sequence-Cut and then further with Sequence-Cut', () => {
@@ -469,46 +471,46 @@ describe('ValidationHelper', () => {
         expect(result[1]).toBe('Sequence-Cut successful');
 
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil DFG1
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[2]?.getNodes()).toContain('E');
-        expect(result[3]?.getNodes()).toContain('F'); // Teil DFG2
-        expect(result[3]?.getNodes()).toContain('G');
-        expect(result[3]?.getNodes()).toContain('H');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil DFG1
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[3]?.getNodes()).toContain('E');
+        expect(result[4]?.getNodes()).toContain('F'); // Teil DFG2
+        expect(result[4]?.getNodes()).toContain('G');
+        expect(result[4]?.getNodes()).toContain('H');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('play')).toContain('B');
-        expect(result[2]?.getSuccessors('A')).toContain('C');
-        expect(result[2]?.getSuccessors('A')).toContain('D');
-        expect(result[2]?.getSuccessors('A')).toContain('E');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[2]?.getSuccessors('B')).toContain('D');
-        expect(result[2]?.getSuccessors('B')).toContain('E');
-        expect(result[2]?.getSuccessors('C')).toContain('stop');
-        expect(result[2]?.getSuccessors('D')).toContain('stop');
-        expect(result[2]?.getSuccessors('E')).toContain('stop');
-        expect(result[2]?.getSuccessors('C')).not.toContain('F');
-        expect(result[2]?.getSuccessors('D')).not.toContain('F');
-        expect(result[2]?.getSuccessors('E')).not.toContain('F');
-        expect(result[2]?.getSuccessors('C')).not.toContain('G');
-        expect(result[2]?.getSuccessors('D')).not.toContain('G');
-        expect(result[2]?.getSuccessors('E')).not.toContain('G');
-        expect(result[3]?.getSuccessors('play')).toContain('F');
-        expect(result[3]?.getSuccessors('play')).toContain('G');
-        expect(result[3]?.getSuccessors('F')).toContain('H');
-        expect(result[3]?.getSuccessors('G')).toContain('H');
-        expect(result[3]?.getSuccessors('H')).toContain('stop');
-        expect(result[3]?.getPredecessors('F')).not.toContain('C');
-        expect(result[3]?.getPredecessors('F')).not.toContain('D');
-        expect(result[3]?.getPredecessors('F')).not.toContain('E');
-        expect(result[3]?.getPredecessors('G')).not.toContain('C');
-        expect(result[3]?.getPredecessors('G')).not.toContain('D');
-        expect(result[3]?.getPredecessors('G')).not.toContain('E');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('B');
+        expect(result[3]?.getSuccessors('A')).toContain('C');
+        expect(result[3]?.getSuccessors('A')).toContain('D');
+        expect(result[3]?.getSuccessors('A')).toContain('E');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('B')).toContain('D');
+        expect(result[3]?.getSuccessors('B')).toContain('E');
+        expect(result[3]?.getSuccessors('C')).toContain('stop');
+        expect(result[3]?.getSuccessors('D')).toContain('stop');
+        expect(result[3]?.getSuccessors('E')).toContain('stop');
+        expect(result[3]?.getSuccessors('C')).not.toContain('F');
+        expect(result[3]?.getSuccessors('D')).not.toContain('F');
+        expect(result[3]?.getSuccessors('E')).not.toContain('F');
+        expect(result[3]?.getSuccessors('C')).not.toContain('G');
+        expect(result[3]?.getSuccessors('D')).not.toContain('G');
+        expect(result[3]?.getSuccessors('E')).not.toContain('G');
+        expect(result[4]?.getSuccessors('play')).toContain('F');
+        expect(result[4]?.getSuccessors('play')).toContain('G');
+        expect(result[4]?.getSuccessors('F')).toContain('H');
+        expect(result[4]?.getSuccessors('G')).toContain('H');
+        expect(result[4]?.getSuccessors('H')).toContain('stop');
+        expect(result[4]?.getPredecessors('F')).not.toContain('C');
+        expect(result[4]?.getPredecessors('F')).not.toContain('D');
+        expect(result[4]?.getPredecessors('F')).not.toContain('E');
+        expect(result[4]?.getPredecessors('G')).not.toContain('C');
+        expect(result[4]?.getPredecessors('G')).not.toContain('D');
+        expect(result[4]?.getPredecessors('G')).not.toContain('E');
 
         // Teste ob weiter mit der Sequence-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A', 'B']);
         const fsdSecondNodeSet = new Set(['C', 'D', 'E']);
 
@@ -516,30 +518,30 @@ describe('ValidationHelper', () => {
 
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Sequence-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('stop');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('stop');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('C');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('D');
-        expect(fsdResult[2]?.getSuccessors('A')).not.toContain('E');
-        expect(fsdResult[2]?.getSuccessors('B')).not.toContain('C');
-        expect(fsdResult[2]?.getSuccessors('B')).not.toContain('D');
-        expect(fsdResult[2]?.getSuccessors('B')).not.toContain('E');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('C');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('E');
-        expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('D')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('E')).toContain('stop');
-        expect(fsdResult[3]?.getPredecessors('C')).not.toContain('A');
-        expect(fsdResult[3]?.getPredecessors('C')).not.toContain('B');
-        expect(fsdResult[3]?.getPredecessors('D')).not.toContain('A');
-        expect(fsdResult[3]?.getPredecessors('D')).not.toContain('B');
-        expect(fsdResult[3]?.getPredecessors('E')).not.toContain('A');
-        expect(fsdResult[3]?.getPredecessors('E')).not.toContain('B');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('B');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('C');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('D');
+        expect(fsdResult[3]?.getSuccessors('A')).not.toContain('E');
+        expect(fsdResult[3]?.getSuccessors('B')).not.toContain('C');
+        expect(fsdResult[3]?.getSuccessors('B')).not.toContain('D');
+        expect(fsdResult[3]?.getSuccessors('B')).not.toContain('E');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('C');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('D');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('E');
+        expect(fsdResult[4]?.getSuccessors('C')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('D')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('E')).toContain('stop');
+        expect(fsdResult[4]?.getPredecessors('C')).not.toContain('A');
+        expect(fsdResult[4]?.getPredecessors('C')).not.toContain('B');
+        expect(fsdResult[4]?.getPredecessors('D')).not.toContain('A');
+        expect(fsdResult[4]?.getPredecessors('D')).not.toContain('B');
+        expect(fsdResult[4]?.getPredecessors('E')).not.toContain('A');
+        expect(fsdResult[4]?.getPredecessors('E')).not.toContain('B');
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['F', 'G']);
         const ssdSecondNodeSet = new Set(['H']);
 
@@ -547,16 +549,16 @@ describe('ValidationHelper', () => {
 
         expect(ssdResult[0]).toBeTrue();
         expect(ssdResult[1]).toBe('Sequence-Cut successful');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('G');
-        expect(ssdResult[2]?.getSuccessors('F')).toContain('stop');
-        expect(ssdResult[2]?.getSuccessors('G')).toContain('stop');
-        expect(ssdResult[2]?.getSuccessors('F')).not.toContain('H');
-        expect(ssdResult[2]?.getSuccessors('G')).not.toContain('H');
-        expect(ssdResult[3]?.getSuccessors('play')).toContain('H');
-        expect(ssdResult[3]?.getSuccessors('H')).toContain('stop');
-        expect(ssdResult[3]?.getPredecessors('H')).not.toContain('F');
-        expect(ssdResult[3]?.getPredecessors('H')).not.toContain('G');
+        expect(ssdResult[3]?.getSuccessors('play')).toContain('F');
+        expect(ssdResult[3]?.getSuccessors('play')).toContain('G');
+        expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+        expect(ssdResult[3]?.getSuccessors('G')).toContain('stop');
+        expect(ssdResult[3]?.getSuccessors('F')).not.toContain('H');
+        expect(ssdResult[3]?.getSuccessors('G')).not.toContain('H');
+        expect(ssdResult[4]?.getSuccessors('play')).toContain('H');
+        expect(ssdResult[4]?.getSuccessors('H')).toContain('stop');
+        expect(ssdResult[4]?.getPredecessors('H')).not.toContain('F');
+        expect(ssdResult[4]?.getPredecessors('H')).not.toContain('G');
     });
 
     it('should validate and split DFG correctly with Sequence-Cut and then further with Parallel-Cut', () => {
@@ -585,53 +587,53 @@ describe('ValidationHelper', () => {
         expect(result[1]).toBe('Sequence-Cut successful');
 
 
-        expect(result[2]?.getNodes()).toContain('A');
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[2]?.getNodes()).toContain('E');
-        expect(result[3]?.getNodes()).toContain('W');
-        expect(result[3]?.getNodes()).toContain('X');
-        expect(result[3]?.getNodes()).toContain('Y');
-        expect(result[3]?.getNodes()).toContain('Z');
+        expect(result[3]?.getNodes()).toContain('A');
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[3]?.getNodes()).toContain('E');
+        expect(result[4]?.getNodes()).toContain('W');
+        expect(result[4]?.getNodes()).toContain('X');
+        expect(result[4]?.getNodes()).toContain('Y');
+        expect(result[4]?.getNodes()).toContain('Z');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('play')).toContain('D');
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('A')).toContain('D');
-        expect(result[2]?.getSuccessors('A')).toContain('E');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[2]?.getSuccessors('B')).toContain('D');
-        expect(result[2]?.getSuccessors('B')).toContain('E');
-        expect(result[2]?.getSuccessors('C')).toContain('D');
-        expect(result[2]?.getSuccessors('C')).toContain('E');
-        expect(result[2]?.getSuccessors('D')).toContain('A');
-        expect(result[2]?.getSuccessors('D')).toContain('B');
-        expect(result[2]?.getSuccessors('D')).toContain('C');
-        expect(result[2]?.getSuccessors('D')).toContain('E');
-        expect(result[2]?.getSuccessors('E')).toContain('A');
-        expect(result[2]?.getSuccessors('E')).toContain('B');
-        expect(result[2]?.getSuccessors('E')).toContain('C');
-        expect(result[2]?.getSuccessors('C')).toContain('stop');
-        expect(result[2]?.getSuccessors('E')).toContain('stop');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('D');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('A')).toContain('D');
+        expect(result[3]?.getSuccessors('A')).toContain('E');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('B')).toContain('D');
+        expect(result[3]?.getSuccessors('B')).toContain('E');
+        expect(result[3]?.getSuccessors('C')).toContain('D');
+        expect(result[3]?.getSuccessors('C')).toContain('E');
+        expect(result[3]?.getSuccessors('D')).toContain('A');
+        expect(result[3]?.getSuccessors('D')).toContain('B');
+        expect(result[3]?.getSuccessors('D')).toContain('C');
+        expect(result[3]?.getSuccessors('D')).toContain('E');
+        expect(result[3]?.getSuccessors('E')).toContain('A');
+        expect(result[3]?.getSuccessors('E')).toContain('B');
+        expect(result[3]?.getSuccessors('E')).toContain('C');
+        expect(result[3]?.getSuccessors('C')).toContain('stop');
+        expect(result[3]?.getSuccessors('E')).toContain('stop');
 
-        expect(result[3]?.getSuccessors('play')).toContain('W');
-        expect(result[3]?.getSuccessors('play')).toContain('Y');
-        expect(result[3]?.getSuccessors('W')).toContain('X');
-        expect(result[3]?.getSuccessors('W')).toContain('Y');
-        expect(result[3]?.getSuccessors('W')).toContain('Z');
-        expect(result[3]?.getSuccessors('X')).toContain('Y');
-        expect(result[3]?.getSuccessors('X')).toContain('Z');
-        expect(result[3]?.getSuccessors('X')).toContain('stop');
-        expect(result[3]?.getSuccessors('Y')).toContain('W');
-        expect(result[3]?.getSuccessors('Y')).toContain('X');
-        expect(result[3]?.getSuccessors('Y')).toContain('Z');
-        expect(result[3]?.getSuccessors('Z')).toContain('X');
-        expect(result[3]?.getSuccessors('Z')).toContain('W');
-        expect(result[3]?.getSuccessors('Z')).toContain('stop');
+        expect(result[4]?.getSuccessors('play')).toContain('W');
+        expect(result[4]?.getSuccessors('play')).toContain('Y');
+        expect(result[4]?.getSuccessors('W')).toContain('X');
+        expect(result[4]?.getSuccessors('W')).toContain('Y');
+        expect(result[4]?.getSuccessors('W')).toContain('Z');
+        expect(result[4]?.getSuccessors('X')).toContain('Y');
+        expect(result[4]?.getSuccessors('X')).toContain('Z');
+        expect(result[4]?.getSuccessors('X')).toContain('stop');
+        expect(result[4]?.getSuccessors('Y')).toContain('W');
+        expect(result[4]?.getSuccessors('Y')).toContain('X');
+        expect(result[4]?.getSuccessors('Y')).toContain('Z');
+        expect(result[4]?.getSuccessors('Z')).toContain('X');
+        expect(result[4]?.getSuccessors('Z')).toContain('W');
+        expect(result[4]?.getSuccessors('Z')).toContain('stop');
 
         // Teste ob weiter mit der Parallel-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D', 'E']);
 
@@ -639,15 +641,15 @@ describe('ValidationHelper', () => {
 
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Parallel-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
-        expect(fsdResult[2]?.getSuccessors('C')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
-        expect(fsdResult[3]?.getSuccessors('D')).toContain('E');
-        expect(fsdResult[3]?.getSuccessors('E')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('B');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
+        expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('D');
+        expect(fsdResult[4]?.getSuccessors('D')).toContain('E');
+        expect(fsdResult[4]?.getSuccessors('E')).toContain('stop');
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['W', 'X']);
         const ssdSecondNodeSet = new Set(['Y', 'Z']);
 
@@ -655,12 +657,12 @@ describe('ValidationHelper', () => {
 
         expect(ssdResult[0]).toBeTrue();
         expect(ssdResult[1]).toBe('Parallel-Cut successful');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('W');
-        expect(ssdResult[2]?.getSuccessors('W')).toContain('X');
-        expect(ssdResult[2]?.getSuccessors('X')).toContain('stop');
-        expect(ssdResult[3]?.getSuccessors('play')).toContain('Y');
-        expect(ssdResult[3]?.getSuccessors('Y')).toContain('Z');
-        expect(ssdResult[3]?.getSuccessors('Z')).toContain('stop');
+        expect(ssdResult[3]?.getSuccessors('play')).toContain('W');
+        expect(ssdResult[3]?.getSuccessors('W')).toContain('X');
+        expect(ssdResult[3]?.getSuccessors('X')).toContain('stop');
+        expect(ssdResult[4]?.getSuccessors('play')).toContain('Y');
+        expect(ssdResult[4]?.getSuccessors('Y')).toContain('Z');
+        expect(ssdResult[4]?.getSuccessors('Z')).toContain('stop');
     });
 
     it('should validate and split DFG correctly with Sequence-Cut and then further with Loop-Cut', () => {
@@ -682,31 +684,31 @@ describe('ValidationHelper', () => {
         expect(result[1]).toBe('Sequence-Cut successful');
 
 
-        expect(result[2]?.getNodes()).toContain('A'); // Teil-DFG1
-        expect(result[2]?.getNodes()).toContain('B');
-        expect(result[2]?.getNodes()).toContain('C');
-        expect(result[2]?.getNodes()).toContain('D');
-        expect(result[2]?.getNodes()).toContain('E');
-        expect(result[3]?.getNodes()).toContain('F'); // Teil-DFG2
-        expect(result[3]?.getNodes()).toContain('G');
-        expect(result[3]?.getNodes()).toContain('H');
+        expect(result[3]?.getNodes()).toContain('A'); // Teil-DFG1
+        expect(result[3]?.getNodes()).toContain('B');
+        expect(result[3]?.getNodes()).toContain('C');
+        expect(result[3]?.getNodes()).toContain('D');
+        expect(result[3]?.getNodes()).toContain('E');
+        expect(result[4]?.getNodes()).toContain('F'); // Teil-DFG2
+        expect(result[4]?.getNodes()).toContain('G');
+        expect(result[4]?.getNodes()).toContain('H');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('B')).toContain('C');
-        expect(result[2]?.getSuccessors('C')).toContain('D');
-        expect(result[2]?.getSuccessors('D')).toContain('E');
-        expect(result[2]?.getSuccessors('E')).toContain('A');
-        expect(result[2]?.getSuccessors('C')).toContain('stop');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('B')).toContain('C');
+        expect(result[3]?.getSuccessors('C')).toContain('D');
+        expect(result[3]?.getSuccessors('D')).toContain('E');
+        expect(result[3]?.getSuccessors('E')).toContain('A');
+        expect(result[3]?.getSuccessors('C')).toContain('stop');
 
-        expect(result[3]?.getSuccessors('play')).toContain('F');
-        expect(result[3]?.getSuccessors('F')).toContain('G');
-        expect(result[3]?.getSuccessors('G')).toContain('H');
-        expect(result[3]?.getSuccessors('H')).toContain('F');
-        expect(result[3]?.getSuccessors('F')).toContain('stop');
+        expect(result[4]?.getSuccessors('play')).toContain('F');
+        expect(result[4]?.getSuccessors('F')).toContain('G');
+        expect(result[4]?.getSuccessors('G')).toContain('H');
+        expect(result[4]?.getSuccessors('H')).toContain('F');
+        expect(result[4]?.getSuccessors('F')).toContain('stop');
 
         // Teste ob weiter mit der Loop-Validierung und Aufteilung korrekt funktioniert
-        const fsd = result[2] // first-sub-dfg
+        const fsd = result[3] // first-sub-dfg
         const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
         const fsdSecondNodeSet = new Set(['D', 'E']);
 
@@ -714,15 +716,15 @@ describe('ValidationHelper', () => {
 
         expect(fsdResult[0]).toBeTrue();
         expect(fsdResult[1]).toBe('Loop-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('C');
-        expect(fsdResult[2]?.getSuccessors('C')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('D');
-        expect(fsdResult[3]?.getSuccessors('D')).toContain('E');
-        expect(fsdResult[3]?.getSuccessors('E')).toContain('stop');
+        expect(fsdResult[3]?.getSuccessors('play')).toContain('A');
+        expect(fsdResult[3]?.getSuccessors('A')).toContain('B');
+        expect(fsdResult[3]?.getSuccessors('B')).toContain('C');
+        expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
+        expect(fsdResult[4]?.getSuccessors('play')).toContain('D');
+        expect(fsdResult[4]?.getSuccessors('D')).toContain('E');
+        expect(fsdResult[4]?.getSuccessors('E')).toContain('stop');
 
-        const ssd = result[3] // second-sub-dfg
+        const ssd = result[4] // second-sub-dfg
         const ssdFirstNodeSet = new Set(['F']);
         const ssdSecondNodeSet = new Set(['G', 'H']);
 
@@ -730,11 +732,11 @@ describe('ValidationHelper', () => {
 
         expect(ssdResult[0]).toBeTrue();
         expect(ssdResult[1]).toBe('Loop-Cut successful');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('F');
-        expect(ssdResult[2]?.getSuccessors('F')).not.toContain('G');
-        expect(ssdResult[3]?.getSuccessors('G')).toContain('H');
-        expect(ssdResult[2]?.getSuccessors('H')).not.toContain('F');
-        expect(ssdResult[2]?.getSuccessors('F')).toContain('stop');
+        expect(ssdResult[3]?.getSuccessors('play')).toContain('F');
+        expect(ssdResult[3]?.getSuccessors('F')).not.toContain('G');
+        expect(ssdResult[4]?.getSuccessors('G')).toContain('H');
+        expect(ssdResult[3]?.getSuccessors('H')).not.toContain('F');
+        expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
     });
 
     it('should validate and split DFG correctly with Parallel-Cut and then further with XOR-Cut', () => {
@@ -776,63 +778,83 @@ describe('ValidationHelper', () => {
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('Parallel-Cut successful');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('play')).toContain('C');
-        expect(result[2]?.getSuccessors('A')).toContain('B');
-        expect(result[2]?.getSuccessors('A')).not.toContain('D');
-        expect(result[2]?.getSuccessors('A')).not.toContain('E');
-        expect(result[2]?.getSuccessors('A')).not.toContain('F');
-        expect(result[2]?.getSuccessors('B')).toContain('stop');
-        expect(result[2]?.getSuccessors('B')).not.toContain('D');
-        expect(result[2]?.getSuccessors('B')).not.toContain('E');
-        expect(result[2]?.getSuccessors('B')).not.toContain('F');
-        expect(result[2]?.getSuccessors('C')).toContain('stop');
-        expect(result[2]?.getSuccessors('C')).not.toContain('D');
-        expect(result[2]?.getSuccessors('C')).not.toContain('E');
-        expect(result[2]?.getSuccessors('C')).not.toContain('F');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('play')).toContain('empty_trace');
+        expect(result[3]?.getSuccessors('play')).toContain('C');
+        expect(result[3]?.getSuccessors('A')).toContain('B');
+        expect(result[3]?.getSuccessors('empty_trace')).toContain('stop');
+        expect(result[3]?.getSuccessors('A')).not.toContain('D');
+        expect(result[3]?.getSuccessors('A')).not.toContain('E');
+        expect(result[3]?.getSuccessors('A')).not.toContain('F');
+        expect(result[3]?.getSuccessors('B')).toContain('stop');
+        expect(result[3]?.getSuccessors('B')).not.toContain('D');
+        expect(result[3]?.getSuccessors('B')).not.toContain('E');
+        expect(result[3]?.getSuccessors('B')).not.toContain('F');
+        expect(result[3]?.getSuccessors('C')).toContain('stop');
+        expect(result[3]?.getSuccessors('C')).not.toContain('D');
+        expect(result[3]?.getSuccessors('C')).not.toContain('E');
+        expect(result[3]?.getSuccessors('C')).not.toContain('F');
 
-        expect(result[3]?.getSuccessors('play')).toContain('D');
-        expect(result[3]?.getSuccessors('play')).toContain('E');
-        expect(result[3]?.getSuccessors('D')).toContain('stop');
-        expect(result[3]?.getSuccessors('D')).not.toContain('A');
-        expect(result[3]?.getSuccessors('D')).not.toContain('B');
-        expect(result[3]?.getSuccessors('D')).not.toContain('C');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
-        expect(result[3]?.getSuccessors('E')).not.toContain('A');
-        expect(result[3]?.getSuccessors('E')).not.toContain('B');
-        expect(result[3]?.getSuccessors('E')).not.toContain('C');
-        expect(result[3]?.getSuccessors('F')).toContain('stop');
-        expect(result[3]?.getSuccessors('F')).not.toContain('A');
-        expect(result[3]?.getSuccessors('F')).not.toContain('B');
-        expect(result[3]?.getSuccessors('F')).not.toContain('C');
+        expect(result[4]?.getSuccessors('play')).toContain('empty_trace');
+        expect(result[4]?.getSuccessors('empty_trace')).toContain('stop');
+        expect(result[4]?.getSuccessors('play')).toContain('D');
+        expect(result[4]?.getSuccessors('play')).toContain('E');
+        expect(result[4]?.getSuccessors('D')).toContain('stop');
+        expect(result[4]?.getSuccessors('D')).not.toContain('A');
+        expect(result[4]?.getSuccessors('D')).not.toContain('B');
+        expect(result[4]?.getSuccessors('D')).not.toContain('C');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
+        expect(result[4]?.getSuccessors('E')).not.toContain('A');
+        expect(result[4]?.getSuccessors('E')).not.toContain('B');
+        expect(result[4]?.getSuccessors('E')).not.toContain('C');
+        expect(result[4]?.getSuccessors('F')).toContain('stop');
+        expect(result[4]?.getSuccessors('F')).not.toContain('A');
+        expect(result[4]?.getSuccessors('F')).not.toContain('B');
+        expect(result[4]?.getSuccessors('F')).not.toContain('C');
 
-        const fsd = result[2] // first-sub-dfg
-        const fsdFirstNodeSet = new Set(['A', 'B']);
-        const fsdSecondNodeSet = new Set(['C']);
+        const fsd = result[3] // first-sub-dfg
+
+        const fsdFirstNodeSet = new Set(['A', 'B', 'C']);
+        const fsdSecondNodeSet = new Set(['empty_trace']);
 
         const fsdResult = ValidationHelper.validateAndReturn(fsd!, fsdFirstNodeSet, fsdSecondNodeSet, CutType.XOR, logFunc);
 
-        expect(fsdResult[0]).toBeTrue();
-        expect(fsdResult[1]).toBe('XOR-Cut successful');
-        expect(fsdResult[2]?.getSuccessors('play')).toContain('A');
-        expect(fsdResult[2]?.getSuccessors('A')).toContain('B');
-        expect(fsdResult[2]?.getSuccessors('B')).toContain('stop');
-        expect(fsdResult[3]?.getSuccessors('play')).toContain('C');
-        expect(fsdResult[3]?.getSuccessors('C')).toContain('stop');
+        const fsd2 = fsdResult[3] // first-sub-dfg
 
-        const ssd = result[3] // second-sub-dfg
-        const ssdFirstNodeSet = new Set(['D']);
-        const ssdSecondNodeSet = new Set(['E', 'F']);
+        const fsd2FirstNodeSet = new Set(['A', 'B']);
+        const fsd2SecondNodeSet = new Set(['C']);
+
+        const fsd2Result = ValidationHelper.validateAndReturn(fsd2!, fsd2FirstNodeSet, fsd2SecondNodeSet, CutType.XOR, logFunc);
+
+        expect(fsd2Result[0]).toBeTrue();
+        expect(fsd2Result[1]).toBe('XOR-Cut successful');
+        expect(fsd2Result[3]?.getSuccessors('play')).toContain('A');
+        expect(fsd2Result[3]?.getSuccessors('A')).toContain('B');
+        expect(fsd2Result[3]?.getSuccessors('B')).toContain('stop');
+        expect(fsd2Result[4]?.getSuccessors('play')).toContain('C');
+        expect(fsd2Result[4]?.getSuccessors('C')).toContain('stop');
+
+        const ssd = result[4] // second-sub-dfg
+        const ssdFirstNodeSet = new Set(['empty_trace']);
+        const ssdSecondNodeSet = new Set(['E', 'F', 'D']);
 
         const ssdResult = ValidationHelper.validateAndReturn(ssd!, ssdFirstNodeSet, ssdSecondNodeSet, CutType.XOR, logFunc);
 
-        expect(ssdResult[0]).toBeTrue();
-        expect(ssdResult[1]).toBe('XOR-Cut successful');
-        expect(ssdResult[2]?.getSuccessors('play')).toContain('D');
-        expect(ssdResult[2]?.getSuccessors('D')).toContain('stop');
-        expect(ssdResult[3]?.getSuccessors('play')).toContain('E');
-        expect(ssdResult[3]?.getSuccessors('E')).toContain('F');
-        expect(ssdResult[3]?.getSuccessors('F')).toContain('stop');
+        const ssd2 = ssdResult[4]
+        const ssd2FirstNodeSet = new Set(['D']);
+        const ssd2SecondNodeSet = new Set(['E', 'F']);
+
+        const ssdResult2 = ValidationHelper.validateAndReturn(ssd2!, ssd2FirstNodeSet, ssd2SecondNodeSet, CutType.XOR, logFunc);
+
+        expect(ssdResult2[0]).toBeTrue();
+        expect(ssdResult2[1]).toBe('XOR-Cut successful');
+        expect(ssdResult2[3]?.getSuccessors('play')).toContain('D');
+        expect(ssdResult2[3]?.getSuccessors('D')).toContain('stop');
+        expect(ssdResult2[4]?.getSuccessors('play')).toContain('E');
+        expect(ssdResult2[4]?.getSuccessors('E')).toContain('F');
+        expect(ssdResult2[4]?.getSuccessors('F')).toContain('stop');
+
+
     });
 
     it('should validate and split DFG correctly with Sequence-, XOR- and Parallel-Cut', () => {
@@ -856,34 +878,34 @@ describe('ValidationHelper', () => {
         expect(result[1]).toBe('Sequence-Cut successful');
 
 
-        expect(result[2]?.getNodes()).toContain('A');
-        expect(result[3]?.getNodes()).toContain('B');
-        expect(result[3]?.getNodes()).toContain('C');
-        expect(result[3]?.getNodes()).toContain('D');
-        expect(result[3]?.getNodes()).toContain('E');
+        expect(result[3]?.getNodes()).toContain('A');
+        expect(result[4]?.getNodes()).toContain('B');
+        expect(result[4]?.getNodes()).toContain('C');
+        expect(result[4]?.getNodes()).toContain('D');
+        expect(result[4]?.getNodes()).toContain('E');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('A')).toContain('stop');
-        expect(result[2]?.getSuccessors('A')).not.toContain('B');
-        expect(result[2]?.getSuccessors('A')).not.toContain('C');
-        expect(result[2]?.getSuccessors('A')).not.toContain('E');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('A')).toContain('stop');
+        expect(result[3]?.getSuccessors('A')).not.toContain('B');
+        expect(result[3]?.getSuccessors('A')).not.toContain('C');
+        expect(result[3]?.getSuccessors('A')).not.toContain('E');
 
-        expect(result[3]?.getSuccessors('play')).toContain('B');
-        expect(result[3]?.getSuccessors('play')).toContain('C');
-        expect(result[3]?.getSuccessors('play')).toContain('E');
-        expect(result[3]?.getSuccessors('B')).toContain('C');
-        expect(result[3]?.getSuccessors('C')).toContain('B');
-        expect(result[3]?.getSuccessors('B')).toContain('D');
-        expect(result[3]?.getSuccessors('C')).toContain('D');
-        expect(result[3]?.getSuccessors('E')).toContain('D');
-        expect(result[3]?.getSuccessors('D')).toContain('stop');
-        expect(result[3]?.getPredecessors('B')).not.toContain('A');
-        expect(result[3]?.getPredecessors('C')).not.toContain('A');
-        expect(result[3]?.getPredecessors('E')).not.toContain('A');
+        expect(result[4]?.getSuccessors('play')).toContain('B');
+        expect(result[4]?.getSuccessors('play')).toContain('C');
+        expect(result[4]?.getSuccessors('play')).toContain('E');
+        expect(result[4]?.getSuccessors('B')).toContain('C');
+        expect(result[4]?.getSuccessors('C')).toContain('B');
+        expect(result[4]?.getSuccessors('B')).toContain('D');
+        expect(result[4]?.getSuccessors('C')).toContain('D');
+        expect(result[4]?.getSuccessors('E')).toContain('D');
+        expect(result[4]?.getSuccessors('D')).toContain('stop');
+        expect(result[4]?.getPredecessors('B')).not.toContain('A');
+        expect(result[4]?.getPredecessors('C')).not.toContain('A');
+        expect(result[4]?.getPredecessors('E')).not.toContain('A');
 
-        // result[2] ist Base-Case {A}
-        // result[3] als dfgBCDE weiter mit der Sequence-Validierung und Aufteilung
-        const dfgBCDE = result[3]
+        // result[3] ist Base-Case {A}
+        // result[4] als dfgBCDE weiter mit der Sequence-Validierung und Aufteilung
+        const dfgBCDE = result[4]
         const nsBCE = new Set(['B', 'C', 'E']);
         const nsD = new Set(['D']);
 
@@ -891,20 +913,20 @@ describe('ValidationHelper', () => {
 
         expect(resultDfgBCDE[0]).toBeTrue();
         expect(resultDfgBCDE[1]).toBe('Sequence-Cut successful');
-        expect(resultDfgBCDE[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBCDE[2]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBCDE[2]?.getSuccessors('E')).toContain('stop');
-        expect(resultDfgBCDE[2]?.getSuccessors('B')).not.toContain('D');
-        expect(resultDfgBCDE[2]?.getSuccessors('C')).not.toContain('D');
-        expect(resultDfgBCDE[2]?.getSuccessors('E')).not.toContain('D');
-        expect(resultDfgBCDE[3]?.getSuccessors('play')).toContain('D');
-        expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('B');
-        expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('C');
-        expect(resultDfgBCDE[3]?.getPredecessors('D')).not.toContain('E');
+        expect(resultDfgBCDE[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBCDE[3]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBCDE[3]?.getSuccessors('E')).toContain('stop');
+        expect(resultDfgBCDE[3]?.getSuccessors('B')).not.toContain('D');
+        expect(resultDfgBCDE[3]?.getSuccessors('C')).not.toContain('D');
+        expect(resultDfgBCDE[3]?.getSuccessors('E')).not.toContain('D');
+        expect(resultDfgBCDE[4]?.getSuccessors('play')).toContain('D');
+        expect(resultDfgBCDE[4]?.getPredecessors('D')).not.toContain('B');
+        expect(resultDfgBCDE[4]?.getPredecessors('D')).not.toContain('C');
+        expect(resultDfgBCDE[4]?.getPredecessors('D')).not.toContain('E');
 
         // resultDfgBCDE[3] ist Base-Case {D}
         // resultDfgBCDE[2] als dfgBCE weiter mit der XOR-Validierung und Aufteilung
-        const dfgBCE = resultDfgBCDE[2]
+        const dfgBCE = resultDfgBCDE[3]
         const nsBC = new Set(['B', 'C']);
         const nsE = new Set(['E']);
 
@@ -912,30 +934,30 @@ describe('ValidationHelper', () => {
 
         expect(resultDfgBCE[0]).toBeTrue();
         expect(resultDfgBCE[1]).toBe('XOR-Cut successful');
-        expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('B');
-        expect(resultDfgBCE[2]?.getSuccessors('play')).toContain('C');
-        expect(resultDfgBCE[2]?.getSuccessors('B')).toContain('C');
-        expect(resultDfgBCE[2]?.getSuccessors('C')).toContain('B');
-        expect(resultDfgBCE[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBCE[2]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBCE[3]?.getSuccessors('play')).toContain('E');
-        expect(resultDfgBCE[3]?.getSuccessors('E')).toContain('stop');
+        expect(resultDfgBCE[3]?.getSuccessors('play')).toContain('B');
+        expect(resultDfgBCE[3]?.getSuccessors('play')).toContain('C');
+        expect(resultDfgBCE[3]?.getSuccessors('B')).toContain('C');
+        expect(resultDfgBCE[3]?.getSuccessors('C')).toContain('B');
+        expect(resultDfgBCE[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBCE[3]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBCE[4]?.getSuccessors('play')).toContain('E');
+        expect(resultDfgBCE[4]?.getSuccessors('E')).toContain('stop');
 
         // resultDfgBCE[3] ist Base-Case {E}
         // resultDfgBCE[2] als dfgBC weiter mit der Parallel-Validierung und Aufteilung
-        const dfgBC = resultDfgBCE[2]
+        const dfgBC = resultDfgBCE[3]
         const nsB = new Set(['B']);
         const nsC = new Set(['C']);
 
         const resultDfgBC = ValidationHelper.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL, logFunc);
         expect(resultDfgBC[0]).toBeTrue();
         expect(resultDfgBC[1]).toBe('Parallel-Cut successful');
-        expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
-        expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
-        expect(resultDfgBC[3]?.getSuccessors('play')).toContain('C');
-        expect(resultDfgBC[3]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBC[3]?.getSuccessors('C')).not.toContain('B');
+        expect(resultDfgBC[3]?.getSuccessors('play')).toContain('B');
+        expect(resultDfgBC[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBC[3]?.getSuccessors('B')).not.toContain('C');
+        expect(resultDfgBC[4]?.getSuccessors('play')).toContain('C');
+        expect(resultDfgBC[4]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBC[4]?.getSuccessors('C')).not.toContain('B');
 
         // resultDfgBC[2] ist Base-Case {B}
         // resultDfgBC[3] ist Base-Case {C}
@@ -965,29 +987,29 @@ describe('ValidationHelper', () => {
         expect(result[0]).toBeTrue();
         expect(result[1]).toBe('Sequence-Cut successful');
 
-        expect(result[2]?.getSuccessors('play')).toContain('A');
-        expect(result[2]?.getSuccessors('A')).toContain('stop');
-        expect(result[2]?.getSuccessors('A')).not.toContain('B');
-        expect(result[2]?.getSuccessors('A')).not.toContain('C');
+        expect(result[3]?.getSuccessors('play')).toContain('A');
+        expect(result[3]?.getSuccessors('A')).toContain('stop');
+        expect(result[3]?.getSuccessors('A')).not.toContain('B');
+        expect(result[3]?.getSuccessors('A')).not.toContain('C');
 
-        expect(result[3]?.getSuccessors('play')).toContain('B');
-        expect(result[3]?.getSuccessors('play')).toContain('C');
-        expect(result[3]?.getSuccessors('B')).toContain('C');
-        expect(result[3]?.getSuccessors('C')).toContain('B');
-        expect(result[3]?.getSuccessors('B')).toContain('D');
-        expect(result[3]?.getSuccessors('C')).toContain('D');
-        expect(result[3]?.getSuccessors('B')).toContain('E');
-        expect(result[3]?.getSuccessors('C')).toContain('E');
-        expect(result[3]?.getSuccessors('E')).toContain('F');
-        expect(result[3]?.getSuccessors('F')).toContain('B');
-        expect(result[3]?.getSuccessors('F')).toContain('C');
-        expect(result[3]?.getSuccessors('D')).toContain('stop');
-        expect(result[3]?.getPredecessors('B')).not.toContain('A');
-        expect(result[3]?.getPredecessors('C')).not.toContain('A');
+        expect(result[4]?.getSuccessors('play')).toContain('B');
+        expect(result[4]?.getSuccessors('play')).toContain('C');
+        expect(result[4]?.getSuccessors('B')).toContain('C');
+        expect(result[4]?.getSuccessors('C')).toContain('B');
+        expect(result[4]?.getSuccessors('B')).toContain('D');
+        expect(result[4]?.getSuccessors('C')).toContain('D');
+        expect(result[4]?.getSuccessors('B')).toContain('E');
+        expect(result[4]?.getSuccessors('C')).toContain('E');
+        expect(result[4]?.getSuccessors('E')).toContain('F');
+        expect(result[4]?.getSuccessors('F')).toContain('B');
+        expect(result[4]?.getSuccessors('F')).toContain('C');
+        expect(result[4]?.getSuccessors('D')).toContain('stop');
+        expect(result[4]?.getPredecessors('B')).not.toContain('A');
+        expect(result[4]?.getPredecessors('C')).not.toContain('A');
 
-        // result[2] ist Base-Case {A}
-        // result[3] als dfgBCDEF weiter mit der Sequence-Validierung und Aufteilung
-        const dfgBCDEF = result[3]
+        // result[3] ist Base-Case {A}
+        // result[4] als dfgBCDEF weiter mit der Sequence-Validierung und Aufteilung
+        const dfgBCDEF = result[4]
         const nsBCEF = new Set(['B', 'C', 'E', 'F']);
         const nsD = new Set(['D']);
 
@@ -995,23 +1017,23 @@ describe('ValidationHelper', () => {
 
         expect(resultDfgBCDEF[0]).toBeTrue();
         expect(resultDfgBCDEF[1]).toBe('Sequence-Cut successful');
-        expect(resultDfgBCDEF[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBCDEF[2]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBCDEF[2]?.getSuccessors('E')).not.toContain('stop');
-        expect(resultDfgBCDEF[2]?.getSuccessors('F')).not.toContain('stop');
-        expect(resultDfgBCDEF[2]?.getPredecessors('E')).not.toContain('play');
-        expect(resultDfgBCDEF[2]?.getPredecessors('F')).not.toContain('play');
-        expect(resultDfgBCDEF[2]?.getSuccessors('B')).not.toContain('D');
-        expect(resultDfgBCDEF[2]?.getSuccessors('C')).not.toContain('D');
-        expect(resultDfgBCDEF[2]?.getSuccessors('E')).not.toContain('D');
-        expect(resultDfgBCDEF[2]?.getSuccessors('F')).not.toContain('D');
-        expect(resultDfgBCDEF[3]?.getSuccessors('play')).toContain('D');
-        expect(resultDfgBCDEF[3]?.getPredecessors('D')).not.toContain('B');
-        expect(resultDfgBCDEF[3]?.getPredecessors('D')).not.toContain('C');
+        expect(resultDfgBCDEF[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBCDEF[3]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBCDEF[3]?.getSuccessors('E')).not.toContain('stop');
+        expect(resultDfgBCDEF[3]?.getSuccessors('F')).not.toContain('stop');
+        expect(resultDfgBCDEF[3]?.getPredecessors('E')).not.toContain('play');
+        expect(resultDfgBCDEF[3]?.getPredecessors('F')).not.toContain('play');
+        expect(resultDfgBCDEF[3]?.getSuccessors('B')).not.toContain('D');
+        expect(resultDfgBCDEF[3]?.getSuccessors('C')).not.toContain('D');
+        expect(resultDfgBCDEF[3]?.getSuccessors('E')).not.toContain('D');
+        expect(resultDfgBCDEF[3]?.getSuccessors('F')).not.toContain('D');
+        expect(resultDfgBCDEF[4]?.getSuccessors('play')).toContain('D');
+        expect(resultDfgBCDEF[4]?.getPredecessors('D')).not.toContain('B');
+        expect(resultDfgBCDEF[4]?.getPredecessors('D')).not.toContain('C');
 
         // resultDfgBCDEF[3] ist Base-Case {D}
         // resultDfgBCDEF[2] als dfgBCEF weiter mit der Loop-Validierung und Aufteilung
-        const dfgBCEF = resultDfgBCDEF[2]
+        const dfgBCEF = resultDfgBCDEF[3]
         const nsBC = new Set(['B', 'C']);
         const nsEF = new Set(['E', 'F']);
 
@@ -1019,56 +1041,56 @@ describe('ValidationHelper', () => {
 
         expect(resultDfgBCEF[0]).toBeTrue();
         expect(resultDfgBCEF[1]).toBe('Loop-Cut successful');
-        expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('B');
-        expect(resultDfgBCEF[2]?.getSuccessors('play')).toContain('C');
-        expect(resultDfgBCEF[2]?.getSuccessors('B')).toContain('C');
-        expect(resultDfgBCEF[2]?.getSuccessors('C')).toContain('B');
-        expect(resultDfgBCEF[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBCEF[2]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBCEF[2]?.getSuccessors('B')).not.toContain('E');
-        expect(resultDfgBCEF[2]?.getSuccessors('C')).not.toContain('E');
-        expect(resultDfgBCEF[2]?.getPredecessors('B')).not.toContain('F');
-        expect(resultDfgBCEF[2]?.getPredecessors('C')).not.toContain('F');
-        expect(resultDfgBCEF[3]?.getSuccessors('play')).toContain('E');
-        expect(resultDfgBCEF[3]?.getSuccessors('E')).toContain('F');
-        expect(resultDfgBCEF[3]?.getSuccessors('F')).toContain('stop');
-        expect(resultDfgBCEF[3]?.getSuccessors('F')).not.toContain('B');
-        expect(resultDfgBCEF[3]?.getSuccessors('F')).not.toContain('C');
-        expect(resultDfgBCEF[3]?.getPredecessors('E')).not.toContain('B');
-        expect(resultDfgBCEF[3]?.getPredecessors('E')).not.toContain('C');
+        expect(resultDfgBCEF[3]?.getSuccessors('play')).toContain('B');
+        expect(resultDfgBCEF[3]?.getSuccessors('play')).toContain('C');
+        expect(resultDfgBCEF[3]?.getSuccessors('B')).toContain('C');
+        expect(resultDfgBCEF[3]?.getSuccessors('C')).toContain('B');
+        expect(resultDfgBCEF[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBCEF[3]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBCEF[3]?.getSuccessors('B')).not.toContain('E');
+        expect(resultDfgBCEF[3]?.getSuccessors('C')).not.toContain('E');
+        expect(resultDfgBCEF[3]?.getPredecessors('B')).not.toContain('F');
+        expect(resultDfgBCEF[3]?.getPredecessors('C')).not.toContain('F');
+        expect(resultDfgBCEF[4]?.getSuccessors('play')).toContain('E');
+        expect(resultDfgBCEF[4]?.getSuccessors('E')).toContain('F');
+        expect(resultDfgBCEF[4]?.getSuccessors('F')).toContain('stop');
+        expect(resultDfgBCEF[4]?.getSuccessors('F')).not.toContain('B');
+        expect(resultDfgBCEF[4]?.getSuccessors('F')).not.toContain('C');
+        expect(resultDfgBCEF[4]?.getPredecessors('E')).not.toContain('B');
+        expect(resultDfgBCEF[4]?.getPredecessors('E')).not.toContain('C');
 
         // resultDfgBCEF[2] als dfgBC weiter mit der Parallel-Validierung und Aufteilung
-        const dfgBC = resultDfgBCEF[2]
+        const dfgBC = resultDfgBCEF[3]
         const nsB = new Set(['B']);
         const nsC = new Set(['C']);
 
         const resultDfgBC = ValidationHelper.validateAndReturn(dfgBC!, nsB, nsC, CutType.PARALLEL, logFunc);
         expect(resultDfgBC[0]).toBeTrue();
         expect(resultDfgBC[1]).toBe('Parallel-Cut successful');
-        expect(resultDfgBC[2]?.getSuccessors('play')).toContain('B');
-        expect(resultDfgBC[2]?.getSuccessors('B')).toContain('stop');
-        expect(resultDfgBC[2]?.getSuccessors('B')).not.toContain('C');
-        expect(resultDfgBC[3]?.getSuccessors('play')).toContain('C');
-        expect(resultDfgBC[3]?.getSuccessors('C')).toContain('stop');
-        expect(resultDfgBC[3]?.getSuccessors('C')).not.toContain('B');
+        expect(resultDfgBC[3]?.getSuccessors('play')).toContain('B');
+        expect(resultDfgBC[3]?.getSuccessors('B')).toContain('stop');
+        expect(resultDfgBC[3]?.getSuccessors('B')).not.toContain('C');
+        expect(resultDfgBC[4]?.getSuccessors('play')).toContain('C');
+        expect(resultDfgBC[4]?.getSuccessors('C')).toContain('stop');
+        expect(resultDfgBC[4]?.getSuccessors('C')).not.toContain('B');
 
         // resultDfgBC[2] ist Base-Case {B}
         // resultDfgBC[3] ist Base-Case {C}
 
         // resultDfgBCEF[3] als dfgBC weiter mit der Sequence-Validierung und Aufteilung
-        const dfgEF = resultDfgBCEF[3]
+        const dfgEF = resultDfgBCEF[4]
         const nsE = new Set(['E']);
         const nsF = new Set(['F']);
 
         const resultDfgEF = ValidationHelper.validateAndReturn(dfgEF!, nsE, nsF, CutType.SEQUENCE, logFunc);
         expect(resultDfgEF[0]).toBeTrue();
         expect(resultDfgEF[1]).toBe('Sequence-Cut successful');
-        expect(resultDfgEF[2]?.getSuccessors('play')).toContain('E');
-        expect(resultDfgEF[2]?.getSuccessors('E')).toContain('stop');
-        expect(resultDfgEF[2]?.getSuccessors('E')).not.toContain('F');
-        expect(resultDfgEF[3]?.getSuccessors('play')).toContain('F');
-        expect(resultDfgEF[3]?.getSuccessors('F')).toContain('stop');
-        expect(resultDfgEF[3]?.getPredecessors('F')).not.toContain('E');
+        expect(resultDfgEF[3]?.getSuccessors('play')).toContain('E');
+        expect(resultDfgEF[3]?.getSuccessors('E')).toContain('stop');
+        expect(resultDfgEF[3]?.getSuccessors('E')).not.toContain('F');
+        expect(resultDfgEF[4]?.getSuccessors('play')).toContain('F');
+        expect(resultDfgEF[4]?.getSuccessors('F')).toContain('stop');
+        expect(resultDfgEF[4]?.getPredecessors('F')).not.toContain('E');
 
         // resultDfgEF[2] ist Base-Case {E}
         // resultDfgEF[3] ist Base-Case {F}
@@ -1098,7 +1120,7 @@ describe('validator', () => {
         const result = ValidationHelper['validator'](dfg, firstNodeSet, secondNodeSet, CutType.XOR);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('All nodes must be present, and the sets must be exclusive');
+        expect(result[2]).toBe('All nodes must be present, and the sets must be exclusive');
     });
 });
 
@@ -1197,7 +1219,7 @@ describe('xorValidation', () => {
         const result = ValidationHelper['xorValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse(); // Verbindungen zwischen Mengen
-        expect(result[1]).toBe('arc from B to C found');
+        expect(result[2]).toBe('Arc from B to C found');
     });
 });
 
@@ -1264,7 +1286,7 @@ describe('sequenceValidation', () => {
         const result = ValidationHelper['sequenceValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('No path from A to E found');
+        expect(result[2]).toBe('No path from A to E found');
     });
 
     it('should return false for invalid sequence cut with backward path', () => {
@@ -1281,7 +1303,7 @@ describe('sequenceValidation', () => {
         const result = ValidationHelper['sequenceValidation'](dfg, firstNodeSet, secondNodeSet);
 
         expect(result[0]).toBeFalse();
-        expect(result[1]).toBe('Path from C to first NodeSet found');
+        expect(result[2]).toBe('Path from C to first NodeSet found');
     });
 });
 
@@ -1322,7 +1344,8 @@ describe('parallelValidation', () => {
         const secondResult = ValidationHelper.validateAndReturn(dfg, secondCutFirstNodeSet, secondCutSecondNodeSet, CutType.PARALLEL, logFunc);
 
         expect(secondResult[0]).toBeFalse();
-        expect(secondResult[1]).toBe('A passed NodeSet is empty');
+        expect(secondResult[1]).toBe('Parallel-Cut not possible');
+        expect(secondResult[2]).toBe('A passed NodeSet is empty');
 
         // Ungültige Cut
 
@@ -1331,7 +1354,8 @@ describe('parallelValidation', () => {
 
         const thirdResult = ValidationHelper.validateAndReturn(dfg, thirdCutFirstNodeSet, thirdCutSecondNodeSet, CutType.PARALLEL, logFunc);
         expect(thirdResult[0]).toBeFalse();
-        expect(thirdResult[1]).toBe('A passed NodeSet is empty');
+        expect(thirdResult[1]).toBe('Parallel-Cut not possible');
+        expect(thirdResult[2]).toBe('A passed NodeSet is empty');
 
     });
 
@@ -1392,7 +1416,9 @@ describe('loopValidation', () => {
         const secondResult = ValidationHelper['loopValidation'](dfg, secondCutFirstNodeSet, secondCutSecondNodeSet);
 
         expect(secondResult[0]).toBeFalse();
-        expect(secondResult[1]).toBe('There exists a arc from play to A'); // weil A in playNodes nicht in firstNodeSetPlay existiert..?
+        expect(secondResult[1]).toBe('Loop-Cut not possible');
+        expect(secondResult[2]).toBe('Do-Part must contain all Play-Nodes of original DFG.\n' +
+            ' A violates this requirement.'); // weil A in playNodes nicht in firstNodeSetPlay existiert
 
     });
 
@@ -1446,8 +1472,12 @@ describe('createNewDFG', () => {
         ];
 
         dfg.setDFGfromStringArray(inputStringArray);
-        const nodeSubset = new Set(['A', 'B', 'E', 'F']);
-        const newDfg = ValidationHelper['createNewDFG'](dfg, nodeSubset);
+        const nodeSubset1 = new Set(['A', 'B', 'E', 'F']);
+        const nodeSubset2 = new Set(['C', 'G']);
+        let cutType : CutType = CutType.SEQUENCE
+        let newEventlog = ValidationHelper['splitEventlogs'](dfg, nodeSubset1, nodeSubset2, cutType);
+        let newDfg = new DirectlyFollows();
+        newDfg.setDFGfromStringArray(newEventlog[0])
 
         expect(newDfg).toBeTruthy();
 
