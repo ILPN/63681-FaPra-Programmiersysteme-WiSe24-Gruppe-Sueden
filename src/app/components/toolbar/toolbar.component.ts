@@ -33,7 +33,7 @@ export class ToolbarComponent {
             result = this.graphService.validateCut({
                 cutType: this.toolbarService.cutType()!,
                 dfg: dfg,
-                firstNodeSet: selectedNodes
+                nodeSet: selectedNodes
             })
         } else {
             result = this.graphService.validateFallthrough(
@@ -47,7 +47,7 @@ export class ToolbarComponent {
             this.dialog.open(FailedValidationDialog, {
                 width: '500px',
                 data: {
-                    title: result.comment,
+                    title: result.title,
                     message: result.reason
                 }
             })

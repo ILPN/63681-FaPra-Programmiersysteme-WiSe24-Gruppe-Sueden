@@ -1,18 +1,47 @@
 import {Arc} from "./arc";
 
+/**
+ * Represents a Directly-Follows Graph (DFG) where each activity/event in a process is associated
+ * with successors and predecessors. The DFG can be constructed using an event log and visualized
+ * as a graph with nodes and arcs.
+ *
+ * This class provides methods to manage and analyze the DFG, including adding successors and
+ * predecessors, generating arcs, and managing event logs.
+ *
+ * @class
+ */
 export class DirectlyFollows {
-    id: number
-    x: number = 0
-    y: number = 0
+    /**
+     * A map that stores the successors for each activity in the DFG. The key is an activity,
+     * and the value is a set of activities that follow it.
+     * @property {Map<string, Set<string>>}
+     */
     successorMap: Map<string, Set<string>>
+    /**
+     * A map that stores the predecessors for each activity in the DFG. The key is an activity,
+     * and the value is a set of activities that precede it.
+     * @property {Map<string, Set<string>>}
+     */
     predecessorMap: Map<string, Set<string>>
+    /**
+     * The event log is represented as a 2D array of strings, where each sub-array is a trace
+     * containing a sequence of activities/events. This is the log that forms the basis of the DFG.
+     * @property {string[][]}
+     */
     eventLog: string[][];
+    /**
+     * A set of unique activities (nodes) in the DFG.
+     * @property {Set<string>}
+     */
     nodes: Set<string>
+    /**
+     * An array of arcs representing the connections between nodes in the DFG.
+     * Each arc is an object that typically has a 'source' and 'target' property.
+     * @property {Arc[]}
+     */
     arcs: Arc[]
 
-    //TODO: Arcs und Nodes aktualisieren
     constructor() {
-        this.id = 0;
         this.successorMap = new Map<string, Set<string>>()
         this.predecessorMap = new Map<string, Set<string>>()
         this.eventLog = [];
@@ -96,6 +125,34 @@ export class DirectlyFollows {
         return this.arcs.filter(arc => arc.source === source)
     }
 
+    /**
+     * Sets the Directly-Follows Graph (DFG) from the provided event log in the form of a string array.
+     * This method processes the input event log, establishing the successor relationships between
+     * activities (or events) in the log and adds the necessary transitions for the DFG.
+     *
+     * The method will also create a predecessor map, set the event log, define the nodes, and generate arcs.
+     *
+     * @param {string[][]} inputStringArray - The event log represented as a 2D array of strings,
+     *                                         where each sub-array represents a trace in the event log.
+     *                                         Each string in the sub-array corresponds to an activity (or event).
+     *                                         The first activity is the start of the trace, and the last one is the stop.
+     *
+     * @returns {void} - This method does not return any value. It modifies the internal state of the DFG.
+     *
+     * @example
+     * // Example event log input:
+     * const inputLog = [
+     *   ['A', 'B', 'C'],
+     *   ['A', 'C', 'D']
+     * ];
+     *
+     * // Set the DFG based on the event log
+     * dfg.setDFGfromStringArray(inputLog);
+     *
+     * // This will process the log and set up the direct follows relationships for the DFG.
+     *
+     * @see {@link DirectlyFollows} for more details on how the DFG is structured.
+     */
     public setDFGfromStringArray(inputStringArray: string[][]): void {
         for (const trace of inputStringArray) {
             let tempElement = trace[0];
@@ -182,7 +239,31 @@ export class DirectlyFollows {
         return successors !== undefined && successors.has(target);
     }
 
-    isPatternExclusivelyRepeated(): boolean {
+    /**
+     * Checks if a repeated pattern is exclusively repeated in the event log.
+     * The method verifies that a pattern is repeated and ensures
+     * that the pattern is consistently repeated in all traces of the event log.
+     *
+     * @this {DirectlyFollows} - The method is called on a `DirectlyFollows` instance.
+     *
+     * @returns {boolean} - Returns `true` if there is a pattern that is exclusively repeated; `false` otherwise.
+     *                      If the event log contains only empty traces, it returns `false`.
+     *
+     * @example
+     * // Example usage:
+     * const dfg = new DirectlyFollows();
+     * dfg.eventLog = [["a", "b", "a", "b"], ["c", "d"], ["a", "b", "a", "b"]];
+     * const result = dfg.isPatternExclusivelyRepeated();
+     * console.log(result); // Output: false
+     *
+     * @example
+     * // Example usage2:
+     * const dfg = new DirectlyFollows();
+     * dfg.eventLog = [["a", "b", "a", "b"], ["a", "b"]];
+     * const result = dfg.isPatternExclusivelyRepeated();
+     * console.log(result); // Output: true
+     */
+    public isPatternExclusivelyRepeated(): boolean {
         let eventlog = this.eventLog;
         let isPatternRepeatedInATrace = false;
         let pattern = this.findRepeatedPattern(this.shortestNotEmptyTrace(eventlog));
@@ -220,7 +301,7 @@ export class DirectlyFollows {
         return shortestTrace;
     }
 
-    public findRepeatedPattern(row: string[]): string[] {
+    private findRepeatedPattern(row: string[]): string[] {
         const n = row.length;
 
         for (let patternLength = 1; patternLength <= Math.floor(n / 2); patternLength++) {
@@ -244,8 +325,24 @@ export class DirectlyFollows {
         return row; // If no smaller repeating pattern is found, return the array itself
     }
 
+    /**
+     * Retrieves the smallest repeated pattern from the event log by finding the shortest non-empty trace.
+     * This method calls the `findRepeatedPattern` method with the shortest non-empty trace from the event log.
+     *
+     * @this {DirectlyFollows} - The method is called on a `DirectlyFollows` instance.
+     *
+     * @returns {string[]} - The smallest repeated pattern found in the shortest non-empty trace of the event log.
+     *                       If no repeated pattern is found, it returns the trace itself.
+     *
+     * @example
+     * // Example usage:
+     * const dfg = new DirectlyFollows();
+     * dfg.eventLog = [["a", "b", "a", "b"]];
+     * const repeatedPattern = dfg.getRepeatedPattern();
+     * console.log(repeatedPattern); // Output: ["a", "b"]
+     */
     public getRepeatedPattern(): string[] {
-        let eventlog = this.eventLog ;
+        let eventlog = this.eventLog;
         return this.findRepeatedPattern(this.shortestNotEmptyTrace(eventlog));
     }
 

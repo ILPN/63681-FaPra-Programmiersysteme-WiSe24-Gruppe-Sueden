@@ -29,7 +29,20 @@ export class ProcessGraphService {
     constructor(private displayService: DisplayService) {
     }
 
-    createGraph(eventLog: string[][]) {
+    /**
+     * Creates and initializes a directed follows graph (DFG) and constructs the basic Petri net structure.
+     *
+     * - Converts the given event log into a `DirectlyFollows` graph.
+     * - Generates initial places and transitions required for the Petri net.
+     * - Sets initial positions for graphical representation.
+     * - Creates arcs connecting the generated places, transitions and DfgNodes.
+     * - Updates the graph signal with the constructed elements.
+     * - Logs the graph creation process.
+     * - If the event log represents a base case, it transforms it into a transition.
+     *
+     * @param {string[][]} eventLog - The event log, represented as an array of traces, where each trace is an array of events.
+     */
+    public createGraph(eventLog: string[][]) {
         // Umwandeln des result in ein DFG Objekt
         const dfg = new DirectlyFollows();
         dfg.setDFGfromStringArray(eventLog)
@@ -96,7 +109,21 @@ export class ProcessGraphService {
     /*====================================================Validation Logic==========================================================*/
 
     /*==============================================================================================================================*/
-
+    /**
+     * Validates the cut between two node sets in the Directly Follows Graph (DFG) and updates the process graph accordingly.
+     *
+     * - Sorts the node sets based on the validation data for later use.
+     * - Calls `validateAndReturn` to perform the cut validation.
+     * - If the cut is valid and new DFGs are generated, incorporates the new DFGs into the process graph.
+     * - If there are no more DfgNodes, logs the completion of the inductive miner.
+     * - Updates the graph signal with the latest state.
+     *
+     * @param {ValidationData} data - The validation data containing the DFG, node set, and cut type.
+     * @returns {ValidationResult} - The result of the validation, containing:
+     *   - `success` (boolean) - Whether the validation was successful.
+     *   - `comment` (string) - A message indicating the validation result.
+     *   - `reason` (string) - The reason for the validation outcome.
+     */
     public validateCut(data: ValidationData): ValidationResult {
         // sortiere die Reihenfolge der NodeSets für die spätere Parameterübergabe
         let sortedNodes = ValidationHelper.createSortedNodeSets(data)
@@ -131,7 +158,7 @@ export class ProcessGraphService {
         } else {
             this.addLogEntry("-----------------------")
         }
-        return {success: result[0], comment: result[1], reason: result[2]};
+        return {success: result[0], title: result[1], reason: result[2]};
     }
 
     // nimmt 3 dfg 2 bool und die cut method entgegen - updated dementsprechend den Processgraph am Signal
@@ -549,7 +576,25 @@ export class ProcessGraphService {
     /*=====================================================FALL THROUGH=============================================================*/
 
     /*==============================================================================================================================*/
-
+    /**
+     * Validates and executes a fallthrough strategy on a given DFG node based on the specified fallthrough type.
+     * The fallthrough strategy could be one of the following: SPT (Tau-Loop), AOPT (Activity Once Per Trace), or Flower Model.
+     *
+     * - For `SPT`, attempts to execute the Tau-Loop by checking for repeating patterns and empty traces.
+     * - For `AOPT`, checks if the fallthrough is possible with a selected node and performs the activity once per trace.
+     * - For `Flower`, checks if the flower model is valid based on the DFG and updates the process graph accordingly.
+     *
+     * Depending on the fallthrough type, this function adjusts the event log, DFG, and graph state, and provides feedback on success or failure.
+     * It also logs the actions taken during the process.
+     *
+     * @param {DfgNode} dfgNode - The DFG node on which the fallthrough strategy is applied.
+     * @param {FallthroughType} fallthroughType - The type of fallthrough to be executed: SPT, AOPT, or FLOWER.
+     * @param {Set<string>} nodeSet - A set of nodes used for AOPT fallthrough.
+     * @returns {ValidationResult} - The result of the validation, containing:
+     *   - `success` (boolean) - Whether the fallthrough strategy was successfully executed.
+     *   - `comment` (string) - A message describing the outcome of the fallthrough operation.
+     *   - `reason` (string) - The reason for the outcome.
+     */
     public validateFallthrough(dfgNode: DfgNode, fallthroughType: FallthroughType, nodeSet: Set<string>): ValidationResult {
         const workingGraph = this.graphSignal();
         if (!workingGraph) {
@@ -572,7 +617,7 @@ export class ProcessGraphService {
                 if (!repeatingPattern) {
                     this.addLogEntry('no repeating Pattern found')
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Tau-Loop not possible', reason: 'No repeating Pattern found'}
+                    return {success: false, title: 'Tau-Loop not possible', reason: 'No repeating Pattern found'}
                 }
                 this.addLogEntry('Repeating Pattern found - ok')
                 if (emptyTrace) {
@@ -627,7 +672,7 @@ export class ProcessGraphService {
                 this.graphSignal.set({
                     ...workingGraph
                 })
-                return {success: true, comment: 'TAU-Loop executed', reason: ''}
+                return {success: true, title: 'TAU-Loop executed', reason: ''}
 
             }
             /*=====================================================AOPT====================================================*/
@@ -666,12 +711,12 @@ export class ProcessGraphService {
                                 this.graphSignal.set({
                                     ...workingGraph!
                                 })
-                                return {success: true, comment: 'Activity Once Per Trace executed', reason: ''}
+                                return {success: true, title: 'Activity Once Per Trace executed', reason: ''}
                             } else {
                                 this.addLogEntry('AOPT not possible with selected Node')
                                 return {
                                     success: false,
-                                    comment: 'Activity Once Per Trace not possible',
+                                    title: 'Activity Once Per Trace not possible',
                                     reason: 'Selected Node not exactly once in every Trace'
                                 }
                             }
@@ -679,7 +724,7 @@ export class ProcessGraphService {
                             this.addLogEntry("-----------------------")
                             return {
                                 success: isFallthrough[0],
-                                comment: 'No Fallthrough detected',
+                                title: 'No Fallthrough detected',
                                 reason: 'A cut is possible'
                             };
                         }
@@ -688,7 +733,7 @@ export class ProcessGraphService {
                         this.addLogEntry("-----------------------")
                         return {
                             success: false,
-                            comment: 'Activity Once Per Trace not possible',
+                            title: 'Activity Once Per Trace not possible',
                             reason: 'Repeating Pattern found'
                         }
                     }
@@ -697,7 +742,7 @@ export class ProcessGraphService {
                     this.addLogEntry("-----------------------")
                     return {
                         success: false,
-                        comment: 'Activity Once Per Trace not possible',
+                        title: 'Activity Once Per Trace not possible',
                         reason: 'More than one Node was selected'
                     }
                 }
@@ -716,7 +761,7 @@ export class ProcessGraphService {
                             this.addLogEntry("-----------------------")
                             return {
                                 success: false,
-                                comment: 'Flower Model not allowed',
+                                title: 'Flower Model not allowed',
                                 reason: 'Activity Once Per Trace is possible'
                             };
                         } else {
@@ -836,31 +881,31 @@ export class ProcessGraphService {
                             this.graphSignal.set({
                                 ...workingGraph
                             })
-                            return {success: true, comment: 'Flower Model Executed', reason: ''};
+                            return {success: true, title: 'Flower Model Executed', reason: ''};
                         }
                     } else {
                         this.addLogEntry(isFallthrough[1])
                         this.addLogEntry("-----------------------")
                         return {
                             success: isFallthrough[0],
-                            comment: 'No Fallthrough detected',
+                            title: 'No Fallthrough detected',
                             reason: 'A cut is possible'
                         };
                     }
                 } else {
-                    this.addLogEntry(sptResult.comment)
+                    this.addLogEntry(sptResult.title)
                     this.addLogEntry("-----------------------")
-                    return {success: false, comment: 'Flower Model not allowed', reason: 'Repeating Pattern found'}
+                    return {success: false, title: 'Flower Model not allowed', reason: 'Repeating Pattern found'}
                 }
             }
             default:
-                return {success: false, comment: 'No Fallthrough-Type selected', reason: ''}
+                return {success: false, title: 'No Fallthrough-Type selected', reason: ''}
         }
     }
 
     private checkNotSPT(dfg: DirectlyFollows): ValidationResult {
         let result = ValidationHelper.testForNoTauOrRepeatingPattern(dfg.eventLog)
-        return {success: result[0], comment: result[1], reason: ''}
+        return {success: result[0], title: result[1], reason: ''}
     }
 
     //gibt false zurück, wenn eine aktivität >1 und =! 0 mal in allen traces vorkommt
@@ -892,8 +937,8 @@ export class ProcessGraphService {
         return [false, ''];
     }
 
-    private getAllAOPTNodes(dfg:DirectlyFollows): string[]{
-        let aoptNodes : string[] = [];
+    private getAllAOPTNodes(dfg: DirectlyFollows): string[] {
+        let aoptNodes: string[] = [];
         let allNodes = [...dfg.getNodes()];
         for (let node of allNodes) {
             if (this.checkAOPTforOne(node, dfg.eventLog)) {
@@ -907,6 +952,42 @@ export class ProcessGraphService {
     /*=======================================================Give TIP===============================================================*/
 
     /*==============================================================================================================================*/
+    /**
+     * Provides a tip based on the analysis of the given DFG node.
+     * It checks for possible process mining patterns like Fallthrough, Tau-Loop,
+     * and Activity Once Per Trace (AOPT), and provides a recommendation for the next step.
+     * If there is no Fallthrough it gives back the result of the Fallthrough - Analysis, i.e. the found cut type and
+     * corresponding nodes.
+     *
+     * @param {DfgNode} dfgNode - The DFG node to analyze. It represents an event or activity
+     *                             in the process model with its event log.
+     *
+     * @returns {[string, string]} - A tuple of two strings:
+     *   - The first string indicates the detected pattern or fallthrough ("Fallthrough detected"
+     *     or some other relevant information).
+     *   - The second string provides more detailed information on the detected pattern,
+     *     such as the activities eligible for AOPT or instructions for using the Flower Model.
+     *
+     * @example
+     * // If a Tau-Loop is detected
+     * giveTip(dfgNode);
+     * // Returns: ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
+     *
+     * @example
+     * // If AOPT is possible for certain activities
+     * giveTip(dfgNode);
+     * // Returns: ['Fallthrough detected', 'AOPT possible for Activities: Activity1 , Activity2']
+     *
+     * @example
+     * // If neither Tau-Loop nor AOPT is possible
+     * giveTip(dfgNode);
+     * // Returns: ['Fallthrough detected', 'Neither AOPT nor Tau-Loop possible.\nUse Flower Model.']
+     * @example
+     * // If a Sequence-Cut was possible between Nodes A and B
+     * giveTip(dfgNode);
+     * // Returns: ['Sequence Cut possible', 'Cut possible between: \n\n Node Set 1: A \n\n Node Set 2: B']
+     */
+
     public giveTip(dfgNode: DfgNode): [string, string] {
         let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
         // Returns Possible cut as first string and between which Nodes the Cut is as second string
@@ -930,28 +1011,6 @@ export class ProcessGraphService {
             return ['Fallthrough detected', resultString]
         }
     }
-
-    /* Alte Version
-    public giveTip(dfgNode: DfgNode): [string, string] {
-        let isFallthrough = FallthroughHelper.isFallthrough(dfgNode.dfg)
-        // Returns Possible cut as first string and between which Nodes the Cut is as second string
-        if (!isFallthrough[0]) {
-            if (!this.checkNotSPT(dfgNode.dfg).success) {
-                return ['Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']
-            }
-            return [isFallthrough[1], isFallthrough[2]]
-        }
-        let aoptpossible = this.checkIfAOPTPossible(dfgNode.dfg)
-        let resultString = '';
-        // if TauLoop is Possible give Tip
-        if (aoptpossible[0]) {
-            resultString += aoptpossible[1]
-        } else {
-            resultString += 'Neither APOT nor Tau-Loop possible.\nUse Flower Model'
-        }
-        return ['Fallthrough detected', resultString]
-    }
-    */
 
 
     /*==============================================================================================================================*/

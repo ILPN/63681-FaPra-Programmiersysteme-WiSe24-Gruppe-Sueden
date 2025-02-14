@@ -6,6 +6,21 @@ import {LoopState} from '../classes/loop-state.enum'
 
 export class ValidationHelper {
 
+    /**
+     * Detects whether the selected cut works on the Directly Follows Graph (DFG).
+     *
+     * @param {DirectlyFollows} dfg - The Directly Follows Graph object.
+     * @param {Set<string>} firstNodeSet - The first set of nodes.
+     * @param {Set<string>} secondNodeSet - The second set of nodes.
+     * @param {CutType} cutType - The type of cut to apply.
+     * @param {(log: string) => void} updateLog - A function to log messages.
+     * @returns {[boolean, string, string, DirectlyFollows?, DirectlyFollows?]} - A tuple containing:
+     *   - `boolean` - Whether the cut is valid.
+     *   - `string` - A message indicating success or failure.
+     *   - `string` - The termination condition if failure.
+     *   - `DirectlyFollows?` - (Optional) The first resulting DFG after the successful cut.
+     *   - `DirectlyFollows?` - (Optional) The second resulting DFG after the successful cut.
+     */
     public static validateAndReturn(dfg: DirectlyFollows,
                                     firstNodeSet: Set<string>,
                                     secondNodeSet: Set<string>,
@@ -412,19 +427,36 @@ export class ValidationHelper {
         return eventlog.some(array => array.length === trace.length && array.every((value, index) => value === trace[index]));
     }
 
-    public static pushIfTraceNotInEventlog(eventlog: string[][], trace: string[]): void {
+    private static pushIfTraceNotInEventlog(eventlog: string[][], trace: string[]): void {
         if (this.isTraceInEventlog(eventlog, trace)) {
             return
         }
         eventlog.push(trace)
     }
 
+    /**
+     * Creates and returns two sorted node sets based on the given validation data.
+     *
+     * - The second node set is determined by taking the difference between all nodes in the DFG and the first node set.
+     * - The first node set is filtered to exclude 'play' and 'stop' if present.
+     * - Depending on the cut type, the order of the node sets is adjusted:
+     *   - For `LOOP`: If a connection exists from 'play' to the first node set, it is considered the "Do" part.
+     *   - For `SEQUENCE`: If a path exists from the first node set to the second node set, the order is maintained.
+     *
+     * @param {ValidationData} data - The validation data containing:
+     *   - `dfg`: The Directly Follows Graph (DFG) object.
+     *   - `firstNodeSet`: One Set of Nodes.
+     *   - `cutType`: The type of cut to apply (e.g., LOOP, SEQUENCE).
+     * @returns {[Set<string>, Set<string>]} - A tuple containing two sets of nodes:
+     *   - The first set can now be considered as `firstNodeSet` in order or Do-Part.
+     *   - The second set can now be considered as `secondNodeSet` in order or Redo-part.
+     */
     public static createSortedNodeSets(data: ValidationData): [Set<string>, Set<string>] {
         // zweites NodeSet durch Differenz mit allen Nodes
         const allNodes = data.dfg.dfg.getNodes();
-        const secondNodeSet = new Set<string>([...allNodes].filter(element => !data.firstNodeSet.has(element)));
+        const secondNodeSet = new Set<string>([...allNodes].filter(element => !data.nodeSet.has(element)));
         // filter play / stop aus dem übergeben NodeSet, falls vorhanden...
-        const firstNodeSet = new Set<string>([...data.firstNodeSet].filter(element => !new Set(['play', 'stop']).has(element)))
+        const firstNodeSet = new Set<string>([...data.nodeSet].filter(element => !new Set(['play', 'stop']).has(element)))
         if (firstNodeSet?.size > 0 && secondNodeSet?.size > 0) {
             switch (data.cutType) {
                 case CutType.LOOP:
@@ -450,7 +482,18 @@ export class ValidationHelper {
         return [firstNodeSet, secondNodeSet]
     }
 
-//return true if no pattern found, else true
+    /**
+     * Tests whether the event log contains an 'empty_trace' AND a repeating pattern.
+     *
+     * - If an 'empty_trace' is found, it removes such traces and checks if the remaining traces form an exclusively repeating pattern.
+     * - If both conditions are met, it returns `false` with a message suggesting resolution via a Tau-Loop.
+     * - Otherwise, it returns `true` with an empty message.
+     *
+     * @param {string[][]} eventLog - The event log, represented as an array of traces, where each trace is an array of events.
+     * @returns {[boolean, string]} - A tuple containing:
+     *   - `boolean` - `false` if a combination of 'empty_trace' and a repeating pattern is found, otherwise `true`.
+     *   - `string` - An error message if the combination is found; otherwise, an empty string.
+     */
     public static testForNoTauAndRepeatingPattern(eventLog: string[][]): [boolean, string] {
         if (eventLog.some(trace => trace.includes('empty_trace'))) {
             let tempLog = eventLog.filter(trace => !trace.includes('empty_trace'));
@@ -465,7 +508,20 @@ export class ValidationHelper {
         return [true, '']
     }
 
-//return true if no pattern found, else true
+    /**
+     * Tests whether the event log contains a Tau-related issue OR a repeating pattern.
+     *
+     * - First, it checks for a combination of 'empty_trace' and a repeating pattern using `testForNoTauAndRepeatingPattern`.
+     * - If such a combination is found, it returns the corresponding result.
+     * - Otherwise, it checks if the entire event log consists of an exclusively repeating pattern.
+     * - If a repeating pattern is detected, it returns `false` with a message.
+     * - Otherwise, it returns `true` with an empty message.
+     *
+     * @param {string[][]} eventLog - The event log, represented as an array of traces, where each trace is an array of events.
+     * @returns {[boolean, string]} - A tuple containing:
+     *   - `boolean` - `false` if a repeating pattern is found, otherwise `true`.
+     *   - `string` - An error message if a pattern issue is found; otherwise, an empty string.
+     */
     public static testForNoTauOrRepeatingPattern(eventLog: string[][]): [boolean, string] {
         let tauAnd = this.testForNoTauAndRepeatingPattern(eventLog);
         if (!tauAnd[0]) {
