@@ -33,10 +33,10 @@ export interface Node {
  *
  * @enum {number}
  * @readonly
- * @property {number} node - A generic node type.
- * @property {number} place - Represents a "place" in a Petri net or similar graph structure.
+ * @property {number} node - A generic node type used for nodes in a Directed Flow Graph (DFG). These nodes are parsed from a Set<string> from a DirectlyFollows Object during runtime.
+ * @property {number} place - Represents a "place" in the PetriNet
  * @property {number} eventLog - Represents a node used for event logs.
- * @property {number} transition - Represents a transition node in a Petri net or similar graph structure.
+ * @property {number} transition - Represents a transition node in the PetriNet
  */
 export enum NodeType {
     node,
