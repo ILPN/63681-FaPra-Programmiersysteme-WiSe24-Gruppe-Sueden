@@ -1,5 +1,4 @@
 import {DirectlyFollows} from "../classes/directly-follows";
-import {main} from "@angular/compiler-cli/src/main";
 import {ValidationHelper} from "./ValidationHelper";
 
 export class FallthroughHelper {
@@ -281,41 +280,31 @@ export class FallthroughHelper {
         if (tempArcs.length !== 0) {
             return [false, ""];
         }
+        //Test for every Wcc via ValidationHelper, whether the wcc is a valid redo-part
+        let returnWccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
+        for (let i=0; i<wccArray.length; i++) {
+            let mainComp :string[] = [...mainComponent.nodes]
+            for (let j = 0; j < wccArray.length; j++) {
+                if (i !== j) {
+                    mainComp = mainComp.concat(wccArray[j].nodes); // concat every wccNode except wcc[i]
+                }
+            }
+            let DoSet: Set<string> = new Set(mainComp);
+            let RedoSet: Set<string> = new Set(wccArray[i].nodes);
+            //call loopValidation with mainComp.concat all wccNode except wcc[i] as Do, and wcc[i] as redo
+            if (!ValidationHelper.loopValidation(dfg, DoSet, RedoSet)[0]){
+                return [false, ""];
+            }
+            // if valid, add to return Array
+            returnWccArray.push(wccArray[i]);
+        }
 
-        // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
-        for (let wcc of wccArray) {
-            for (let sourceNode of wcc.stopNodes) {
-                let isConnectedToAllStartNodes = false
-                for (let targetNode of mainComponent.startNodes) {
-                    isConnectedToAllStartNodes = connectingArcs.some(arc => {
-                        return arc.source === sourceNode && arc.target === targetNode
-                    })
-                    if (!isConnectedToAllStartNodes) {
-                        return [false, ""];
-                    }
-                }
-            }
-        }
-        // sowie, ob alle knoten von wcc.start von allen knoten aus Maincomponent.stop erreicht werden..
-        for (let wcc of wccArray) {
-            for (let targetNode of wcc.startNodes) {
-                let isConnectedFromAllStopNodes = false
-                for (let sourceNode of mainComponent.stopNodes) {
-                    isConnectedFromAllStopNodes = connectingArcs.some(arc => {
-                        return arc.source === sourceNode && arc.target === targetNode
-                    })
-                }
-                if (!isConnectedFromAllStopNodes) {
-                    return [false, ""];
-                }
-            }
-        }
-        let numberOfWccs = wccArray.length;
+        let numberOfWccs = returnWccArray.length;
         let returnString: string = '';
         returnString += 'Cut possible between:\n\n'
         returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n\n'
         for (let i = 0; i < numberOfWccs; i++) {
-            returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n\n';
+            returnString += 'Redo-Part ' + (i + 1) + ': ' + returnWccArray[i].nodes.join(' , ') + '\n\n';
         }
         return [true, returnString];
     }
