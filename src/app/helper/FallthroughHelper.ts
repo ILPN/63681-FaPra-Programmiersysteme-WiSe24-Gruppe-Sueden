@@ -298,38 +298,7 @@ export class FallthroughHelper {
             // if valid, add to return Array
             returnWccArray.push(wccArray[i]);
         }
-/*
-        // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
-        for (let wcc of wccArray) {
-            for (let sourceNode of wcc.stopNodes) {
-                let isConnectedToAllStartNodes = false
-                for (let targetNode of mainComponent.startNodes) {
-                    isConnectedToAllStartNodes = connectingArcs.some(arc => {
-                        return arc.source === sourceNode && arc.target === targetNode
-                    })
-                    if (!isConnectedToAllStartNodes) {
-                        return [false, ""];
-                    }
-                }
-            }
-        }
-        // sowie, ob alle knoten von wcc.start von allen knoten aus Maincomponent.stop erreicht werden..
-        for (let wcc of wccArray) {
-            for (let targetNode of wcc.startNodes) {
-                let isConnectedFromAllStopNodes = false
-                for (let sourceNode of mainComponent.stopNodes) {
-                    isConnectedFromAllStopNodes = connectingArcs.some(arc => {
-                        return arc.source === sourceNode && arc.target === targetNode
-                    })
-                }
-                if (!isConnectedFromAllStopNodes) {
-                    return [false, ""];
-                }
-            }
-        }
 
-
- */
         let numberOfWccs = returnWccArray.length;
         let returnString: string = '';
         returnString += 'Cut possible between:\n\n'
