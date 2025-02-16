@@ -214,6 +214,17 @@ export class ValidationHelper {
         return [true, 'Parallel-Cut successful', '']
     }
 
+    /**
+     * Validates whether a loop cut is possible in the given Directly Follows Graph (DFG).
+     *
+     * @param {DirectlyFollows} dfg - The Directly Follows Graph to validate.
+     * @param {Set<string>} firstNodeSet - The first node set representing the "Do" part.
+     * @param {Set<string>} secondNodeSet - The second node set representing the "Redo" part.
+     * @returns {[boolean, string, string]} - A tuple where:
+     *   - The first value indicates whether the loop cut is valid (`true` or `false`).
+     *   - The second value provides a short validation message.
+     *   - The third value contains additional details if the validation fails.
+     */
     public static loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string, string] {
         //erstelle die verschiedenen play/stop mengen
         this.log('Creating DOplay, DOstop, REDOplay, REDOstop')

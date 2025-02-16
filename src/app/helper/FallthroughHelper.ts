@@ -280,22 +280,22 @@ export class FallthroughHelper {
         if (tempArcs.length !== 0) {
             return [false, ""];
         }
-        //
-
+        //Test for every Wcc via ValidationHelper, whether the wcc is a valid redo-part
         let returnWccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
-
         for (let i=0; i<wccArray.length; i++) {
             let mainComp :string[] = [...mainComponent.nodes]
             for (let j = 0; j < wccArray.length; j++) {
                 if (i !== j) {
-                    mainComp = mainComp.concat(wccArray[j].nodes); // Anhängen aller außer wccArray[i]
+                    mainComp = mainComp.concat(wccArray[j].nodes); // concat every wccNode except wcc[i]
                 }
             }
             let DoSet: Set<string> = new Set(mainComp);
             let RedoSet: Set<string> = new Set(wccArray[i].nodes);
+            //call loopValidation with mainComp.concat all wccNode except wcc[i] as Do, and wcc[i] as redo
             if (!ValidationHelper.loopValidation(dfg, DoSet, RedoSet)[0]){
                 return [false, ""];
             }
+            // if valid, add to return Array
             returnWccArray.push(wccArray[i]);
         }
 /*
