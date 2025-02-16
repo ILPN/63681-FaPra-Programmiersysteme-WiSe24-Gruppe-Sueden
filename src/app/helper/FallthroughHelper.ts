@@ -1,5 +1,4 @@
 import {DirectlyFollows} from "../classes/directly-follows";
-import {main} from "@angular/compiler-cli/src/main";
 import {ValidationHelper} from "./ValidationHelper";
 
 export class FallthroughHelper {
@@ -281,7 +280,25 @@ export class FallthroughHelper {
         if (tempArcs.length !== 0) {
             return [false, ""];
         }
+        //
 
+        let returnWccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
+
+        for (let i=0; i<wccArray.length; i++) {
+            let mainComp :string[] = [...mainComponent.nodes]
+            for (let j = 0; j < wccArray.length; j++) {
+                if (i !== j) {
+                    mainComp = mainComp.concat(wccArray[j].nodes); // Anhängen aller außer wccArray[i]
+                }
+            }
+            let DoSet: Set<string> = new Set(mainComp);
+            let RedoSet: Set<string> = new Set(wccArray[i].nodes);
+            if (!ValidationHelper.loopValidation(dfg, DoSet, RedoSet)[0]){
+                return [false, ""];
+            }
+            returnWccArray.push(wccArray[i]);
+        }
+/*
         // nun bleibt nur mehr zu testen ob jeder Knoten von WCC stop zu allen Maincomponent.play führt ...
         for (let wcc of wccArray) {
             for (let sourceNode of wcc.stopNodes) {
@@ -310,12 +327,15 @@ export class FallthroughHelper {
                 }
             }
         }
-        let numberOfWccs = wccArray.length;
+
+
+ */
+        let numberOfWccs = returnWccArray.length;
         let returnString: string = '';
         returnString += 'Cut possible between:\n\n'
         returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n\n'
         for (let i = 0; i < numberOfWccs; i++) {
-            returnString += 'Redo-Part ' + (i + 1) + ': ' + wccArray[i].nodes.join(' , ') + '\n\n';
+            returnString += 'Redo-Part ' + (i + 1) + ': ' + returnWccArray[i].nodes.join(' , ') + '\n\n';
         }
         return [true, returnString];
     }

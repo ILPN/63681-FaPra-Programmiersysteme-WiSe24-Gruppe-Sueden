@@ -214,7 +214,7 @@ export class ValidationHelper {
         return [true, 'Parallel-Cut successful', '']
     }
 
-    private static loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string, string] {
+    public static loopValidation(dfg: DirectlyFollows, firstNodeSet: Set<string>, secondNodeSet: Set<string>): [boolean, string, string] {
         //erstelle die verschiedenen play/stop mengen
         this.log('Creating DOplay, DOstop, REDOplay, REDOstop')
         let firstNodeSetPlay = this.createPlaySet(dfg, firstNodeSet);
