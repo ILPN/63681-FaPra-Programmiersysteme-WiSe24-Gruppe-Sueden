@@ -15,7 +15,7 @@ export class FallthroughHelper {
             if (dfg.getArcs().length === 2) {
                 return [false, 'Base Case', ''];
             } else if (dfg.getArcs().length > 2) {
-                return [false, 'Loop Cut of length 1 possible', ''];
+                return [false, 'Fallthrough detected', 'There is a Repeating Pattern ==> Tau-Loop']; 
             }
         }
         let isRepWithTau = ValidationHelper.testForNoTauAndRepeatingPattern(dfg.eventLog)
