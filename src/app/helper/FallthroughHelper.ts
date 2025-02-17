@@ -282,6 +282,7 @@ export class FallthroughHelper {
         }
         //Test for every Wcc via ValidationHelper, whether the wcc is a valid redo-part
         let returnWccArray: { nodes: string[], FPM: string[][], startNodes: string[], stopNodes: string[] }[] = [];
+        let returnMainComponent = [...mainComponent.nodes]
         for (let i=0; i<wccArray.length; i++) {
             let mainComp :string[] = [...mainComponent.nodes]
             for (let j = 0; j < wccArray.length; j++) {
@@ -292,17 +293,21 @@ export class FallthroughHelper {
             let DoSet: Set<string> = new Set(mainComp);
             let RedoSet: Set<string> = new Set(wccArray[i].nodes);
             //call loopValidation with mainComp.concat all wccNode except wcc[i] as Do, and wcc[i] as redo
+            //if not valid --> must be part of Do-Part --> add to main component
             if (!ValidationHelper.loopValidation(dfg, DoSet, RedoSet)[0]){
-                return [false, ""];
+                for (let node of wccArray[i].nodes) {
+                    returnMainComponent.push(node)
+                }
+                continue;
             }
-            // if valid, add to return Array
+            // if valid --> must be a valid redo part --> add to return Array
             returnWccArray.push(wccArray[i]);
         }
 
         let numberOfWccs = returnWccArray.length;
         let returnString: string = '';
         returnString += 'Cut possible between:\n\n'
-        returnString += 'Do-Part: ' + mainWCC.join(' , ') + '\n\n'
+        returnString += 'Do-Part: ' + returnMainComponent.join(' , ') + '\n\n'
         for (let i = 0; i < numberOfWccs; i++) {
             returnString += 'Redo-Part ' + (i + 1) + ': ' + returnWccArray[i].nodes.join(' , ') + '\n\n';
         }
