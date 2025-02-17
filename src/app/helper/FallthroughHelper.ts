@@ -303,6 +303,9 @@ export class FallthroughHelper {
             // if valid --> must be a valid redo part --> add to return Array
             returnWccArray.push(wccArray[i]);
         }
+if (returnWccArray.length === 0) {
+    return [false, ''];
+}
 
         let numberOfWccs = returnWccArray.length;
         let returnString: string = '';
